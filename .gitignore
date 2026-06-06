@@ -19,7 +19,7 @@ venv/
 # Data — large binary assets not suitable for git
 data/
 weights/
-octo-images/
+# octo-images/
 segmented-output/
 
 # Cloned dependency (nested git repo)
