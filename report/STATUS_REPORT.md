@@ -115,7 +115,7 @@ data/aquarium/2026-02-20/092420--vv-1/
 
 ---
 
-## 3. Known Issues & Fixes
+## 3. Known Issues & Fixes & Fixes
 
 | Issue | Root Cause | Fix Applied |
 |---|---|---|
@@ -140,7 +140,50 @@ data/aquarium/2026-02-20/092420--vv-1/
 
 ---
 
-## 5. Next Steps
+## 5. Behavioral Clustering — YouTube Corpus
+
+### Setup
+
+We ran the full clustering pipeline on **84 clips** extracted from **10 YouTube octopus videos**, using DINOv2 (ViT-B/14) as the appearance feature extractor.
+
+| Step | Detail |
+|---|---|
+| Feature extractor | DINOv2 `dinov2_vitb14` — 768-d per clip |
+| Dimensionality reduction | PCA 768 → 50 dims (95.8% variance retained) |
+| Clustering algorithm | KMeans, k=6 |
+| Total clips | 84 across 10 YouTube videos |
+| Inertia | 22.40 |
+
+### PCA Scatter + Cluster Sizes
+
+![Clustering PCA and bar chart](images/clustering_pca.png)
+
+The PCA projection (2D) shows clusters 1 and 4 are clearly separated along PC1, while clusters 2 and 0 overlap more — suggesting similar appearance features between those behavioral groups. Clusters 3 (n=4) is the smallest, likely a rare or distinct behavior.
+
+### Representative Frames per Cluster
+
+![Cluster representative frames](images/cluster_reps.png)
+
+Visual inspection of the representative frame closest to each cluster centroid:
+
+| Cluster | n | Video | Time | Likely behavior |
+|---|---|---|---|---|
+| C0 | 7 | Hwji93BVjnI | 157–173s | Resting near rock wall, muted coloration |
+| C1 | 15 | tmJtd9BLCuc | 150–155s | Human–octopus interaction, arm extension |
+| C2 | 25 | LITlLW9bYNs | 210–233s | Locomotion / foraging on open substrate |
+| C3 | 4 | LITlLW9bYNs | 192–202s | Den / hiding, constricted posture |
+| C4 | 24 | abRPaXgJGQg | 70–85s | Active foraging, vivid chromatophore display |
+| C5 | 9 | LNEaa_cNf9M | 28–46s | Arms spread, hunting / threat display |
+
+> Cluster labels are preliminary visual assignments — manual ethogram review of 3–5 representative clips per cluster is the next labeling step.
+
+### Elbow Analysis
+
+The notebook (`phase2/cluster_demo.ipynb`) also ran an elbow sweep from k=2 to k=14. The curve flattens between k=5 and k=7, confirming k=6 is a reasonable choice aligned with the expected ethogram size (resting, foraging, locomotion, camouflage, denning, inking/threat).
+
+---
+
+## 6. Next Steps (Overall)
 
 ### Immediate — get confirmed octopus data
 
