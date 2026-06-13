@@ -1,7 +1,104 @@
 # Cephalopod Behavioral Captioning — Status Report
 **Project:** *O. vulgaris* (Nity) Behavioral Analysis  
-**Date:** 2026-06-06  
+**Last Updated:** 2026-06-13  
 **Author:** Siddharth Raj
+
+---
+
+## Week of 2026-06-09 — Update
+
+### What We Did
+
+#### 1. Ethogram Clip Extraction (exp12 → exp13)
+
+Built and ran a full pipeline to extract 15-second clips for every event in `data/Nity events.csv` (119 rows). Two iterations:
+
+- **exp12** (`phase2/exp12_ethogram_clips.py`): First attempt. Used MOG2 peak-motion within ±2.5 min of event time. Had two bugs: (a) "all day" events were wrongly anchored to 10:00am, (b) the wide scan window picked up motion from unrelated nearby events. Produced 66 clips but many were mismatched.
+- **exp13** (`phase2/exp13_ethogram_clips_v2.py`): Fixed version. Tightened window to ±2 min, properly skipped all 53 "all day" / "morning and afternoon" events with no anchor time. Re-ran from scratch. Produced **39 clips** in `data/clips/ethogram_v2/`.
+
+Pipeline per event: find segment on server → download 30-min video → scan ±2 min for peak MOG2 motion → extract 15s clip → delete raw video immediately (disk efficient).
+
+**Final results:**
+
+| Status | Count | Reason |
+|---|---|---|
+| Extracted | 39 | Clips saved to `data/clips/ethogram_v2/` |
+| Skipped — no anchor | 54 | "all day" / "morning and afternoon" (no reliable time) |
+| Skipped — dark/IR | 11 | Camera in IR mode at event time (brightness < 100) |
+| Skipped — not on server | 5 | Dates before recording started |
+| Skipped — unparseable | 1 | "17??++" in CSV |
+
+Output index: `data/ethogram_clips_v2.json` — one entry per CSV row with clip path, motion score, segment, and session.
+
+#### 2. Video Captioning with Qwen2-VL-2B (Local)
+
+Installed `mlx-vlm` and ran `Qwen2-VL-2B-Instruct-4bit` (Apple MLX, ~1.5GB RAM) locally to generate timestamped behavioral descriptions from video frames.
+
+- Extracts 1 frame every 30 seconds from a clip
+- Runs the vision-language model on each frame individually (keeps peak RAM ~2.2GB)
+- Outputs a JSON with timestamped captions
+
+**Test run** on Right Back camera, 2026-03-07 12:36–12:41 ("Joystick light; caister" event):
+
+```
+[00:00] Nity is extending arms, interacting with a blue water bottle on the ground.
+[01:00] Nity is with arms extended, possibly reaching toward equipment on tank floor.
+[01:30] Nity is extending arms, interacting with objects on a shelf. Arms raised, relaxed posture.
+[02:00] Nity is extending arms, interacting with an elderly man.
+[04:00] Nity is extending arms, vibrant coloration, interacting with a computer keyboard.
+```
+
+Caption JSON saved to `data/clips/ethogram_v2/20260307_123002_captions.json`.
+
+Script: `/tmp/describe_video_light.py` (to be moved into `phase2/` next week).
+
+#### 3. Key Technical Fixes This Week
+
+| Issue | Fix |
+|---|---|
+| `head -80` pipe killed extraction script early | Re-ran without pipe, logged to file |
+| mlx-vlm `image=` param rejected .mp4 files | Switched to `video=` param |
+| 7B model crashed 16GB laptop | Downgraded to 2B + one-frame-at-a-time inference |
+| `GenerationResult` not JSON serializable | Extract `.text` field before saving |
+| Model echoed prompt structure in output | Rewrote prompt to force direct first-person observation |
+
+---
+
+## Next Week — Plan
+
+### Priority 1 — Caption all 39 ethogram clips
+
+Move `/tmp/describe_video_light.py` into `phase2/exp14_caption_clips.py`. Run it over all clips in `data/clips/ethogram_v2/`. Save a sidecar `<clip_name>_captions.json` next to each clip, and a combined `data/ethogram_captions.json` index mapping clip → captions → ethogram metadata.
+
+Estimated time: ~3 min per clip × 39 clips = ~2 hours unattended.
+
+### Priority 2 — Improve caption quality
+
+The 2B model is generic ("sitting on shelf", hallucinated "shell"). Two options to improve:
+- **Better prompt engineering**: include camera angle (Right Back = side view), tank layout description, known objects (den, bridge, canister, joystick)
+- **7B model**: run overnight when laptop is plugged in and no other apps open (needs ~4.5GB free RAM)
+
+### Priority 3 — Recover the 10 skipped Sept 2025 clips
+
+The last 10 events (Sept 17 – Oct 2 2025) were marked `manually_skipped_slow_download`. Re-run exp13 on just those events when on a faster connection.
+
+### Priority 4 — Build final JSON dataset
+
+Merge `ethogram_clips_v2.json` + captions into one unified dataset file:
+```json
+{
+  "date": "2026-03-07",
+  "event": "Joystick light; caister",
+  "clip_path": "data/clips/ethogram_v2/...",
+  "ethogram_details": "...",
+  "captions": [
+    {"time": "00:00", "description": "Nity is extending arms..."},
+    ...
+  ]
+}
+```
+
+This is the deliverable that connects raw footage → behavioral label → visual description.
 
 ---
 
