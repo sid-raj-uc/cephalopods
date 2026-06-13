@@ -52,7 +52,29 @@ Caption JSON saved to `data/clips/ethogram_v2/20260307_123002_captions.json`.
 
 Script: `/tmp/describe_video_light.py` (to be moved into `phase2/` next week).
 
-#### 3. Key Technical Fixes This Week
+#### 3. Fundamental Challenge: Ethogram Timeline Accuracy
+
+A critical finding this week: **the ethogram timestamps are highly approximate and cannot be relied on for precise clip alignment.** Times in the CSV are observer-logged manually and can be off by 1–2 minutes or more. Many events have no usable timestamp at all ("all day", "morning and afternoon" — 54 out of 119 rows). A few entries are entirely unparseable ("17??++").
+
+This made every ML-based approach we tried unreliable:
+
+| Approach | What failed |
+|---|---|
+| MOG2 peak-motion (exp12, ±2.5 min window) | Peak motion drifted to unrelated nearby activity — clips didn't show the actual event |
+| MOG2 tightened window (exp13, ±2 min) | Improved but still unreliable when timestamp is off or event motion is subtle |
+| CLIP text→image matching | CLIP cannot understand behavioral captions like "Kiss, Bluetooth" or "Attack Joystick" — trained on visual descriptions, not ethological notes |
+| Exact timestamp extraction | Fails when time is off by >30s, which is common |
+| DINOv2 visual similarity | Requires a reference exemplar frame per event type — we don't have labeled ground truth |
+
+**Conclusion: traditional CV and zero-shot ML approaches have low success rate for this task given the noisy timestamps and behaviorally-described captions.** A vision-language model (LLM) is the most viable path forward because it can:
+- Reason about ambiguous visual scenes without needing a precise timestamp
+- Interpret behavioral language ("she reaches toward the joystick") into visual expectations
+- Handle frames where the octopus is partially hidden or off-center
+- Describe what is actually happening rather than relying on motion as a proxy
+
+This is why we pivoted to Qwen2-VL for captioning, and why the next week's priority is running it over all 39 available clips.
+
+#### 4. Key Technical Fixes This Week
 
 | Issue | Fix |
 |---|---|
