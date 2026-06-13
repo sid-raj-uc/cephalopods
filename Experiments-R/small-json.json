@@ -1,0 +1,835 @@
+{
+    "Nity events": [
+        {
+            "Date": "2026-04-15 00:00:00",
+            "Time": "morning and afternoon",
+            "Event": "Cards",
+            "Cameras": "Right ",
+            "Details": "morning: very clear choice of yelloow X card => almost vi0olent, does not want to watch.Afternoon around 16:30 to 17:00 clear food preference, clear video choice."
+        },
+        {
+            "Date": "2026-04-07 00:00:00",
+            "Time": "12:45:00",
+            "Event": "Google Meet with Wolfgang and Kyoko ",
+            "Cameras": "Right ",
+            "Details": "Clear reaction; When we returned ~ 19:20 live blue crab."
+        },
+        {
+            "Date": "2026-04-05 00:00:00",
+            "Time": "20:15:00",
+            "Event": "Nity eats orange",
+            "Cameras": "Right  + Handy",
+            "Details": NaN
+        },
+        {
+            "Date": "2026-03-20 00:00:00",
+            "Time": "13:45:00",
+            "Event": "Straw box ",
+            "Cameras": "Right ",
+            "Details": "Nity opens straw box with instruction video, even though being distracted by blue crab in other tank. "
+        },
+        {
+            "Date": "2026-03-12 00:00:00",
+            "Time": "06:00:00",
+            "Event": "NO card selection ",
+            "Cameras": "Right ",
+            "Details": "Nity is awake, but points to NO card, retires into den after morning greetings. "
+        },
+        {
+            "Date": "2026-03-07 00:00:00",
+            "Time": "12:38:00",
+            "Event": "Joystick light; caister",
+            "Cameras": "Right ",
+            "Details": "Joystick strongly, turns on light. TV choice. 16:35 Canister excursion, afterwards TV choice, *extremely active* (typical after long excursion)."
+        },
+        {
+            "Date": "2026-03-02 00:00:00",
+            "Time": "19:30:00",
+            "Event": "TV choice ",
+            "Cameras": "Right ",
+            "Details": "Clear that she wants music videos while eating. "
+        },
+        {
+            "Date": "2026-03-01 00:00:00",
+            "Time": "20:15:00",
+            "Event": "Attack Joystick ",
+            "Cameras": "Right ",
+            "Details": "Nity violently attacked the joystick, removed the silicon cover and popped out the stick. "
+        },
+        {
+            "Date": "2026-02-27 00:00:00",
+            "Time": "09:45:00",
+            "Event": "Kiss, Bluetooth",
+            "Cameras": "Right ",
+            "Details": "Nity came up and touched my beard, let me kiss her. Passionate, after oyster. Later: no TV choice, but clear choice for bluetooth speaker and music. Gesturing towards real bluetooth speaker. Watching music videos while sitting calmly in den."
+        },
+        {
+            "Date": "2026-02-22 00:00:00",
+            "Time": "20:15:00",
+            "Event": "TV Menu ",
+            "Cameras": "Right ",
+            "Details": "Clearly choosing no "
+        },
+        {
+            "Date": "2026-02-17 00:00:00",
+            "Time": "20:55:00",
+            "Event": "Into canister ",
+            "Cameras": "Right ",
+            "Details": "In front of me, waiting. "
+        },
+        {
+            "Date": "2026-02-13 00:00:00",
+            "Time": "20:40:00",
+            "Event": "Eating gesture ",
+            "Cameras": "Right ",
+            "Details": "Elbow towards beak "
+        },
+        {
+            "Date": "2026-02-12 00:00:00",
+            "Time": "15:35:00",
+            "Event": "black white",
+            "Cameras": "Right ",
+            "Details": "Very strong contrast"
+        },
+        {
+            "Date": "2026-02-07 00:00:00",
+            "Time": "17:00:00",
+            "Event": NaN,
+            "Cameras": "Right ",
+            "Details": "16:55? TV menu card => TV, I select music videos. 17:00 excrements once I started vacuuming old excrements. 17:08 food remains from yesterday night into potty (my directions, with correction!!). "
+        },
+        {
+            "Date": "2026-02-04 00:00:00",
+            "Time": "17??++",
+            "Event": "straw box opened ",
+            "Cameras": "Right ",
+            "Details": "Straw box opened. Accidentially? "
+        },
+        {
+            "Date": "2026-01-28 00:00:00",
+            "Time": "08:25:00",
+            "Event": NaN,
+            "Cameras": "Right side ",
+            "Details": "8:25 she helps me collect food remains from last night by gesturing and showing me some that lie besides her. "
+        },
+        {
+            "Date": "2026-01-11 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "13:35 Nity opens the box with the new straw (better texture through cable binders)! 16:20 food choice black tiger vs red shrimp. 16:50 black tiger in straw box with new magic wand \"straw\". "
+        },
+        {
+            "Date": "2026-01-08 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "Weighing, 591g. 19:30 Excursion to kitchen table! Clone wars. 21:10 inside the straw box. "
+        },
+        {
+            "Date": "2026-01-07 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:30: Excrements, high touch. No interest in canister, TV choice = \"no\" (yellow cross) and no Bluetooth => she returns to den to rest. 17:45 food choice. Play wit mirrors. From around 17:45 straw box video, but to no avail, and eventuelly Kyoko opens the box for Nity at around 19:15. 21:15 menu choice for bluetooth"
+        },
+        {
+            "Date": "2026-01-06 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "Excursion to kitchen table! Music videos without video! Lots of finger play, also reverse (she follows Wolfgang's finger)."
+        },
+        {
+            "Date": "2026-01-05 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "9:00 Oyster. 12:30 TV choice. Excrements. Gesturing towards balcony towel so Wolfgang reopens it. Food choice. Straw box. Canister excursion. Feeding. "
+        },
+        {
+            "Date": "2026-01-04 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "Active in afternoon. Clone Wars. "
+        },
+        {
+            "Date": "2026-01-03 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "16:08 sitting towards back side ld after having choosen to continue to watch yesterday's TV (clone wars). Strawbox: Wolfgang closed back hole but erronuously believed Nity nevertheless could put her arm into the box (it was difficult to see, so opened it for her. ~22:00 Nity put remains of fish into potty, directed by Wolfgang."
+        },
+        {
+            "Date": "2026-01-02 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "14:09 interesting reaction to video of octopus excursion (with Heidi) outside, on back LCD. Watching towards bacony. 14:15 short excursion in sieve to salad bowl to bridge, returns to right side. Maybe sucked in a bit into vacuum (really only very very little, without being turned on), so she hides deeply in her den. 00:23 indicates still wants star wars clone wars. Later excitation until 00:40"
+        },
+        {
+            "Date": "2026-01-01 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "15:00 wake up, 16:00 playing, 16:22 black dots and lines on beige skin. 16:27 in straw box => to bridge, escape back to tank. Food choice, TV choice (but ignored by Wolfgang --- showing something else new). 17:15 shrimp in Box, but she attacks Nutella. Then takes the shrimp through the back hole --- I open the box. 20:30 Throws remains into potty after Wolfgang directs her to it. TV choice elephants with sound. "
+        },
+        {
+            "Date": "2025-12-31 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:00 shortly awake, then retires into den. 17:15 awake, high touch, excrements, no interest in TV or activities, black white purse, 17:28 cleaning, 17:35 black white on other side. 18:50 sound and TV choice "
+        },
+        {
+            "Date": "2025-12-30 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "15:00 wake up, playing with new toy with lots of \"silicon tentacles\". 15:50 canister, excursion to kitchen, lots of amusent park activities wit black dots on beige skin, escape outside and exploring the kitchen table, three times!!! 16:16 return to bridge but remains in canister, too exhausted! Return via canister in water. TV choie soccer, with sound. 16:35 Esther arrives, interactions. Leopold plays with her. Feeding via straw box but didn't succeed. 22:05 ejects parts of food remains into potty (3x)."
+        },
+        {
+            "Date": "2025-12-29 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:30 high touch, TV choice planets with sound. Clear choice for TV insted of \"No\" card. 18:00 protest against lights off. 18:50 Nity pulls straw out of her den. TV choice \"no\".  22:50 TV choice elephants."
+        },
+        {
+            "Date": "2025-12-28 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "Full program (high touch etc). ~10:15 Black dots on beige skin when given the new challenge toy introduced yesterday, an empty Chavroux box (French cheese). 10:50 TV choice => music with Bluetooth speaker. 12:15 new large climbing toy. 13:50 reconfirmation of music videos, with sound; 15:35 dancing with Kyoko. 16:55 Fish in straw box, big fight with Wolfgang, skirting all over and climbing up to bridge! Kyoko coaches Nity so she manages to open the box. Around 21:10 Nity ejects food remains more or less into potty after being directed by Wolfgang."
+        },
+        {
+            "Date": "2025-12-27 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "19:50 TV choice: gesturing towards TV, then choice 2x => soccer (confirmed). No Bluetooth. 17:25 clear choice for star wars (several confirmations). 21:20 TV off; when lights off => protest, I turn it on again."
+        },
+        {
+            "Date": "2025-12-26 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "6:50 Telco from Vienna, but sleepy. TV remotely. Wilde Tierwelt. 15:45 Octolab TV strawbox video. 18:15 red shrimp in straw box."
+        },
+        {
+            "Date": "2025-12-25 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "14:40 Telco from Vienna, but sleepy."
+        },
+        {
+            "Date": "2025-12-24 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:30. High touch, Nutella, Milka, straw box. Clear TV choice Wilde Tierwelt. 16:25 Nity ejected food remains into potty after being encouraged to do so by Wolfgang. Around 16:30 she indicates some remains that went astray and that Wolfgang initially missed when cleaning up. "
+        },
+        {
+            "Date": "2025-12-24 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:30. High touch, Nutella, Milka, straw box. Clear TV choice Wilde Tierwelt."
+        },
+        {
+            "Date": "2025-12-23 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:15 \"bobbing\" acknowledgement of Wolfgang, Kyok; High touch. ~ 7:28 gestures towards backside screen; Wolfgang turns it on and plays as soothing deep sea youtube episode. 7:46: tries to grab to a small cranb on the screen. 7:47 retires deep into den, maybe frustrated that she can't reach the crabs. 7:50 stays deep in den even after I turn OFF lights and screen."
+        },
+        {
+            "Date": "2025-12-22 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "High touch, Nutella, Milka, straw box, canister but no excursion, Straw box ended ... unexpected! Box not open, but shrimp inside eaten! WTF! Probably through the back straw hole of the box! Protest against lights off at night. "
+        },
+        {
+            "Date": "2025-12-20 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "15:00 high touch, Nutella, Milka, straw box, canister excursion, return from bridge into right tank. fish in straw box, opened! Remains in back but later I found that some were also near the potty. Later at 23:38 (?) protest against lights off."
+        },
+        {
+            "Date": "2025-12-19 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:15: Black-white pattern, High touch, TV indication, choice Star Wars, with sound, but very soon uses red shield/door to close den so she can sleep undisturbed. Wolfgang turns off TV and coses curtains 75% => dark. She remains behind red shield. She was behind the shield also during the night. 14:00 slowly wakes up. High touch. Nutella. Milka, canister cover, straw box. Visitors. Straw box a lot."
+        },
+        {
+            "Date": "2025-12-18 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:45 excrements as soon as I pull the vacuum cleaner to her aquarium, gestures towards the excrements; high touch afterwards. Sleep until~ 17:45. High touch, 18:10: two times clear \"hunger\" gesture from Heidi, one arm to the mouth (left or right?). Food choices (chooses white, but I have to give her black tiger), TV menu choices, Milka and Nutella glasses challenges. 19:05 start with straw box experiment. I open the empty box in front of her ion the tank --- se is super excited and interested. At around 19:35 I insert shrimp and cput closed box into tank. Somhow clear she understands that the box is the next level challenge, and that the straw is somehow involved, but not yet the exact mechanism."
+        },
+        {
+            "Date": "2025-12-17 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "9:46 black-white while chilling. Visitor. Play with butterfly glass. "
+        },
+        {
+            "Date": "2025-12-16 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "10:45: High touch.\"No TV\" TV choice menu card (cnfirmed twice). No interest into entering canister. Gesture towards curtain, I open it a bit. No interest in Milka or Nutella glasses. Play with Wolfgang with plastic straw (very short). 10:55 Empty closed Straw Box into tank. Excrements, Wolfgang cleans => several \"thank you\" high touches afterwards. 12:35: clean choice for soccer + loudspeaker. Tries to open straw box. 18:45 I opened the straw box in front of her, she is very interested in straw and box, and detached the swimpart that should lift the cover => need to repair it. Elephant TV choice (several steps) with sound. Feeding from Nutella glas.. 21:35: cristal clear use of the potty to throw the food remains away!!!! Afterwards indicationand menu card => continue elephants, with sound. "
+        },
+        {
+            "Date": "2025-12-14 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "10:30 sleeping. 20:00 straw box experiment, choice of black tiger shrimp. with video 10 minutes in aquarium without shrimp. 20:20 Nity puts complete arm through straw, without moving it at all (nothing in box yet). Even though it should be really easy. TV choice Soccer. Switching back to straw box instruction video while she was watching soccer. Back and forth. When I retireved the box, she was angry and ejected a water jet towards me. Adfter some back and forth, She went into canister, lots of canister action, return via bridge-pool to left side. Feeding from hand, very happy octopus. After eating and \"helping\" to clean up, clear indication: \"no\" when choice video or No card. Retirnes into den."
+        },
+        {
+            "Date": "2025-12-13 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "Wake up with high touch several times and excrements at 10:00, then return to sleep. 17:30 (or 19:00?) wakes up again, 19:16 very happy about new larger pipe (9cm diameter) => many black dots pulsating!!! 20:15 empty Milka and Nutella glasses opened. 20:19 Nity stretches in the new pipe. Playing with the open outlet of the canister. 20:27 Empty Straw Box inserted and playing instruction video. Play with similar straw (green instead of blue) alone, while video is playing and box is in the tank. 20:38 TV program changed to Nina and the wild animals. Empty box remains in tank, but no interest. Later TV menu => soccer. Protest against turning off lights at around 00:00 while WhatsApp with family and Nity."
+        },
+        {
+            "Date": "2025-12-12 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "Wake up around 16:30, very friendly. High touch, opens Milka, opens Nutella (not tightly closed), gestures towards cards and TV, clear selection of Star Wars among several, but I show her the straw box instruction video, and after 10 minutes put he straw box empty into the tank. She tries but does not manage. I got the impression that she actively looked at the video, but only tried to insert her arm into the straw very gently, without pulling. After some time, I switch to Star Wars clone wars but leave the box in the water. 18:55: Food or TV => tiger shrimp please. 19:27 Wolfgang puts the shrimp into the box (on the bridge, not visible for Nity). Big fight with Wolfgang when he puts the box into the tank. Videos play for the box. Nity tries to open box using force. At 20:00 she enters canister => excursion up to 4th floor neighbor, where she escapes the canister! But return via bridge in pool on bridge, back to her left tank. I give her the shrimp (without showing her how to open it). New less high but larger potty inserted. Later at night, when Wolfgang cleans up food remains, several pieces are in or next to the new potty."
+        },
+        {
+            "Date": "2025-12-11 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": " "
+        },
+        {
+            "Date": "2025-12-10 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "Wake up around 12:30, very friendly but initially sleepy. No interest in TV, but several touches, play with gripper. 13:00 indicates interest in blue Milka glass cover, plays with it, she quickly opens the closed glas. Play! At Around 13:05 she tries to *close* the glas with the cover, not possible but several attemtps to put the cover back on the glas! Gestures towards green Nutella cover, then plays with the cover. Triesto open (loosely) closed Nutella glas, but more turns needed than for Milka (glas is not the correct one, so cover does not fit thigthly). 13:19 into canister, excursion to balcony and appartment, whatsapp with Selina, amusement park activities, return via bridge, she climbs out at 14:08, returns to tank. TV choice (multiple) => elephants. A bit later ~14:25: Please sound too! 17:15 Milka Glas, TV => soccer. Again tries to put cover back onto glas. 19:00 food choice red shrimp, TV choice Star Warsc (confirmed). 19:28 third day of straw box experiment. 19:32 attempt to open by force. 19:43: second screen at back of left tank, identical video. 21:30 end, no success. She gets the red shrimp as is. 21:41: when I try to turn down the lights, she gesticulates wildly, indicating that she wants the lights to be kept on. "
+        },
+        {
+            "Date": "2025-12-08 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:45 High touch after Wolfgang opens curtain. Protest gesture hint when Wolgang tries to close curtain again. Several gestures: towards cards, then TV vs nothing => TV, then soccer versus elephants => soccer, then Star wars vs soccer => soccer (very clear!). No interest in green cover of Nutella glas. 16:40 WhatsApp video call with Wolfgang's family in Vienna. 16:48 TV choice: elephants, with sound please. 19:15 food choice red shrimp. 19:50 start of straw box experiment day 2. 21:50 end, she did not open the straw box. 22:20 red shrimp in jam glas => she immediately attacks and opens it, then eats shrimp. While eating, she protests against Wolfgang trying to turn off the lights => small light left on. 23:10: she throws away all the remains, almost into the potty, but then takes them almost all back to the den, seems she was not finished with it after all! 23:55 she throws the final food remains \"over\" the potty that I presented to her. Very satisfied octopus!"
+        },
+        {
+            "Date": "2025-12-07 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "NOTE: I added two new cameras, IPC 11 and IPC 12, left and right of left tank (because the earlier cameras there were broken since Nity's arrival). 15:40 wakeup (because I vacuumed excrements). High touches. TV choice (only hinted at --- Star Wars, but then watches). Play with Nutella. 16:00 quickly into canister, but only halfway, then returns to den. 18:40 food choice tiger shrimp. Starting from 19:10 straw box experiment (first day: 90 minutes), for details see https://www.youtube.com/watch?v=6xiV0GLUyTA  --- afte rinitial attept, sits mostly in den an contemplates the situation. 19:52 black-white color pattern in den (relaxation?). Another attempt to the box at 20:19. 20:40 end of experiment, result: box not opened (as expected on first experiment day from octolab.tv). 20:10 \"keep lights on\" protest gesture. 22:05 \"forced\" weighing: 306g. Small head part of tiger shrimp in Nutella glas, successfully opened. Late at night: she wants to throw the food remains into a corner. I come and put the small pot into the tank and indicate she should \u00fcut it there instead. She chanes direction (!!!) and tries to put it into the potty!"
+        },
+        {
+            "Date": "2025-12-06 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "18:00 canister excursion --- she loves being swung around (black dots on beige skin!!!) like in an amusement park. Nutella glas. Escaped from Canister in kitchen, tasted my tongue. After return: huge excrements. Watches cirque du soleil (human acrobatics), she did not select any TV program, but then watches nevertheless. Lots of play with Nutella glas. Hide and seek on right side of aquarium. She returns to left tank via pipe. "
+        },
+        {
+            "Date": "2025-12-05 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "9:00 high touch, \"close curtain\" gesture, TV or canister choice => canister. Later TV choice => star wars. Then she enters canister once completely, but when I lift the canister, she escapes back into the tank. \"Fight\" & opening of Nutella bin (empty!). 10:17 Nutella bin with small PVC pipe.inside (from O. maya when they were small). Many fights against the Nutella bin. I do a lot of tinkering in front of her.  17:30 menu choice (before: strong pulling = asking for ...) white shrimp selected, eating \"together with me\" whle I eat noodles in front of her --- she seems to acknowledge it since she did not retire into her den and kept arm reaching contact, and acknowledging my presence (e.g., reaching out when I started to stand up). 20:15: she follows by Nutella bin cover when I move it around the glass wall -- play! Several clearly soccer TV choice, not others. Also,even though she just ate and ignored the plastic crab in the Nutella bin, as soon as I close it with the green bin cover, she starts mock fighting against it again, trying to open it --- this is clearly play: she is not hungry, and she knows nothing important is inside --- she does it even when empty. Still a challgenging puzzle to open it!"
+        },
+        {
+            "Date": "2025-12-03 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:15 high touch x 2. TV gesture, choice => star wars. high touch, canister, food choice, \"keep lights on\" gesture, help with cleaning."
+        },
+        {
+            "Date": "2025-12-02 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:16 high touch 3x. Afternoon and evening some interaction, TV choice, light gesture at night even when onlz dim red lights."
+        },
+        {
+            "Date": "2025-12-01 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:15 high touch x 2. \"Lights on\" gesture. 14:55 remote back monitor \"Nina und die wilden Tiere\". Pushing shell towards me so I clean it up. 17:00 Excursion to mirrors. TV selection. Food selection (showed be \"hunger\" gesture at around 18:10 for the first time!), red shrimp. She get's it at 18:52 in the Nutella bin --- long fight, but she succeeds to open it at 18:57. "
+        },
+        {
+            "Date": "2025-11-30 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "15:39: Nity pushes empty shells she just ate towards the bucket with which I collect the empty shells, in front of me!"
+        },
+        {
+            "Date": "2025-11-28 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "9:00 TV choice, with gestures: first request, then selection among several, and reconfimation. \"Please turn on the lights\" gesture! 21:51 \"light\" gesture."
+        },
+        {
+            "Date": "2025-11-27 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "20:18 \"protest against turning off lights\", excursion and return from bridge 18:15"
+        },
+        {
+            "Date": "2025-11-25 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:30 high touch, playing with Nutella cover. 8:45 gesturing towards canister, enters canister, excursion, return from bridge to *left* tank. New den in left tank. Attempts severayl times to cross via pipe but unsure. TV card selection: soccer."
+        },
+        {
+            "Date": "2025-11-24 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:15 high touch; Wolfgang tries to open the curtain, but she goes deeper into the den, so he close it again. Some time during the night she had opened the Nutella glas. Wolfgang plays with her and the green plastik Nutella cover. She sits in the Gmundner tea pot for a short moment. Either before or afterwards, she defecates (big!), but I didn't see it immediately. She points towards excrements since Wolfgang didn't see them. Wolfgang cleans while Nity chills in her den. Nity points up towards the gripper above her. Wolfgang plays a bit with the gripper with her, she gesticules high so Wolfgang inserts hand next to gripper, she makes a short high touch. Gripper play. Return to den, chilling (~7:25)."
+        },
+        {
+            "Date": "2025-11-23 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:20 defacate before me, gesturing towards excrements (second round at 7:24). Gesturing towards balcony towel, with some back and forth. Gesturing towards gripper, towards Wolfgang. High touch several times. Sleep till 14:30, visit of Helmut and family. 15:08 gesturing towards backside TV => I turn on the anime from yesterday. 17:12 Canister excursion.Wolfgang returns her to the right side tank. Nity moves through the pipe to the left side. 17:38 menu cards, Nity choose tiger shrimp really fast and clearly. Turned on TV while waiting to thaw (about eating shrimp in Thailand). 18:15 feeding red shrimp via nutella glas... but needs help opening it. 18:32 Wolfgang tries to take glas, but Nity refuses to give it up. 21:49 after feeding, Nity \"fights\" with the Nutella glas again (Wolfgang closed it again). Still fighting in the dark at 22:02 with the nutella glas. She seems determined to \"solve\" this bin, and looks a bit aggravated by it!"
+        },
+        {
+            "Date": "2025-11-22 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "16:00 high touch, excrements in front of me, Clear gesturing that she wants me to put the canister inside the tank. 16:14 she enters the canister, we make a small excursion. Afterwards selection of Starwars, Esther makes water analysis. Some gesturing => Nina and the octopus, followed by Nina and Anna videos with animals. Later anime. 22:45 what's app with Kyoko, excrements during it. "
+        },
+        {
+            "Date": "2025-11-21 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:30 \"pressing\" high to defacate. 7:55 excrements in front of me, gesturing towards them, ishort high touch afterwards. Still \"pressing\". 15:30 TV selection, mich play, 15:45 canister. 16:10 TV clear star wars V, but then switch to soccer. 16:44 clear gesture to leave on the light. 16:46 Excrements. Once more into canister, to bridge, Wolfgang puts Nity in the canister into right side tank. Play with gmundner tea can. Return to leftside via pipe. 18:10 Very interested in octopus documentary (Nina, selected from TV cards). 22:50 protest against lights off. "
+        },
+        {
+            "Date": "2025-11-20 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:30 high touch, excrements in front of me, gesturing towards them, TV selection first soccer, but then prefers planets/universe. Clear gesturing that she wants me to leave the canister inside the tank (despite metal screw, it was ion the tank with the maya for months, with the tiny Acuecueyotl in it --- should be no problem I guess. 11:10 with Kyoko imitating her mouth movements with her break! 16:30 several selections of TV program later selection of food white shrimp and opening of jam or actually Nutella to get the food. Excrements in front of me. 18:18 protest gesture so I don't turn off the lights. After eating, she tried to put the detritus into the box. 20:15 many interactions, TV cards, light off protest. 20:10? Third time into canister. 20:30 protest against turning off lights. Again 20:37 (Wolfgang remote) "
+        },
+        {
+            "Date": "2025-11-19 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "8:35 excrements in front of me, short high touch. TV cards => shoking blue venus => music videos. 8:40 Gesture towards gangway monitor => I show menu venus and yellow => no selection, but retires deeper into den  => I turn off LCDs and music => she comes out again. 17:10 lots of excrements in front of me."
+        },
+        {
+            "Date": "2025-11-18 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "9:12 excrements in front of me. 9:15 high touch several times. Getting off Kyoko when she joins Wolfgang in front of the tank with extending arms. 925 menu canister clearly selected instead of elephants. 9:35 pointing towards back LCD. Lots of interest in Kyoko, canister. 9:44 gesturing towards balcony, I close curtain, she stops gesturing. 9:46 again, I open curtain again. She tests whether I react to her gestures. 9:58 clear selection of Star Wars instead of Music Video. Watching. 18:48 menu card black tiger shrimp. Into canister, went to neighbors upstairs, return via bridge to left. "
+        },
+        {
+            "Date": "2025-11-17 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "9:45 high touch. Excrements in front of me. Sometimes in the morning: detached the den on the right side that was connected to the pipe. Sometimes around 11:30 return to the left side. "
+        },
+        {
+            "Date": "2025-11-16 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left",
+            "Details": "8:15 shit in front of me, pointing towards it. Planets TV selection? 8:35 black-white color.  15:25 she makes short contact with my hand, then pushes me away. Still sleepy. Later: several times consistent selection of elephants, even after already running. Once via red sieve on the new bridge crossing waterway. Return to right. Much play. Clear selection of red shrimp. 20:00 goes through pipe to the right side. "
+        },
+        {
+            "Date": "2025-11-15 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left and right + handy",
+            "Details": "7:22 big shitting in front of me after short play. 16:14 canister / appartment / bridge / return to right side, 16:40 shit after excursion. 19:05 red salad sieve => back to the right side. 19:20 traverse pipe from right to left. Pull-sensor for light on left side. (on right side)."
+        },
+        {
+            "Date": "2025-11-14 00:00:00",
+            "Time": "all day",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left",
+            "Details": "Earlier during the morning: no interest in TV cards or activity card. 13:15 Shitting in front of me. Eating a vongole mussle. 14:05 red sieve => bridge => back to right side by herself. 15:18 from right side: good perspecitve when she opens the vogole bivalve."
+        },
+        {
+            "Date": "2025-11-13 00:00:00",
+            "Time": "~17:20:00",
+            "Event": "Nity activity and watching TV (?)",
+            "Cameras": "IPCs on left",
+            "Details": "Interaction with Wolfgang, exploring tank, short interest in TV, interaction with Esther"
+        },
+        {
+            "Date": "2025-11-13 00:00:00",
+            "Time": "06:50:00",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left",
+            "Details": "6:55 Excrements in front of me. High touch (short). "
+        },
+        {
+            "Date": "2025-11-12 00:00:00",
+            "Time": "08:05:00",
+            "Event": "Full day programme",
+            "Cameras": "IPCs on left",
+            "Details": "Shitting in front of me. 12:00 into canister. 14:42: situational awareness: Nity already knows that the blue ball will fall on her and reacts correctly, even though it comes from straight up down to her. Nobody is around since I let it roll from the bridge from the other tank side. Red shrimp food selection."
+        },
+        {
+            "Date": "2025-11-11 00:00:00",
+            "Time": "05:00:00",
+            "Event": "Full day programme",
+            "Cameras": "IPCs right + Handy",
+            "Details": "5:05 I come to room => she recognizes my presence, immediately raises out of her den, excrates after recognizing me => I vacuum it directly next to her => she returns deeper into her den when I turn off the lights and continues to chill. Excursion, 16:14 frist bridge pipe transversal. 17:19 \"passing cloud\" x 2. 19:08 \"leave lights on!\" gesture. "
+        },
+        {
+            "Date": "2025-11-10 00:00:00",
+            "Time": "09:09:00",
+            "Event": "Full day programme",
+            "Cameras": "IPCs right + Handy",
+            "Details": "9:09 new red transparent \"door\" for den, while sleeping."
+        },
+        {
+            "Date": "2025-11-09 00:00:00",
+            "Time": "15:17:00",
+            "Event": "Drillhead cleaning and several expulsions (no excrement)",
+            "Cameras": "IPCs right (front)",
+            "Details": "Looked interesting/funny (from Esther), reminded me a little bit of a cat cleaning its face with its paw"
+        },
+        {
+            "Date": "2025-11-09 00:00:00",
+            "Time": "06:50:00",
+            "Event": "Full day programme",
+            "Cameras": "IPCs right",
+            "Details": "6:50 morning high touch (lime everyday now). In salad bowl on bridge, return by herself. 7:08: Planet-card (among many choices). 8:20 few minutes of play with ball when I try to remove it. 8:25 \"please go out of my view to TV\" gesture. 9:38 play with ball, high touch. 10:00 Play with blue ball with many protusions and fissure. 10:40 dance with bluetooth speaker. Clear reaction to bluetooth speaker. 12:14 excursion to salad bowl on bridge and back via my hand. 13:00 into canister, long excursion through apartment and balconies, bridge, until 13:50. Return via canister in tank, since she did not want to leave it!"
+        },
+        {
+            "Date": "2025-11-08 00:00:00",
+            "Time": "21:28:00",
+            "Event": "Light gesture ",
+            "Cameras": "IPCs right",
+            "Details": "TV turned off at 21:28,in dark room: Nity gesticulated wildly. I turn on lights, gesticulations stops. I turn on TV, and turn off the lights, she continues watching. "
+        },
+        {
+            "Date": "2025-11-07 00:00:00",
+            "Time": "06:00:00",
+            "Event": "Canister, left tank, TV choice",
+            "Cameras": "IPCs left and right + Handy",
+            "Details": "Nity chooses again and again soccer out of several alternatives. Watches for hours! Several times in canister, in salad bowl. Return by herself from bridge. "
+        },
+        {
+            "Date": "2025-11-05 00:00:00",
+            "Time": "13:15:00",
+            "Event": "Canister ",
+            "Cameras": "IPCs right",
+            "Details": NaN
+        },
+        {
+            "Date": "2025-11-02 00:00:00",
+            "Time": "16:36:00",
+            "Event": "Keep light on gesture ",
+            "Cameras": "IPCs right",
+            "Details": NaN
+        },
+        {
+            "Date": "2025-11-02 00:00:00",
+            "Time": "~13:40",
+            "Event": "Coaxing Nity into canister",
+            "Cameras": "IPCs right",
+            "Details": "Wolfgang is trying to coax Nity into the canister, showing her how to...eventually after some time she went in! After return to the tank, big excrements in front of us! Could excrementing be under conscious control? Or at least holding it back (I.e., not doing it in the small canister?). Occurrence is suspicious, e.g., often in front of us, or even pointing out excrements we missed? "
+        },
+        {
+            "Date": "2025-11-01 00:00:00",
+            "Time": "~13:15",
+            "Event": "Nity expulsion in front of Esther",
+            "Cameras": "IPCs right",
+            "Details": "Seems like she waited for someone to see, Esther vacuumed excrements right away."
+        },
+        {
+            "Date": "2025-10-30 00:00:00",
+            "Time": "03:45:00",
+            "Event": "google meet from Japan",
+            "Cameras": "IPCs right",
+            "Details": "Clear reaction, from passive to active. Turned nature doc on afterwards, and 10 minutes later she's still very active and excited! 9:30 she points out excrements to Kyoko that Kyoko hadn't cleaned up yet. Later, twice into the salad bowl, and black/white color. "
+        },
+        {
+            "Date": "2025-10-28 00:00:00",
+            "Time": "15:14 (?)",
+            "Event": "Nity in canister",
+            "Cameras": "IPCs right",
+            "Details": "After showing Nity the tiger shrimp and putting it on the bridge to thaw, she went into the canister by herself! But Esther can't lift it, its too heavy. Kyoko took her out for some time. (Did NIty open the Valve on the canister from inside?)"
+        },
+        {
+            "Date": "2025-10-28 00:00:00",
+            "Time": "15:09:00",
+            "Event": "Menu cards with Esther",
+            "Cameras": "IPCs right",
+            "Details": "After lots of interaction with Esther... settled in her den a little bit again, but still trying to reach Esther. She told Nity to put her tentacles back, which she did, and then held up menu cards (tiger shrimp and shrimp). Nity definetly chose tiger shrimp!"
+        },
+        {
+            "Date": "2025-10-28 00:00:00",
+            "Time": "14:49:00",
+            "Event": "Interaction with Esther",
+            "Cameras": "IPCs right",
+            "Details": "Slight touches in water and fingerplay through glass with Esther, Nity a little more active after she came to play. Also put canister in, but no interest. More soft touches. Gave NIty the barbie to play with, which she liked a lot...but took it out because it looked like Nity nibbled on the toy, concerned over eating plastic."
+        },
+        {
+            "Date": "2025-10-23 00:00:00",
+            "Time": "~17:15",
+            "Event": "Hunting/searching ",
+            "Cameras": "IPCs right",
+            "Details": "Nity was going all over the place and it seemed like she searched for small prey in the sand, under a rock and then climbed up to the small bridge platform to stick her tentacles in the small spaces in between the glass and the platform (think she found something there before?). Went to yesterdays crab disposal place as well ..."
+        },
+        {
+            "Date": "2025-10-22 00:00:00",
+            "Time": "16:45:00",
+            "Event": "White shrimp on iPad, canister, bridge, TV choices",
+            "Cameras": "IPCs right + Handy",
+            "Details": "Choice, but then rejected. Food menu choice was rejected (pointing / reaching \"in between\" cards). Canister => long excursion, remained on bridge to watch TV. Later returned at unknown time to her den. No interest in food at 18:30, but selects soccer!"
+        },
+        {
+            "Date": "2025-10-22 00:00:00",
+            "Time": "09:45:00",
+            "Event": "TV selection with iPads, canister excursion, bridge",
+            "Cameras": "IPCs right + Handy",
+            "Details": "as it says; canister ~ 10:00. Back from bridge into right side ~ 10:30?"
+        },
+        {
+            "Date": "2025-10-20 00:00:00",
+            "Time": "08:08:00",
+            "Event": "Excrements in front of Wolfgang; menu cards; excursion; left side return from bridge, food menu cards",
+            "Cameras": "IPCs left and right + Handy",
+            "Details": "8:08 excrements; 11:53 menu card elephants with Kyoko. 16:00 lots of play with Wolfgang, TV menu heart beat. 16:15 canister excursion, 16:32 jumps into the left tank! 18:10 menu cards: electronic version does not yet work (too new?); tiger out of red or whi9t4e or tiger shrimp!"
+        },
+        {
+            "Date": "2025-10-19 00:00:00",
+            "Time": "14:20:00",
+            "Event": "TV choice; iPad menu card, canister, left side hunt.",
+            "Cameras": "IPCs left and right + Handy",
+            "Details": "14:34 Very interested in langustino video on iPad. 14:39 enters canister in front of Wolfgang. On bridge, Nity goes to the left side and captures some small crabs there. The oister is to difficult for her. At 18:30 she's getting a langustino in the box with the elephant on top, in the left tank. Doesn't work at all, probably the langustino wasn't fresh enough (did not look good anymore, and she didn't try to eat it). Later I place her back onto the bridge, she then returns from there into the right tank. I give her the oister (fresh, smells good). 19:46: she carries it away from her den, places the oister at the front of the glass towards the right side of the tank. At 19:50 she ejects the remains of the part of the oister she ate."
+        },
+        {
+            "Date": "2025-10-19 00:00:00",
+            "Time": "12:28:00",
+            "Event": "Digging in the sand",
+            "Cameras": "IPCs right",
+            "Details": "Before she started digging in the sand, seemed like she caught a shrimp (?). Seemed like hunting behaviour in general."
+        },
+        {
+            "Date": "2025-10-17 00:00:00",
+            "Time": "07:39:00",
+            "Event": "Dance moves with me? TV choice, excursion",
+            "Cameras": "IPCs right + Handy",
+            "Details": "Again 7:46. Menu: no to most TV, no to canister, but heart beat selected. 9:30 excursion, by herself from bridge back into tank. 15:59, Lots of play with Kyoko and Wolfgang after 17:00. 17:37 => soccer (against food and other channels). 21:00 red shrimp; while eating she gesticulates that the light should stay on. "
+        },
+        {
+            "Date": "2025-10-16 00:00:00",
+            "Time": "17:50:00",
+            "Event": "TV cards, canister ",
+            "Cameras": "IPCs right + Handy",
+            "Details": "Menu tv: star wars. 18:10 Nity goes into canister in front of Wolfgang. "
+        },
+        {
+            "Date": "2025-10-14 00:00:00",
+            "Time": "07:30:00",
+            "Event": "High touch, finger play, light please gesture, TV menu card choice, food menu",
+            "Cameras": "IPCs right",
+            "Details": "As it says. Soccer (many other choices offered). White shrimp (without head, among many choices). Straw box (without straw --- elefant on top, but after 20~30 minutes, she needs my help after all to open it). 20:00 fresh oyster "
+        },
+        {
+            "Date": "2025-10-14 00:00:00",
+            "Time": "16:47:00",
+            "Event": "Barbie hair, interactions, enters canister 2x, weighing",
+            "Cameras": "IPCs right + Handy + YouTube",
+            "Details": "As it says. 100g. 17:58 menu choices, finally choice between red shrimp or canister => canister:  I insert it, and she enters it, the third time today!!! 19:45: clear indication: leave the light on!!! Music please. Canister please. Then again canister, and again!!! Video choice => Heart beat. 20:45: clear gesturing that light should stay on. I 21:22 finally she let's me turn off the TV and light. "
+        },
+        {
+            "Date": "2025-10-13 00:00:00",
+            "Time": "07:40:00",
+            "Event": "High-touch, food menu, box",
+            "Cameras": "IPCs right",
+            "Details": "Menu: no interest in TV, but white or tiger => tiger (she didn't eat for ~40h). 7:49 Fingerspiel with Wolfgang and Kyoko. TV menu => star wars. 8:20 tiger shrimp from open box (new sponge was too uplifting to hold the elephant). 9:35 after eating, no interest in being touched or in TV cards --- just wants to rest after feeding. 9:49: She quickly grabs one of the very small live shrimp from afar and eats it!"
+        },
+        {
+            "Date": "2025-10-11 00:00:00",
+            "Time": "07:45:00",
+            "Event": "Barbie hair; menu cards, finger play, dancing & music; black dots on beige ground pattern! Essen aus Kiste.",
+            "Cameras": "IPCs right + Handy + YouTube",
+            "Details": "Menu card: canister or outdoors => no interest; loudspeaker: pointing towards it, shocking blue / venus, Salsa dance, Yellow submarine, Britney Spears, .... Black dots on beige skin in me-facing \"side\" of her body!!! She reacts a lot to the bluetooth loudspeaker, and to the dansing with me. ~ 9:00 loudspeaker or Star Wars => Star Wars with sound. Later: ~ 12:00 soccer chosen. Later 12:15 red shrimp chosen; challenge inside straw box, closed by putting big elephant on it. 12:46 she manages to open the straw box (without the strow, but with the elephant on top!!!)."
+        },
+        {
+            "Date": "2025-10-10 00:00:00",
+            "Time": "20:05:00",
+            "Event": "Excrement gesturing, play with Barbie hairs ",
+            "Cameras": "IPCs right + Handy + YouTube",
+            "Details": "While she was playing in the dark she suddenly pointed to one area and I saw there were fresh excrements floating around, and it was very clear that she wanted to communication that I should clean that up, really interesting. 20:20 play with female Barbie doll hair. "
+        },
+        {
+            "Date": "2025-10-10 00:00:00",
+            "Time": "07:45:00",
+            "Event": "Mornining high-five, finger play, TV menu card, food menu (mixed with TV). Once more TV menu at ~ 10:30. TV menu. 18:00 again Star wars menu card ",
+            "Cameras": "IPCs right",
+            "Details": "Heart beat OR octopuses => heart beat; ~ 8:13: offer of white or tiger --- she points in between or above. Wolfgang then shows red or heart beat => she points to red shrimp. At around 10:30, i again offered her many choices of TV Programms and she finally selected Star Wars. "
+        },
+        {
+            "Date": "2025-10-09 00:00:00",
+            "Time": "16:30? ",
+            "Event": "TV menu ",
+            "Cameras": "IPCs right",
+            "Details": "Heart beat OR elephants => elephants "
+        },
+        {
+            "Date": "2025-10-08 00:00:00",
+            "Time": "09:00:00",
+            "Event": "High touch, Menu cards TV, menu cards food, straw box",
+            "Cameras": "IPCs right",
+            "Details": "Heart beat OR soccer => heart beat. White shrimp or tiger shrimp => tiger. Open straw box 9:25: entering from top is still a challenge, but success."
+        },
+        {
+            "Date": "2025-10-07 00:00:00",
+            "Time": "17:05:00",
+            "Event": "TV menu choice",
+            "Cameras": "IPCs right",
+            "Details": "Heart beat OR elephants => heart beat"
+        },
+        {
+            "Date": "2025-10-06 00:00:00",
+            "Time": "11:00:00",
+            "Event": "Menu food",
+            "Cameras": "IPCs right",
+            "Details": "White or Tiger => tiger."
+        },
+        {
+            "Date": "2025-10-05 00:00:00",
+            "Time": "17:00:00",
+            "Event": "Long play with mirror. Play with elephand toy. Menu-card TV.",
+            "Cameras": "IPCs right + Handy",
+            "Details": "Very long exploration phase of mirror. Soccer or elephants => elephants. While watching, very interested in elephant toy. "
+        },
+        {
+            "Date": "2025-10-04 00:00:00",
+            "Time": "14:27:00",
+            "Event": "Food menu choice. Nity goes into canister",
+            "Cameras": "IPCs right + Handy",
+            "Details": "After many examples and showing how it is done, including videos from previous excursions, Nity enters the canister in front of me. Lots of travels. Before that menu choice, red shrimp choosen."
+        },
+        {
+            "Date": "2025-10-04 00:00:00",
+            "Time": "07:50:00",
+            "Event": "High touch, Menu cards TV",
+            "Cameras": "IPCs right",
+            "Details": "Menu card: elephant or soccer => elephant. Gesturing to Wolfgang and Kyoko. Touch hand. "
+        },
+        {
+            "Date": "2025-10-03 00:00:00",
+            "Time": "16:10:00",
+            "Event": "Interaction with Esther",
+            "Cameras": "IPCs right",
+            "Details": "Esther trieed to interact with Nity, didn't seem to show much interest... maybe a little bit of headbobbing? Mostly tried to pull the pipe in front of her den closer to her, to close the opening. Esther gave her the shell half too to use. Was startled by her hand, but also reached carefully to the glas when Esther put her hand on it... actually some light fingerplay as well! And little hightouch!"
+        },
+        {
+            "Date": "2025-10-03 00:00:00",
+            "Time": "14:32:00",
+            "Event": "Left-right motion in front of mirror",
+            "Cameras": "IPCs right + Handy",
+            "Details": "Looks like Nity is experimenting with the mirror and trying out the motion synchroncity with its mirror-image."
+        },
+        {
+            "Date": "2025-10-03 00:00:00",
+            "Time": "08:00:00",
+            "Event": "Many interactions with humans and mirror; TV selection",
+            "Cameras": "IPCs",
+            "Details": "TV selection: soccer. Playing with muppets with Kyoko. 8:53 \"squatting\" with Kyoko. Interest in hair of Kyoko. Long play with gripper."
+        },
+        {
+            "Date": "2025-10-02 00:00:00",
+            "Time": "20:35:00",
+            "Event": "Reaction to octopus muppet ",
+            "Cameras": "IPCs",
+            "Details": "Strong reactions to suckers on arms of octopus muppet."
+        },
+        {
+            "Date": "2025-10-01 00:00:00",
+            "Time": "07:30:00",
+            "Event": "Play, High touch, Menu cards TV, menu cards food, crab on other side, feed from hand",
+            "Cameras": "IPCs right + Handy",
+            "Details": "Finger play, High touch good morning, nibbling on hand, menu cards TV soccer or elphants => soccer, watching; menu cards food red or white shrimp => white shrimp, shown frozen; before that clear recognition of crab in left tank; feed shrimp from hand"
+        },
+        {
+            "Date": "2025-09-29 00:00:00",
+            "Time": "09:57:00",
+            "Event": "Food selection ",
+            "Cameras": "IPCs",
+            "Details": "Offer of choice red or white shrimp => clear selection of red shrimp."
+        },
+        {
+            "Date": "2025-09-29 00:00:00",
+            "Time": "09:09:00",
+            "Event": "Menu card selection",
+            "Cameras": "IPCs",
+            "Details": "Offer of choice between elephant-TV or shrimp => clear selection of elephants (even though she didn't eat since Saturday evening!)."
+        },
+        {
+            "Date": "2025-09-27 00:00:00",
+            "Time": "16:40:00",
+            "Event": "Mirror",
+            "Cameras": "IPCs + phone Kyoko + Wolfgang",
+            "Details": "After going with Wolfgang to the bathroom mirror, she uses the mirror in the tank extensively to close her pipe-den."
+        },
+        {
+            "Date": "2025-09-23 00:00:00",
+            "Time": "14:29:00",
+            "Event": "Sand play ",
+            "Cameras": "IPCs + phone Kyoko ",
+            "Details": "Playing with sand with arms, blowing it around "
+        },
+        {
+            "Date": "2025-09-21 00:00:00",
+            "Time": "11:20:00",
+            "Event": "Food ",
+            "Cameras": "IPCs ",
+            "Details": "15 minutes earlier i showed her the menu card with the red when I came back at 11:20 I turned on the light showed her the menu card again showed her the shrimp then ate visibly in front of her and then offered to shrimp through the black short plastic gripper and she had to fight hard for it, now she's eating it in her coffee cup. "
+        },
+        {
+            "Date": "2025-09-19 00:00:00",
+            "Time": "16:16:00",
+            "Event": "Finger play",
+            "Cameras": "IPCs",
+            "Details": "First time, pointed to me, approached, then played for quite some time the finger game on the glass wall. A bit later, it touched my hand in the water."
+        },
+        {
+            "Date": "2025-09-18 00:00:00",
+            "Time": "19:44:00",
+            "Event": "Excrements",
+            "Cameras": "top right",
+            "Details": "NO ejected excrements from resting place, towards the bridge. I suck it away."
+        },
+        {
+            "Date": "2025-09-17 00:00:00",
+            "Time": "16:50:00",
+            "Event": "\"bobbing\"",
+            "Cameras": "IPCs",
+            "Details": "New octopus vulgaris makes \"bobbing\" motion, mirroring/acknowledging Kyoko's \"bobbing\"."
+        } ]}
