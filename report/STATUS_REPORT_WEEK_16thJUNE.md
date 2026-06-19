@@ -23,7 +23,7 @@ Built a custom web-based labeling tool to annotate time patches from the ethogra
 
 **Screenshot — Labeler UI:**
 
-![Labeler UI](ui_labeler.png)
+![Labeler UI](images/ui_labeler.png)
 *(screenshot: `notes/ui_labeler.png` — take with Cmd+Shift+4 on http://localhost:8001)*
 
 **Labeled dataset:**
@@ -64,7 +64,7 @@ After each training run, misclassified frames were reviewed in a second UI at `h
 
 **Screenshot — Review UI:**
 
-![Review UI](ui_review.png)
+![Review UI](images/ui_review.png)
 *(screenshot: `notes/ui_review.png` — take with Cmd+Shift+4 on http://localhost:8002)*
 
 ---
