@@ -26,6 +26,10 @@ segmented-output/
 # Cloned dependency (nested git repo)
 GroundingDINO/
 
+# W&B local run cache
+phase2/wandb/
+wandb/
+
 # Claude Code local settings
 .claude/
 
