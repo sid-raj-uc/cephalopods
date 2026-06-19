@@ -110,6 +110,35 @@ Checkpoint: `data/frames/clip_mlp_best.pt`
 
 ---
 
+#### Exp 20 — CLIP Zero-Shot Baseline (`phase2/exp20_clip_zeroshot.ipynb`)
+
+To understand how much training helps, we tested plain CLIP with no training — just text-image similarity between 4 prompt pairs and each frame, no learned weights.
+
+Best prompt pair tested:
+- **visible** → `"octopus present, arms extended, aquarium security camera"`
+- **hidden** → `"octopus absent, empty tank, aquarium security camera"`
+
+| Metric | Value |
+|---|---|
+| Test accuracy | 55.7% |
+| ROC-AUC | **0.49** (random chance) |
+| Visible recall | 0.23 — misses 77% of octopus frames |
+| Hidden recall | 0.81 — biased toward predicting hidden |
+
+CLIP zero-shot essentially fails at this task — ROC-AUC of 0.49 means it has no real discriminative ability beyond guessing. The model is biased toward predicting "hidden" regardless of content, which inflates accuracy slightly above 50% given the class imbalance.
+
+**Full model comparison:**
+
+| Model | Accuracy | Notes |
+|---|---|---|
+| CLIP zero-shot (exp20) | 55.7% | Near-random, ROC-AUC ≈ 0.49 |
+| CLIP + Linear probe (exp17) | 88.8% | 1,026 params trained |
+| CLIP + MLP 512→256→64 (exp18) | **98.1%** | 147,906 params trained |
+
+**Key takeaway:** CLIP's generic visual-semantic features have almost no signal for octopus presence/absence in aquarium footage. The 42% accuracy gap between zero-shot and MLP (55.7% → 98.1%) is entirely from training the classifier head on our labeled dataset. This validates the labeling effort and the MLP architecture choice.
+
+---
+
 ### 5 — Inference Benchmark (`phase2/exp19_inference_benchmark.ipynb`)
 
 End-to-end latency on Apple M5 (MPS) for a single image, measured over 100 runs:
