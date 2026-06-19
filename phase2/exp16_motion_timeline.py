@@ -21,7 +21,7 @@ import json, sys, argparse
 import numpy as np
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 
 sys.path.insert(0, str(Path(__file__).parent))
 from motion_detector import scan_motion
@@ -176,16 +176,23 @@ def process_entry(entry: dict) -> dict:
     print(f"  Scanning {len(avail)} cameras in parallel …", flush=True)
 
     camera_results = {}
+    CAM_TIMEOUT = 360  # seconds — kill whole batch if any camera stalls beyond this
     with ThreadPoolExecutor(max_workers=min(MAX_WORKERS, len(avail))) as pool:
         futures = {
             pool.submit(scan_camera, name, url): name
             for name, url in avail.items()
         }
-        for fut in as_completed(futures):
-            name, ts, scores = fut.result()
-            camera_results[name] = (ts, scores)
-            status = f"{len(scores)}s" if len(scores) else "failed"
-            print(f"    {name}: {status}", flush=True)
+        try:
+            for fut in as_completed(futures, timeout=CAM_TIMEOUT):
+                name, ts, scores = fut.result()
+                camera_results[name] = (ts, scores)
+                status = f"{len(scores)}s" if len(scores) else "failed"
+                print(f"    {name}: {status}", flush=True)
+        except FuturesTimeout:
+            for fut, name in futures.items():
+                if not fut.done():
+                    print(f"    {name}: timeout (>{CAM_TIMEOUT}s) — skipped", flush=True)
+                    camera_results[name] = (np.array([]), np.array([]))
 
     vote_grid, cam_grids = build_vote_grid(camera_results)
     windows = build_windows(vote_grid, cam_grids)
