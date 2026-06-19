@@ -7993,6 +7993,67 @@
   },
   {
     "date": "2025-10-03",
+    "time": "08:00",
+    "event": "no-motion-1",
+    "cameras_col": "",
+    "details": "",
+    "status": "indexed",
+    "session": "O-vulgaris-Nity-2025-9-17--",
+    "cameras": [
+      {
+        "name": "Left Back",
+        "available": false,
+        "reason": "not_in_session"
+      },
+      {
+        "name": "Left Front",
+        "available": false,
+        "reason": "not_in_session"
+      },
+      {
+        "name": "Left Top",
+        "available": false,
+        "reason": "not_in_session"
+      },
+      {
+        "name": "Right Back",
+        "available": true,
+        "video_url": "https://repo.octopus-intelligence.org/public/O-vulgaris-Nity-2025-9-17--/Right%20Back/Local/2025-10-03/080001--vv-1.mp4",
+        "confidence_score": null,
+        "caption": null,
+        "event_offset": "08:00"
+      },
+      {
+        "name": "Right Front",
+        "available": true,
+        "video_url": "https://repo.octopus-intelligence.org/public/O-vulgaris-Nity-2025-9-17--/Right%20Front/Local/2025-10-03/080001--vv-1.mp4",
+        "confidence_score": null,
+        "caption": null,
+        "event_offset": "08:00"
+      },
+      {
+        "name": "Right Left",
+        "available": false,
+        "reason": "not_in_session"
+      },
+      {
+        "name": "Right Right",
+        "available": false,
+        "reason": "not_in_session"
+      },
+      {
+        "name": "Right Top",
+        "available": true,
+        "video_url": "https://repo.octopus-intelligence.org/public/O-vulgaris-Nity-2025-9-17--/Right%20Top/Local/2025-10-03/080001--vv-1.mp4",
+        "confidence_score": null,
+        "caption": null,
+        "event_offset": "08:00"
+      }
+    ],
+    "motion_timeline": []
+  },
+  {
+    "date": "2025-10-03",
     "time": "16:10",
     "event": "Interaction with Esther",
     "cameras_col": "IPCs right",

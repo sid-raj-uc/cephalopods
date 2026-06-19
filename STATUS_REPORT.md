@@ -1,7 +1,152 @@
 # Cephalopod Behavioral Captioning — Status Report
 **Project:** *O. vulgaris* (Nity) Behavioral Analysis  
-**Last Updated:** 2026-06-13  
+**Last Updated:** 2026-06-19  
 **Author:** Siddharth Raj
+
+---
+
+## Week of 2026-06-16 — Octopus Presence Classifier
+
+### Overview
+
+Built and trained a binary classifier to detect whether Nity (*O. vulgaris*) is visibly present in a frame. Pipeline: manual frame labeling via custom UI → CLIP feature extraction → MLP classifier. Achieved **98.1% test accuracy**.
+
+---
+
+### 1 — Frame Labeling UI (`ui/labeler.py`)
+
+Built a custom web-based labeling tool to annotate time patches from the ethogram videos as `visible` (octopus present) or `hidden` (octopus not visible). Runs locally at `http://localhost:8001`.
+
+**How it works:**
+- Loads `data/ethogram_index.json` — all indexed events with camera URLs
+- Streams video directly from the remote server (`repo.octopus-intelligence.org`) — no full download needed
+- User scrubs through the video timeline and marks time windows as visible/hidden
+- Patches saved in real time to `data/octopus_patches.json`
+
+**Screenshot — Labeler UI:**
+
+![Labeler UI](notes/ui_labeler.png)
+*(screenshot: `notes/ui_labeler.png` — take with Cmd+Shift+4 on http://localhost:8001)*
+
+**Labeled dataset:**
+- 239 patches across 29 unique videos
+- 154 visible patches, 85 hidden patches
+
+---
+
+### 2 — Frame Extraction (`phase2/extract_frames.py`)
+
+Extracted 1 JPEG frame per second from each labeled time window using `ffmpeg`. Frames saved to `data/frames/visible/` and `data/frames/hidden/`.
+
+**Class imbalance:** 3750 visible vs 1636 hidden (~2.3:1 ratio). Addressed by oversampling the hidden class with augmentation:
+
+| Augmentation | Description |
+|---|---|
+| Horizontal flip + brightness/contrast jitter | Copy 1 per hidden frame |
+| Gaussian noise + random crop+resize | Copy 2 per hidden frame |
+
+Script: `phase2/augment_hidden.py` → saves to `data/frames/hidden_aug/`
+
+**Final dataset:**
+
+| Class | Frames |
+|---|---|
+| visible | 3,750 |
+| hidden (original) | 1,636 |
+| hidden (augmented) | 3,272 |
+| **Total** | **8,658** |
+
+---
+
+### 3 — Misclassification Review UI (`ui/review_errors.py`)
+
+After each training run, misclassified frames were reviewed in a second UI at `http://localhost:8002`. Shows FP (hidden predicted as visible) and FN (visible predicted as hidden) one at a time with keyboard shortcuts to flip or skip.
+
+**Key design:** Flipping a label moves the JPEG between `visible/` and `hidden/` folders and updates `manifest.csv` directly — patches.json is never touched, so corrections are at the individual frame level.
+
+**Screenshot — Review UI:**
+
+![Review UI](notes/ui_review.png)
+*(screenshot: `notes/ui_review.png` — take with Cmd+Shift+4 on http://localhost:8002)*
+
+---
+
+### 4 — Model Training
+
+#### Exp 17 — CLIP Linear Probe (`phase2/exp17_clip_classifier.ipynb`)
+
+Frozen CLIP ViT-B/32 features (512-dim) → single linear layer (1,026 params).
+
+| Metric | Value |
+|---|---|
+| Test accuracy | 88.8% |
+| Hidden F1 | 0.90 |
+| Visible F1 | 0.87 |
+| Misclassified | 194 / 1,732 (11.2%) |
+
+Class weights applied to loss to handle imbalance. Baseline result — the linear layer underfits the feature space.
+
+#### Exp 18 — CLIP MLP (`phase2/exp18_clip_mlp.ipynb`)
+
+Same frozen CLIP features → MLP head: `512 → 256 → ReLU → Dropout(0.3) → 64 → ReLU → Dropout(0.3) → 2` (147,906 params).
+
+| Metric | Value |
+|---|---|
+| Test accuracy | **98.1%** |
+| Hidden F1 | **0.98** |
+| Visible F1 | **0.98** |
+| Misclassified | ~35 / 1,732 |
+
+No overfitting — val accuracy tracked train accuracy throughout. The MLP capacity was sufficient to find the non-linear decision boundary that a single linear layer could not.
+
+**Comparison:**
+
+| Model | Params | Test Acc | Hidden F1 | Visible F1 |
+|---|---|---|---|---|
+| Linear probe (exp17) | 1,026 | 88.8% | 0.90 | 0.87 |
+| MLP (exp18) | 147,906 | **98.1%** | **0.98** | **0.98** |
+
+Checkpoint: `data/frames/clip_mlp_best.pt`
+
+---
+
+### 5 — Inference Benchmark (`phase2/exp19_inference_benchmark.ipynb`)
+
+End-to-end latency on Apple M5 (MPS) for a single image, measured over 100 runs:
+
+| Stage | Mean (ms) | Std (ms) |
+|---|---|---|
+| Image load from disk | 13.9 | 3.1 |
+| CLIP preprocess | 18.1 | 1.6 |
+| CLIP encode (ViT-B/32) | 9.0 | 3.0 |
+| MLP forward | 0.6 | 0.2 |
+| **Total end-to-end** | **41.6** | **5.5** |
+
+**Throughput: 24 images/second** (single image, no batching)
+
+Real-time capability:
+
+| Camera FPS | Headroom | Status |
+|---|---|---|
+| 1 fps | 24× | ✓ real-time |
+| 5 fps | 4.8× | ✓ real-time |
+| 10 fps | 2.4× | ✓ real-time |
+| 25 fps | 1.0× | ✗ borderline |
+| 30 fps | 0.8× | ✗ too slow |
+
+**With batching** (pre-loaded images, no disk I/O):
+
+| Batch size | Per-image (ms) | Throughput |
+|---|---|---|
+| 1 | 4.7 | 211 img/s |
+| 4 | 3.3 | 306 img/s |
+| 8 | 2.3 | 432 img/s |
+| 16 | 2.2 | 462 img/s |
+| 32 | 2.0 | **493 img/s** |
+
+The bottleneck is disk I/O + CLIP preprocessing (31ms / 75% of total), not the model itself. For real-time aquarium scanning, pre-buffering frames would push throughput to 400+ img/s.
+
+---
 
 ---
 

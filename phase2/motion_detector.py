@@ -10,6 +10,7 @@ Works on local files and remote HTTP streams.
 
 import logging
 import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -38,14 +39,29 @@ def _stream_gray_frames(source: str, fps: float = 1.0):
     frame_size = _GRAY_SIZE * _GRAY_SIZE
     interval = 1.0 / fps
     ts = 0.0
+    FRAME_TIMEOUT = 30  # seconds — kill ffmpeg if no frame arrives within this
+
+    def _read_frame():
+        return proc.stdout.read(frame_size)
+
     while True:
-        raw = proc.stdout.read(frame_size)
-        if len(raw) < frame_size:
+        buf = [None]
+        t = threading.Thread(target=lambda: buf.__setitem__(0, _read_frame()), daemon=True)
+        t.start()
+        t.join(timeout=FRAME_TIMEOUT)
+        if t.is_alive():
+            proc.kill()
+            break
+        raw = buf[0]
+        if raw is None or len(raw) < frame_size:
             break
         yield ts, np.frombuffer(raw, dtype=np.uint8).reshape((_GRAY_SIZE, _GRAY_SIZE))
         ts += interval
     proc.stdout.close()
-    proc.wait()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
 
 
 def scan_motion(
