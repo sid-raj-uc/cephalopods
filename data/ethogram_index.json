@@ -15,7 +15,7 @@
     "event": "Google Meet with Wolfgang and Kyoko",
     "cameras_col": "Right",
     "details": "Clear reaction; When we returned ~ 19:20 live blue crab.",
-    "status": "indexed",
+    "status": "annotated",
     "session": "O-vulgaris-Nity-2026-2-20--",
     "cameras": [
       {
@@ -300,7 +300,16 @@
           "Right Top": 0.007
         }
       }
-    ]
+    ],
+    "annotation": {
+      "start": "16:50",
+      "end": "18:36",
+      "caption": "octopus engaging in real-time communication with humans over a live video conference through a digital screen.",
+      "cameras_used": [
+        "Right Left"
+      ],
+      "annotated_at": "2026-06-19T17:58:18.843912"
+    }
   },
   {
     "date": "2026-04-05",
@@ -308,7 +317,7 @@
     "event": "Nity eats orange",
     "cameras_col": "Right  + Handy",
     "details": "",
-    "status": "indexed",
+    "status": "annotated",
     "session": "O-vulgaris-Nity-2026-2-20--",
     "cameras": [
       {
@@ -578,7 +587,16 @@
           "Right Top": 0.068
         }
       }
-    ]
+    ],
+    "annotation": {
+      "start": "26:20",
+      "end": "27:13",
+      "caption": "Octopus accepting orange piece using tentacles and eating it, provided by human.",
+      "cameras_used": [
+        "Right Left"
+      ],
+      "annotated_at": "2026-06-19T16:40:26.286310"
+    }
   },
   {
     "date": "2026-03-20",
@@ -586,7 +604,7 @@
     "event": "Straw box",
     "cameras_col": "Right",
     "details": "Nity opens straw box with instruction video, even though being distracted by blue crab in other tank.",
-    "status": "indexed",
+    "status": "annotated",
     "session": "O-vulgaris-Nity-2026-2-20--",
     "cameras": [
       {
@@ -787,7 +805,14 @@
           "Right Top": 0.067
         }
       }
-    ]
+    ],
+    "annotation": {
+      "start": "17:25",
+      "end": "20:10",
+      "caption": "octopus opens a straw box using an instructional video and eats the food inside the box, while being distracted by a blue crab in another tank",
+      "cameras_used": [],
+      "annotated_at": "2026-06-19T17:19:28.737179"
+    }
   },
   {
     "date": "2026-03-12",
@@ -795,7 +820,7 @@
     "event": "NO card selection",
     "cameras_col": "Right",
     "details": "Nity is awake, but points to NO card, retires into den after morning greetings.",
-    "status": "indexed",
+    "status": "annotated",
     "session": "O-vulgaris-Nity-2026-2-20--",
     "cameras": [
       {
@@ -1042,7 +1067,14 @@
           "Right Top": 0.073
         }
       }
-    ]
+    ],
+    "annotation": {
+      "start": "26:20",
+      "end": "27:04",
+      "caption": "Octopus performs a morning greeting interaction with a human and then returns to its den",
+      "cameras_used": [],
+      "annotated_at": "2026-06-19T17:45:38.252902"
+    }
   },
   {
     "date": "2026-03-07",
@@ -1050,7 +1082,7 @@
     "event": "Joystick light; caister",
     "cameras_col": "Right",
     "details": "Joystick strongly, turns on light. TV choice. 16:35 Canister excursion, afterwards TV choice, *extremely active* (typical after long excursion).",
-    "status": "indexed",
+    "status": "annotated",
     "session": "O-vulgaris-Nity-2026-2-20--",
     "cameras": [
       {
@@ -1297,7 +1329,14 @@
           "Right Top": 0.309
         }
       }
-    ]
+    ],
+    "annotation": {
+      "start": "08:02",
+      "end": "08:30",
+      "caption": "Octopus forcefully pushes a joystick, activating lights",
+      "cameras_used": [],
+      "annotated_at": "2026-06-20T05:19:57.809976"
+    }
   },
   {
     "date": "2026-03-02",
@@ -1606,7 +1645,7 @@
     "event": "Attack Joystick",
     "cameras_col": "Right",
     "details": "Nity violently attacked the joystick, removed the silicon cover and popped out the stick.",
-    "status": "indexed",
+    "status": "annotated",
     "session": "O-vulgaris-Nity-2026-2-20--",
     "cameras": [
       {
@@ -1929,7 +1968,16 @@
           "Right Front": 0.065
         }
       }
-    ]
+    ],
+    "annotation": {
+      "start": "13:02",
+      "end": "14:30",
+      "caption": "Attack Joystick",
+      "cameras_used": [
+        "Right Top"
+      ],
+      "annotated_at": "2026-06-20T06:19:00.181681"
+    }
   },
   {
     "date": "2026-02-27",
