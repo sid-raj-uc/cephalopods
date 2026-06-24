@@ -1971,12 +1971,12 @@
     ],
     "annotation": {
       "start": "13:02",
-      "end": "14:30",
-      "caption": "Attack Joystick",
+      "end": "14:24",
+      "caption": "Octopus attacks the joystick with its tentacles.",
       "cameras_used": [
         "Right Top"
       ],
-      "annotated_at": "2026-06-20T06:19:00.181681"
+      "annotated_at": "2026-06-22T18:22:49.189754"
     }
   },
   {
@@ -2206,7 +2206,7 @@
     "event": "Into canister",
     "cameras_col": "Right",
     "details": "In front of me, waiting.",
-    "status": "indexed",
+    "status": "annotated",
     "session": "O-vulgaris-Nity-2025-9-17--",
     "cameras": [
       {
@@ -2529,7 +2529,14 @@
           "Right Right": 0.04
         }
       }
-    ]
+    ],
+    "annotation": {
+      "start": "24:52",
+      "end": "025:17",
+      "caption": "Octopus going inside a canister that is lying near it.",
+      "cameras_used": [],
+      "annotated_at": "2026-06-22T20:20:15.081902"
+    }
   },
   {
     "date": "2026-02-13",
