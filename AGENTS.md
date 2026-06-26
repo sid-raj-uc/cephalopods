@@ -96,7 +96,19 @@ label cleanliness), so a higher number does not mean a better model.
 All of these live in **`phase2/octo-clip-extraction/`**. Each script computes the repo root as
 `Path(__file__).resolve().parents[2]`; notebooks discover it by walking up for `data/`+`weights/`.
 
-- `phase2/octo-clip-extraction/exp26_remote_scan.py` — streams remote videos (ffmpeg HTTP → image2pipe), **motion-gates
+- **`phase2/octo-clip-extraction/extract_octopus_clips.py` — THE clip extractor (use this).**
+  The clean, consolidated pipeline: octopus detection (`clip_mlp_best.pt`, letterbox) + motion
+  detection (`scan_motion_area`, the correct ABSOLUTE method) + 20s clip extraction, in one script.
+  Per video it makes two 1 fps ffmpeg passes (octopus, then motion via `scan_motion_area`), slides a
+  non-overlapping 20s window, and keeps a window when **>50% of frames are octopus-visible AND mean
+  absolute motion ≥ `--motion-thresh`** (default 0.005, matching exp30). Extracts via ffmpeg
+  byte-range copy. Outputs to a FRESH namespace that does not touch the old dirs:
+  `data/octopus_clips/{date}/{segment}/...`, index `data/octopus_clips.json`, ledger
+  `data/octopus_clips_processed.json`. Flags: `--limit`, `--date`, `--motion-thresh`, `--visible-frac`.
+  **This supersedes the exp27 + exp28 + exp30 chain** — because both gates are correct here, clips
+  come out clean in one pass, so exp28/exp30 are no longer required (keep them only as optional audits).
+- `phase2/octo-clip-extraction/exp26_remote_scan.py` — a different tool: harvests training *frames*
+  (visible/hidden) to `data/scanned_frames/`, not clips. streams remote videos (ffmpeg HTTP → image2pipe), **motion-gates
   then classifies**. Per video it first runs `scan_motion_area` (per-second absolute changed-pixel
   fraction), then streams frames through the letterbox filter
   `scale=224:224:force_original_aspect_ratio=decrease,pad=224:224:-1:-1:color=gray`. Each frame is
@@ -109,12 +121,14 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   gained `n_classified,n_static,frac_static,motion_mean` (old file auto-rotated to
   `scan_summary_pre_motion.csv`). Tracks done videos in `data/processed_videos.json` (the canonical
   "already processed" ledger — always update it).
-- `phase2/octo-clip-extraction/exp27_octopus_clips.ipynb` — clip extractor. 20s clips, keep when motion gate passes
-  AND >50% of frames are octopus-visible, 1fps sampling, Right cameras.
-- `phase2/octo-clip-extraction/exp28_verify_clips.py` — re-runs octopus check over extracted clips.
-- `phase2/octo-clip-extraction/exp30_audit_clip_motion.py` — re-audits verified clips with `scan_motion_area`; writes
-  `data/clips_motion_audit.json` + `data/clips_motion_survivors.txt`. Non-survivors (flicker-only)
-  were deleted from `data/octopus_clips_verified/`.
+- `phase2/octo-clip-extraction/exp27_octopus_clips.ipynb` — **SUPERSEDED** by `extract_octopus_clips.py`.
+  Old clip extractor; gated on the buggy per-video **normalized** motion (`motion/motion.max()`), so it
+  over-extracts. Kept for reference only — do not use for new extraction.
+- `phase2/octo-clip-extraction/exp28_verify_clips.py` — optional audit: re-runs the octopus check over
+  extracted clips. No longer required in the main flow (the consolidated extractor already gates on octopus).
+- `phase2/octo-clip-extraction/exp30_audit_clip_motion.py` — optional audit: re-audits clips with `scan_motion_area`;
+  writes `data/clips_motion_audit.json` + `data/clips_motion_survivors.txt`. No longer required in the main
+  flow (the consolidated extractor already gates on absolute motion).
 - `phase2/octo-clip-extraction/exp29_motion_debug.ipynb`, `phase2/octo-clip-extraction/exp31_saliency.ipynb` — forensics: false-motion debug,
   and occlusion saliency (what pixels make the model say "octopus").
 
