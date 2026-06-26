@@ -166,7 +166,8 @@ def run_clip_scan(video_path: Path, model, processor, text_features, device) -> 
 
 
 def run_motion_scan(video_path: Path) -> tuple[np.ndarray, np.ndarray]:
-    from phase2.motion_detector import scan_motion
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "octo-clip-extraction"))  # motion_detector moved here
+    from motion_detector import scan_motion
     return scan_motion(str(video_path), fps=1.0, smooth_window=5)
 
 

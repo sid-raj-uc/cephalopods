@@ -23,7 +23,7 @@ from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent / "octo-clip-extraction"))  # motion_detector moved here
 from motion_detector import scan_motion
 
 PROJECT    = Path(__file__).resolve().parent.parent

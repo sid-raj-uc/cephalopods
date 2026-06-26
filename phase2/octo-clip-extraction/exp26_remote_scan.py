@@ -37,7 +37,7 @@ from PIL import Image
 
 from motion_detector import scan_motion_area
 
-PROJECT   = Path(__file__).resolve().parent.parent
+PROJECT   = Path(__file__).resolve().parents[2]   # repo root (file is phase2/octo-clip-extraction/)
 REGISTRY  = PROJECT / "data" / "processed_videos.json"
 # Octopus model: clip_mlp_best.pt (letterbox + 66 verified hard negs) — set per
 # explicit instruction for the scanner, overriding the clip_mlp_letterbox_v1 default.

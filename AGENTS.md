@@ -15,6 +15,8 @@ extracting behavioral clips.
   cd phase2 && WANDB_SILENT=true python3 -m jupyter nbconvert --to notebook --execute --inplace \
     --ExecutePreprocessor.timeout=3600 --ExecutePreprocessor.kernel_name=octopus-venv <nb>.ipynb
   ```
+  (Clip-pipeline notebooks moved to `phase2/octo-clip-extraction/` — pass that path to the
+  `<nb>.ipynb` argument. They discover the repo root by walking up, so any cwd under the repo works.)
 - **Device**: Apple Silicon (MPS). MPS works for CLIP. **OWLv2 hangs on MPS — use `device="cpu"`** for it.
 - **`clip` import shim** (OpenAI CLIP needs `packaging` shimmed into `pkg_resources`):
   ```python
@@ -73,7 +75,7 @@ label cleanliness), so a higher number does not mean a better model.
 
 - Checkpoint dict keys: `state_dict`, `clip_model`, `arch`, `feat_dim`, `label_map`, `test_acc`.
 
-## Motion detection — `phase2/motion_detector.py`
+## Motion detection — `phase2/octo-clip-extraction/motion_detector.py`
 
 - **BUG (do not reintroduce)**: the original per-video **normalized** motion (`motion/motion.max()`)
   passes static videos — a flickering lamp gets normalized up to "motion". See memory
@@ -82,10 +84,19 @@ label cleanliness), so a higher number does not mean a better model.
   returns the **absolute changed-pixel fraction**. It masks the timestamp region
   (`diff[int(h*0.88):, int(w*0.60):] = 0`) so the ticking clock isn't counted as motion.
   This was ADDED alongside, not replacing, the old `scan_motion()`.
+- **Location**: `motion_detector.py` now lives in `phase2/octo-clip-extraction/` (with the rest of
+  the clip pipeline). It is still imported by non-pipeline scripts that stayed in `phase2/`
+  (`exp16_motion_timeline.py`, `exp22_auto_scan.py`, `run_aquarium_analysis.py`) — they add
+  `phase2/octo-clip-extraction` to `sys.path` and `import motion_detector` (the folder name has
+  hyphens, so it is NOT importable as a package — always use sys.path + flat import, never
+  `from octo-clip-extraction.x import`).
 
 ## Clip extraction & verification pipeline
 
-- `phase2/exp26_remote_scan.py` — streams remote videos (ffmpeg HTTP → image2pipe), **motion-gates
+All of these live in **`phase2/octo-clip-extraction/`**. Each script computes the repo root as
+`Path(__file__).resolve().parents[2]`; notebooks discover it by walking up for `data/`+`weights/`.
+
+- `phase2/octo-clip-extraction/exp26_remote_scan.py` — streams remote videos (ffmpeg HTTP → image2pipe), **motion-gates
   then classifies**. Per video it first runs `scan_motion_area` (per-second absolute changed-pixel
   fraction), then streams frames through the letterbox filter
   `scale=224:224:force_original_aspect_ratio=decrease,pad=224:224:-1:-1:color=gray`. Each frame is
@@ -98,13 +109,13 @@ label cleanliness), so a higher number does not mean a better model.
   gained `n_classified,n_static,frac_static,motion_mean` (old file auto-rotated to
   `scan_summary_pre_motion.csv`). Tracks done videos in `data/processed_videos.json` (the canonical
   "already processed" ledger — always update it).
-- `phase2/exp27_octopus_clips.ipynb` — clip extractor. 20s clips, keep when motion gate passes
+- `phase2/octo-clip-extraction/exp27_octopus_clips.ipynb` — clip extractor. 20s clips, keep when motion gate passes
   AND >50% of frames are octopus-visible, 1fps sampling, Right cameras.
-- `phase2/exp28_verify_clips.py` — re-runs octopus check over extracted clips.
-- `phase2/exp30_audit_clip_motion.py` — re-audits verified clips with `scan_motion_area`; writes
+- `phase2/octo-clip-extraction/exp28_verify_clips.py` — re-runs octopus check over extracted clips.
+- `phase2/octo-clip-extraction/exp30_audit_clip_motion.py` — re-audits verified clips with `scan_motion_area`; writes
   `data/clips_motion_audit.json` + `data/clips_motion_survivors.txt`. Non-survivors (flicker-only)
   were deleted from `data/octopus_clips_verified/`.
-- `phase2/exp29_motion_debug.ipynb`, `phase2/exp31_saliency.ipynb` — forensics: false-motion debug,
+- `phase2/octo-clip-extraction/exp29_motion_debug.ipynb`, `phase2/octo-clip-extraction/exp31_saliency.ipynb` — forensics: false-motion debug,
   and occlusion saliency (what pixels make the model say "octopus").
 
 ## Hard-negative mining — the verification lesson (IMPORTANT)
