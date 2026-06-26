@@ -45,7 +45,9 @@ CKPT_PATH = PROJECT / "weights" / "clip_mlp_best.pt"
 OUT_DIR   = PROJECT / "data" / "scan_results"
 
 BASE      = "https://repo.octopus-intelligence.org/public/O-vulgaris-Nity-2026-2-20--"
-USER, PWD = "octopus", "communication42"
+import sys
+sys.path.insert(0, str(PROJECT))
+from server_creds import USER, PASS as PWD   # creds from env / .env, not hardcoded
 RIGHT_CAMS = ["Right Back", "Right Front", "Right Left", "Right Right", "Right Top"]
 
 FPS        = 0.5    # 1 frame / 2s

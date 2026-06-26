@@ -39,8 +39,10 @@ logging.basicConfig(
 log = logging.getLogger("aquarium_analysis")
 
 BASE_URL  = "https://repo.octopus-intelligence.org/public"
-USER      = "octopus"
-PASS      = "communication42"
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 SESSION   = "O-vulgaris-Nity-2026-2-20--"
 
 ALL_CAMERAS = [

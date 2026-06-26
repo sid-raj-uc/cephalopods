@@ -24,8 +24,12 @@ extracting behavioral clips.
   except Exception: pass
   import clip as clip_lib
   ```
-- **Server (footage source)**: `repo.octopus-intelligence.org`, creds `octopus` / `communication42`.
-  Used in code for streaming/pulling videos.
+- **Server (footage source)**: `repo.octopus-intelligence.org`. Credentials are **no longer
+  hardcoded** — they live in the gitignored repo-root `.env` as `OCTOPUS_USER` / `OCTOPUS_PASS`
+  and are loaded via `server_creds.py` (`from server_creds import USER, PASS`; zero-dependency
+  .env parser). Scripts add the repo root to `sys.path` first. Do NOT paste the password back
+  into source. (NOTE: the old plaintext creds remain in git history; rotating them server-side
+  is the only real fix for that.)
 
 ## The model: CLIP + MLP probe
 

@@ -21,8 +21,10 @@ CSV_PATH = PROJECT / "data" / "Nity events.csv"
 OUT_PATH = PROJECT / "data" / "ethogram_index.json"
 
 BASE_URL = "https://repo.octopus-intelligence.org/public"
-USER, PASS = "octopus", "communication42"
-
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 SESSION_2025 = "O-vulgaris-Nity-2025-9-17--"
 SESSION_2026 = "O-vulgaris-Nity-2026-2-20--"
 

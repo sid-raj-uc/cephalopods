@@ -17,8 +17,10 @@ os.makedirs(CLIPS_DIR, exist_ok=True)
 
 SESSION  = "O-vulgaris-Nity-2026-2-20--"
 BASE_URL = "https://repo.octopus-intelligence.org/public"
-USER, PASS = "octopus", "communication42"
-
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 PROC_W, PROC_H = 1280, 720
 TANK       = (130, 30, 870, 600)
 TANK_AREA  = (TANK[2]-TANK[0]) * (TANK[3]-TANK[1])

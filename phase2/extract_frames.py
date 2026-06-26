@@ -16,9 +16,10 @@ from urllib.parse import urlparse, urlunparse
 PROJECT      = Path(__file__).resolve().parent.parent
 PATCHES_PATH = PROJECT / "data" / "octopus_patches.json"
 FRAMES_DIR   = PROJECT / "data" / "frames"
-USER, PASS   = "octopus", "communication42"
-
-
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 def embed_auth(url: str) -> str:
     p = urlparse(url)
     netloc = f"{USER}:{PASS}@{p.hostname}"
