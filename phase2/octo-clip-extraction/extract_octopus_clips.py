@@ -59,7 +59,8 @@ SAMPLE_FPS       = 1.0     # 1 frame/sec for both octopus + motion
 CLIP_LEN         = 20      # seconds per clip
 MIN_VISIBLE_FRAC = 0.50    # > this fraction of window frames must be octopus-visible
 VIS_THRESH       = 0.60    # p_visible >= this -> frame counts as "visible"
-MOTION_THRESH    = 0.005   # mean ABSOLUTE changed-pixel fraction in window (matches exp30)
+MOTION_THRESH    = 0.008   # mean ABSOLUTE changed-pixel fraction in window (raised from 0.005:
+                           # 0.005 let IR-noise/reflection false positives through, esp. Right_Left)
 MOTION_PIX       = 25      # per-pixel grey-level change counted as "moved"
 SIZE, BATCH      = 224, 64
 

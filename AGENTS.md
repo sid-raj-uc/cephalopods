@@ -102,8 +102,9 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   detection (`scan_motion_area`, the correct ABSOLUTE method) + 20s clip extraction, in one script.
   Per video it makes two 1 fps ffmpeg passes (octopus, then motion via `scan_motion_area`), slides a
   non-overlapping 20s window, and keeps a window when **>50% of frames are octopus-visible
-  (`p_visible ≥ 0.6`, `--vis-thresh`) AND mean absolute motion ≥ `--motion-thresh`** (default 0.005,
-  matching exp30). Extracts via ffmpeg
+  (`p_visible ≥ 0.6`, `--vis-thresh`) AND mean absolute motion ≥ `--motion-thresh`** (default 0.008,
+  raised from 0.005 because the 0.005–0.008 band was IR-noise/reflection false positives, esp. on
+  Right_Left). Extracts via ffmpeg
   byte-range copy. Outputs clips to `data/octopus_clips_verified/{date}/{segment}/...` (extract_clip
   skips paths that already exist, so existing verified clips are not overwritten), index
   `data/octopus_clips_verified.json` (the clip index — one entry per clip: clip_path, camera,
