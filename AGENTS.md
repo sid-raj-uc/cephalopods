@@ -57,10 +57,13 @@ extracting behavioral clips.
 
 ### Weights (`weights/`)
 
-> **USE `clip_mlp_best.pt` ALWAYS, FOR NOW.** It is the latest model — letterbox
-> preprocessing + 66 verified hard negatives folded into `hidden/` — and the current
-> default for all inference/clip-extraction work. Do not switch the active model
-> without an explicit instruction.
+> **USE `clip_mlp_hardneg_v2.pt` for the clip-extraction pipeline** (set 2026-06-27). It is the
+> latest model — letterbox + 66 original hard negs + ~1.6k mined IR-noise/reflection hard negatives
+> (the false positives from the 0.005-era Right_Left clips), class-weighted. In A/B vs
+> `clip_mlp_best.pt` it cut the hidden false-positive rate 24%→3% while holding visible recall ~0.97.
+> NOTE: `extract_octopus_clips.py` uses it; `exp26_remote_scan.py` (frame harvester) and
+> `exp28_verify_clips.py` (audit) still load `clip_mlp_best.pt` — switch those only on instruction.
+> Do not change a script's active model without an explicit instruction.
 
 All are CLIP ViT-B/32 + `mlp_256_64` probes unless noted. **Headline accuracies are NOT
 directly comparable** — each was scored on a different test set (different preprocessing /
@@ -68,7 +71,8 @@ label cleanliness), so a higher number does not mean a better model.
 
 | File | Use | Preprocessing / data | Acc | Trust |
 |------|-----|----------------------|-----|-------|
-| `clip_mlp_best.pt` | **DEFAULT — use this** (letterbox + 66 verified hard negs; honest, harder test set) | letterbox + 66 hard negs | 96.3% | ✅ |
+| `clip_mlp_hardneg_v2.pt` | **LATEST — clip-extraction pipeline uses this** (66 + ~1.6k mined hard negs, class-weighted) | letterbox + ~1.7k hard negs | 96.8% | ✅ |
+| `clip_mlp_best.pt` | prior default; still used by exp26 scanner + exp28 audit (letterbox + 66 verified hard negs) | letterbox + 66 hard negs | 96.3% | ✅ |
 | `clip_mlp_letterbox_v1.pt` | clean letterbox baseline before hard negs (kept for A/B) | clean letterbox | 96.9% | ✅ |
 | `clip_mlp_hardneg_unverified.pt` | trap: 232 UNVERIFIED labels (166 were actually octopus) — inflated | letterbox + 232 unverified | 97.2% | ❌ |
 | `clip_mlp_crop.pt` | old destructive squish/crop model | CenterCrop (drops 33–44%) | 96.8% | ❌ deprecated |
@@ -98,7 +102,7 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
 `Path(__file__).resolve().parents[2]`; notebooks discover it by walking up for `data/`+`weights/`.
 
 - **`phase2/octo-clip-extraction/extract_octopus_clips.py` — THE clip extractor (use this).**
-  The clean, consolidated pipeline: octopus detection (`clip_mlp_best.pt`, letterbox) + motion
+  The clean, consolidated pipeline: octopus detection (`clip_mlp_hardneg_v2.pt`, letterbox) + motion
   detection (`scan_motion_area`, the correct ABSOLUTE method) + 20s clip extraction, in one script.
   Per video it makes two 1 fps ffmpeg passes (octopus, then motion via `scan_motion_area`), slides a
   non-overlapping 20s window, and keeps a window when **>50% of frames are octopus-visible

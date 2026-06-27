@@ -4,7 +4,7 @@ Octopus clip extractor — the clean, consolidated pipeline.
 One script that does the three things the clip pipeline actually needs, each the
 *correct* way:
 
-  1. OCTOPUS DETECTION — CLIP ViT-B/32 + MLP probe (weights/clip_mlp_best.pt),
+  1. OCTOPUS DETECTION — CLIP ViT-B/32 + MLP probe (weights/clip_mlp_hardneg_v2.pt),
      letterbox preprocessing (no crop), per-second p_visible.
   2. MOTION DETECTION  — scan_motion_area() from motion_detector.py: the ABSOLUTE
      changed-pixel fraction with the burned-in timestamp masked out. (NOT the old
@@ -46,7 +46,7 @@ PROJECT = Path(__file__).resolve().parents[2]   # repo root (file is phase2/octo
 sys.path.insert(0, str(PROJECT))
 from server_creds import USER, PASS              # creds from env / .env, not hardcoded
 
-CKPT_PATH   = PROJECT / "weights" / "clip_mlp_best.pt"
+CKPT_PATH   = PROJECT / "weights" / "clip_mlp_hardneg_v2.pt"
 CLIPS_DIR   = PROJECT / "data" / "octopus_clips_verified"        # extracted clips land here
 INDEX_JSON  = PROJECT / "data" / "octopus_clips_verified.json"   # clip index (matches clips dir)
 PROCESSED   = PROJECT / "data" / "octopus_clips_processed.json"
