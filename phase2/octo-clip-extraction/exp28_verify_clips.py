@@ -6,8 +6,10 @@ For every clip in data/octopus_clips_auto/:
   - count, at p_visible thresholds 0.5 / 0.6 / 0.7, the fraction of visible frames
   - a clip "has octopus" if that fraction > MIN_FRAC (0.40)
 
-Writes data/octopus_clips_verified.json (per-clip results) and prints, per camera,
+Writes data/clips_verify_audit.json (per-clip results) and prints, per camera,
 how many clips pass the >40% bar at each threshold so the cutoff can be chosen.
+(NOTE: this is an optional audit, superseded by extract_octopus_clips.py. It must
+NOT write octopus_clips_verified.json — that is now the live clip index.)
 
 Usage: venv/bin/python3 phase2/exp28_verify_clips.py
 """
@@ -21,8 +23,8 @@ from PIL import Image
 
 PROJECT   = Path(__file__).resolve().parents[2]   # repo root (file is phase2/octo-clip-extraction/)
 CLIPS_DIR = PROJECT / "data" / "octopus_clips_auto"
-CKPT_PATH = PROJECT / "weights" / "clip_mlp_letterbox_v1.pt"   # letterbox model
-OUT_JSON  = PROJECT / "data" / "octopus_clips_verified.json"
+CKPT_PATH = PROJECT / "weights" / "clip_mlp_best.pt"   # letterbox model
+OUT_JSON  = PROJECT / "data" / "clips_verify_audit.json"   # NOT octopus_clips_verified.json (that's the live index)
 
 THRESHOLDS = [0.5, 0.6, 0.7]
 MIN_FRAC   = 0.40
@@ -125,7 +127,7 @@ def main():
         results.append(rec)
 
         if i % 100 == 0 or i == len(clips):
-            json.dump({"model": "clip_mlp_letterbox_v1.pt (letterbox)", "min_frac": MIN_FRAC,
+            json.dump({"model": "clip_mlp_best.pt (letterbox)", "min_frac": MIN_FRAC,
                        "thresholds": THRESHOLDS,
                        "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
                        "count": len(results), "clips": results},

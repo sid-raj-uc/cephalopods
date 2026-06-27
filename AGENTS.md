@@ -57,9 +57,10 @@ extracting behavioral clips.
 
 ### Weights (`weights/`)
 
-> **USE `clip_mlp_letterbox_v1.pt` ALWAYS, FOR NOW.** It is the clean letterbox
-> model and the current default for all inference/clip-extraction work. Do not
-> switch the active model without an explicit instruction.
+> **USE `clip_mlp_best.pt` ALWAYS, FOR NOW.** It is the latest model — letterbox
+> preprocessing + 66 verified hard negatives folded into `hidden/` — and the current
+> default for all inference/clip-extraction work. Do not switch the active model
+> without an explicit instruction.
 
 All are CLIP ViT-B/32 + `mlp_256_64` probes unless noted. **Headline accuracies are NOT
 directly comparable** — each was scored on a different test set (different preprocessing /
@@ -67,8 +68,8 @@ label cleanliness), so a higher number does not mean a better model.
 
 | File | Use | Preprocessing / data | Acc | Trust |
 |------|-----|----------------------|-----|-------|
-| `clip_mlp_letterbox_v1.pt` | **DEFAULT — use this** | clean letterbox | 96.9% | ✅ |
-| `clip_mlp_best.pt` | letterbox + 66 verified hard negs (honest, harder test set) | letterbox + 66 hard negs | 96.3% | ✅ |
+| `clip_mlp_best.pt` | **DEFAULT — use this** (letterbox + 66 verified hard negs; honest, harder test set) | letterbox + 66 hard negs | 96.3% | ✅ |
+| `clip_mlp_letterbox_v1.pt` | clean letterbox baseline before hard negs (kept for A/B) | clean letterbox | 96.9% | ✅ |
 | `clip_mlp_hardneg_unverified.pt` | trap: 232 UNVERIFIED labels (166 were actually octopus) — inflated | letterbox + 232 unverified | 97.2% | ❌ |
 | `clip_mlp_crop.pt` | old destructive squish/crop model | CenterCrop (drops 33–44%) | 96.8% | ❌ deprecated |
 | `clip_linear_best.pt` | old **linear** probe (not MLP), superseded | — | 88.8% | ❌ |
@@ -105,7 +106,8 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   matching exp30). Extracts via ffmpeg
   byte-range copy. Outputs clips to `data/octopus_clips_verified/{date}/{segment}/...` (extract_clip
   skips paths that already exist, so existing verified clips are not overwritten), index
-  `data/octopus_clips_extracted.json`, ledger `data/octopus_clips_processed.json`. Flags: `--limit`, `--date`,
+  `data/octopus_clips_verified.json` (the clip index — one entry per clip: clip_path, camera,
+  video_url, video_timeline, start/end, scores), ledger `data/octopus_clips_processed.json`. Flags: `--limit`, `--date`,
   `--motion-thresh`, `--visible-frac`.
   **This supersedes the exp27 + exp28 + exp30 chain** — because both gates are correct here, clips
   come out clean in one pass, so exp28/exp30 are no longer required (keep them only as optional audits).
@@ -127,7 +129,8 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   Old clip extractor; gated on the buggy per-video **normalized** motion (`motion/motion.max()`), so it
   over-extracts. Kept for reference only — do not use for new extraction.
 - `phase2/octo-clip-extraction/exp28_verify_clips.py` — optional audit: re-runs the octopus check over
-  extracted clips. No longer required in the main flow (the consolidated extractor already gates on octopus).
+  extracted clips. Writes `data/clips_verify_audit.json` (NOT `octopus_clips_verified.json` — that is now
+  the live clip index written by `extract_octopus_clips.py`). No longer required in the main flow.
 - `phase2/octo-clip-extraction/exp30_audit_clip_motion.py` — optional audit: re-audits clips with `scan_motion_area`;
   writes `data/clips_motion_audit.json` + `data/clips_motion_survivors.txt`. No longer required in the main
   flow (the consolidated extractor already gates on absolute motion).
