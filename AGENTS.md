@@ -104,7 +104,7 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   absolute motion ≥ `--motion-thresh`** (default 0.005, matching exp30). Extracts via ffmpeg
   byte-range copy. Outputs clips to `data/octopus_clips_verified/{date}/{segment}/...` (extract_clip
   skips paths that already exist, so existing verified clips are not overwritten), index
-  `data/octopus_clips.json`, ledger `data/octopus_clips_processed.json`. Flags: `--limit`, `--date`,
+  `data/octopus_clips_extracted.json`, ledger `data/octopus_clips_processed.json`. Flags: `--limit`, `--date`,
   `--motion-thresh`, `--visible-frac`.
   **This supersedes the exp27 + exp28 + exp30 chain** — because both gates are correct here, clips
   come out clean in one pass, so exp28/exp30 are no longer required (keep them only as optional audits).

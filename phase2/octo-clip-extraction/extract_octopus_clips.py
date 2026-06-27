@@ -22,7 +22,7 @@ scan_motion_area) so the motion logic stays a single source of truth.
 
 Outputs:
   data/octopus_clips_verified/{date}/{segment}/{Camera}_{start}-{end}.mp4  — clips
-  data/octopus_clips.json              — clip index (source url + time + scores)
+  data/octopus_clips_extracted.json    — clip index (source url + time + scores)
   data/octopus_clips_processed.json    — processed-video ledger (resumable)
   (extract_clip skips a path that already exists, so existing verified clips are not overwritten)
 
@@ -47,8 +47,8 @@ sys.path.insert(0, str(PROJECT))
 from server_creds import USER, PASS              # creds from env / .env, not hardcoded
 
 CKPT_PATH   = PROJECT / "weights" / "clip_mlp_best.pt"
-CLIPS_DIR   = PROJECT / "data" / "octopus_clips_verified"   # extracted clips land here
-INDEX_JSON  = PROJECT / "data" / "octopus_clips.json"
+CLIPS_DIR   = PROJECT / "data" / "octopus_clips_verified"        # extracted clips land here
+INDEX_JSON  = PROJECT / "data" / "octopus_clips_extracted.json"  # clip index (fresh file)
 PROCESSED   = PROJECT / "data" / "octopus_clips_processed.json"
 
 BASE = "https://repo.octopus-intelligence.org/public/O-vulgaris-Nity-2026-2-20--"
