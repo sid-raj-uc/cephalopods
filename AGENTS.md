@@ -151,6 +151,12 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   `octopus_clips_verified.zip` + copy `octopus_clips_verified.json` and `ethogram_list.json` to Drive
   (`MyDrive/GSOC-Catrobat/`), caption on Colab, then copy the updated JSON back into `data/`. Successor
   to `phase2/exp23_caption_colab.ipynb` (flat clip dir + separate captions json; this writes into the index).
+- `ui/review_captions.py` — **caption review UI** (FastAPI, port 8005). Plays each clip from local
+  disk (`data/octopus_clips_verified/`) next to its `caption` + `ethogram_label`; approve/reject,
+  edit the caption (textarea) and label (dropdown of `ethogram_list.json` labels). Writes review
+  status + edits back into `octopus_clips_verified.json` per clip (`review`, `reviewed_at`), saved
+  after every action (resumable). Keys: A approve, R reject, ←/→ nav, U clear, S save edits.
+  Run: `venv/bin/python3 ui/review_captions.py` → http://localhost:8005.
 
 ## Hard-negative mining — the verification lesson (IMPORTANT)
 
