@@ -295,6 +295,8 @@ def main():
                     "video": c["video"], "video_url": c["url"], "date": c["date"],
                     "segment": c["segment"], "camera": c["camera"],
                     "start_sec": w["start_sec"], "end_sec": w["end_sec"],
+                    "video_timeline": f"{w['start_sec']//60:02d}:{w['start_sec']%60:02d}-"
+                                      f"{w['end_sec']//60:02d}:{w['end_sec']%60:02d}",
                     "visible_frac": w["visible_frac"], "mean_motion": w["mean_motion"],
                     "clip_path": str(clip_path.relative_to(PROJECT)),
                     "added_at": datetime.datetime.now().isoformat(timespec="seconds")})
