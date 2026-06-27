@@ -58,7 +58,7 @@ CAMERAS = ["Right Back", "Right Front", "Right Left", "Right Right", "Right Top"
 SAMPLE_FPS       = 1.0     # 1 frame/sec for both octopus + motion
 CLIP_LEN         = 20      # seconds per clip
 MIN_VISIBLE_FRAC = 0.50    # > this fraction of window frames must be octopus-visible
-VIS_THRESH       = 0.50    # p_visible >= this -> frame counts as "visible"
+VIS_THRESH       = 0.60    # p_visible >= this -> frame counts as "visible"
 MOTION_THRESH    = 0.005   # mean ABSOLUTE changed-pixel fraction in window (matches exp30)
 MOTION_PIX       = 25      # per-pixel grey-level change counted as "moved"
 SIZE, BATCH      = 224, 64
@@ -239,7 +239,7 @@ def extract_clip(url, start, end, out_path: Path) -> bool:
 # ── main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    global MOTION_THRESH, MIN_VISIBLE_FRAC
+    global MOTION_THRESH, MIN_VISIBLE_FRAC, VIS_THRESH
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None, help="max videos to process this run")
     ap.add_argument("--date", type=str, default=None, help="restrict to a single date YYYY-MM-DD")
@@ -247,16 +247,19 @@ def main():
                     help="mean absolute changed-pixel fraction per window (default %(default)s)")
     ap.add_argument("--visible-frac", type=float, default=MIN_VISIBLE_FRAC,
                     help="min fraction of window frames that must be octopus-visible (default %(default)s)")
+    ap.add_argument("--vis-thresh", type=float, default=VIS_THRESH,
+                    help="p_visible >= this -> frame counts as octopus-visible (default %(default)s)")
     args = ap.parse_args()
     MOTION_THRESH = args.motion_thresh
     MIN_VISIBLE_FRAC = args.visible_frac
+    VIS_THRESH = args.vis_thresh
 
     CLIPS_DIR.mkdir(parents=True, exist_ok=True)
     device = ("mps" if torch.backends.mps.is_available()
               else "cuda" if torch.cuda.is_available() else "cpu")
     cm, pp, clf, vis_idx = load_model(device)
-    print(f"device: {device}  | clip {CLIP_LEN}s | visible>{MIN_VISIBLE_FRAC} "
-          f"| motion>={MOTION_THRESH} (pix {MOTION_PIX})")
+    print(f"device: {device}  | clip {CLIP_LEN}s | p_visible>={VIS_THRESH} "
+          f"| visible-frac>{MIN_VISIBLE_FRAC} | motion>={MOTION_THRESH} (pix {MOTION_PIX})")
 
     proc_reg, clip_idx = init_registries()
     done = {r["video"] for r in proc_reg["processed"]}

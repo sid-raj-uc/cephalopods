@@ -100,8 +100,9 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   The clean, consolidated pipeline: octopus detection (`clip_mlp_best.pt`, letterbox) + motion
   detection (`scan_motion_area`, the correct ABSOLUTE method) + 20s clip extraction, in one script.
   Per video it makes two 1 fps ffmpeg passes (octopus, then motion via `scan_motion_area`), slides a
-  non-overlapping 20s window, and keeps a window when **>50% of frames are octopus-visible AND mean
-  absolute motion ≥ `--motion-thresh`** (default 0.005, matching exp30). Extracts via ffmpeg
+  non-overlapping 20s window, and keeps a window when **>50% of frames are octopus-visible
+  (`p_visible ≥ 0.6`, `--vis-thresh`) AND mean absolute motion ≥ `--motion-thresh`** (default 0.005,
+  matching exp30). Extracts via ffmpeg
   byte-range copy. Outputs clips to `data/octopus_clips_verified/{date}/{segment}/...` (extract_clip
   skips paths that already exist, so existing verified clips are not overwritten), index
   `data/octopus_clips_extracted.json`, ledger `data/octopus_clips_processed.json`. Flags: `--limit`, `--date`,
