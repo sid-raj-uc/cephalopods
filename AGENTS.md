@@ -137,14 +137,16 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   flow (the consolidated extractor already gates on absolute motion).
 - `phase2/octo-clip-extraction/exp29_motion_debug.ipynb`, `phase2/octo-clip-extraction/exp31_saliency.ipynb` — forensics: false-motion debug,
   and occlusion saliency (what pixels make the model say "octopus").
-- `phase2/octo-clip-extraction/caption_octopus_clips.ipynb` — **Colab/GPU** captioner (Qwen3-VL-30B
-  AWQ via vLLM, A100). Reads `octopus_clips_verified.json`, samples frames from each clip, and writes
-  a one-sentence `caption` field back onto each clip entry (also `captioned_at`, `caption_model`).
-  **Resumable** — skips entries that already have a `caption`; saves the JSON after every clip.
-  To run: zip the `octopus_clips_verified/` folder to `octopus_clips_verified.zip` + copy
-  `octopus_clips_verified.json` to Drive (`MyDrive/GSOC-Catrobat/`), caption on Colab, then copy the
-  updated JSON back into `data/`. Successor to `phase2/exp23_caption_colab.ipynb` (which used a flat
-  clip dir + separate captions json; this writes into the index instead).
+- `phase2/octo-clip-extraction/caption_octopus_clips.ipynb` — **Colab/GPU** captioner+classifier
+  (Qwen3-VL-30B AWQ via vLLM, A100). Reads `octopus_clips_verified.json`, samples frames from each
+  clip, and writes back onto each clip entry: a one-sentence `caption` AND an `ethogram_label` chosen
+  from `data/ethogram_list.json` (19 behaviors) — or `octopus not present` for both if no octopus
+  (plus `captioned_at`, `caption_model`). Parsing validates the label against the list with a keyword
+  fallback (`match_ethogram`) for near-misses. **Resumable** — skips entries that already have a
+  `caption`; saves the JSON after every clip. To run: zip the `octopus_clips_verified/` folder to
+  `octopus_clips_verified.zip` + copy `octopus_clips_verified.json` and `ethogram_list.json` to Drive
+  (`MyDrive/GSOC-Catrobat/`), caption on Colab, then copy the updated JSON back into `data/`. Successor
+  to `phase2/exp23_caption_colab.ipynb` (flat clip dir + separate captions json; this writes into the index).
 
 ## Hard-negative mining — the verification lesson (IMPORTANT)
 
