@@ -20,10 +20,11 @@ out clean in a single pass — no separate cleanup step required.
 Per video it makes two 1 fps ffmpeg passes (one for octopus, one for motion via
 scan_motion_area) so the motion logic stays a single source of truth.
 
-Outputs (fresh namespace, does not touch the old octopus_clips_auto/verified):
-  data/octopus_clips/{date}/{segment}/{Camera}_{start}-{end}.mp4
+Outputs:
+  data/octopus_clips_verified/{date}/{segment}/{Camera}_{start}-{end}.mp4  — clips
   data/octopus_clips.json              — clip index (source url + time + scores)
   data/octopus_clips_processed.json    — processed-video ledger (resumable)
+  (extract_clip skips a path that already exists, so existing verified clips are not overwritten)
 
 Usage:
   python3 phase2/octo-clip-extraction/extract_octopus_clips.py --limit 1
@@ -46,7 +47,7 @@ sys.path.insert(0, str(PROJECT))
 from server_creds import USER, PASS              # creds from env / .env, not hardcoded
 
 CKPT_PATH   = PROJECT / "weights" / "clip_mlp_best.pt"
-CLIPS_DIR   = PROJECT / "data" / "octopus_clips"
+CLIPS_DIR   = PROJECT / "data" / "octopus_clips_verified"   # extracted clips land here
 INDEX_JSON  = PROJECT / "data" / "octopus_clips.json"
 PROCESSED   = PROJECT / "data" / "octopus_clips_processed.json"
 
