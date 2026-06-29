@@ -20,6 +20,8 @@ venv/
 data/
 !data/ethogram_index.json
 !data/octopus_clips_processed.json
+!data/octopus_clips_verified.json
+!data/ethogram_list.json
 weights/
 # octo-images/
 segmented-output/

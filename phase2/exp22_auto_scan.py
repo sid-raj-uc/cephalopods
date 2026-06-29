@@ -28,7 +28,10 @@ CKPT_PATH    = PROJECT / "weights" / "clip_mlp_best.pt"
 OUT_DIR      = PROJECT / "data" / "auto_clips"
 PROGRESS_PATH = OUT_DIR / "progress.json"
 
-USER, PASS   = "octopus", "communication42"
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 BASE_URL     = "https://repo.octopus-intelligence.org/public/"
 
 # Only right-side cameras (left cameras miss Nity's den)
@@ -152,7 +155,8 @@ def load_model(device):
 
 def get_motion_windows(url: str) -> list[dict]:
     """Run exp16-style motion scan and return top windows."""
-    sys.path.insert(0, str(PROJECT / "phase2"))
+    sys.path.insert(0, str(PROJECT / "phase2"))                          # exp16_motion_timeline
+    sys.path.insert(0, str(PROJECT / "phase2" / "octo-clip-extraction"))  # motion_detector moved here
     from motion_detector import scan_motion
     from exp16_motion_timeline import build_vote_grid, build_windows
 

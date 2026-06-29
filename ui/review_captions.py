@@ -120,8 +120,8 @@ def index():
   <div class="vid"><video id="vid" controls autoplay loop muted></video></div>
   <div class="panel">
     <div class="meta" id="meta"></div>
-    <div><label>Caption</label><textarea id="cap"></textarea></div>
-    <div><label>Ethogram label</label><select id="etho"></select></div>
+    <div><label>Caption <span id="dirtyflag" style="color:#e0b000"></span></label><textarea id="cap" oninput="dirty=true;document.getElementById('dirtyflag').textContent='editing…'" onblur="persistCurrent()"></textarea></div>
+    <div><label>Ethogram label</label><select id="etho" onchange="dirty=true;persistCurrent()"></select></div>
     <div class="verdict" id="verdict"></div>
     <div class="path" id="path"></div>
   </div>
@@ -137,6 +137,7 @@ def index():
 const clips={json.dumps(clips)};
 const LABELS={json.dumps(labels())};
 let i=0;
+let dirty=false;
 const $=id=>document.getElementById(id);
 // ethogram dropdown options
 $('etho').innerHTML=LABELS.map(l=>`<option value="${{l}}">${{l}}</option>`).join('');
@@ -165,14 +166,22 @@ function render(){{
  const v=c.review;
  $('verdict').className='verdict'+(v?' v-'+v:'');
  $('verdict').textContent=v=='approved'?'✓ APPROVED':v=='rejected'?'✗ REJECTED':'';
+ dirty=false; $('dirtyflag').textContent='';
  counts();
 }}
-function go(d){{ i=Math.max(0,Math.min(clips.length-1,i+d)); render(); }}
 async function post(body){{
  const r=await fetch('/save',{{method:'POST',headers:{{'Content-Type':'application/json'}},
    body:JSON.stringify(body)}});
  return r.json();
 }}
+function captureCurrent(){{ const c=clips[i]; c.caption=$('cap').value; c.ethogram_label=$('etho').value; return c; }}
+function persistCurrent(){{                       // auto-save pending caption/label edits
+ if(!dirty) return;
+ const c=captureCurrent();
+ post({{clip_path:c.clip_path,caption:c.caption,ethogram_label:c.ethogram_label}});
+ dirty=false; $('dirtyflag').textContent='saved ✓';
+}}
+function go(d){{ persistCurrent(); i=Math.max(0,Math.min(clips.length-1,i+d)); render(); }}
 function mark(v){{
  const c=clips[i];
  if(c.review==v){{ delete c.review; post({{clip_path:c.clip_path,review:'clear'}}); render(); return; }}

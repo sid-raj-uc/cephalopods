@@ -34,8 +34,10 @@ INDEX_PATH = PROJECT / "data" / "ethogram_index.json"
 CKPT_PATH  = PROJECT / "weights" / "clip_mlp_best.pt"
 OUT_DIR    = PROJECT / "data" / "octopus_clips"
 
-USER, PASS = "octopus", "communication42"
-
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 VISIBLE_THRESHOLD = 0.70  # P(visible) must exceed this to count a frame as "visible"
 MIN_VISIBLE_FRAC  = 0.60  # at least 60% of frames must be "visible" to extract a clip
 CLIP_DURATION    = 20     # seconds per output clip
