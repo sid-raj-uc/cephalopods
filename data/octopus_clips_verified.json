@@ -1,7 +1,7 @@
 {
   "description": "Extracted 20s octopus clips: source video url + time location + scores.",
   "model": "clip_mlp_best.pt",
-  "updated_at": "2026-06-28T21:34:15",
+  "updated_at": "2026-06-28T21:36:38",
   "count": 847,
   "clips": [
     {
@@ -117,12 +117,12 @@
       "mean_motion": 0.08226,
       "clip_path": "data/octopus_clips_verified/2026-02-20/135421/Right_Left_1257-1277.mp4",
       "added_at": "2026-06-27T02:23:43",
-      "caption": "The octopus, initially visible in the background, extends an arm to manipulate a white object near the tank's filtration system, then retracts it and moves out of view.",
-      "ethogram_label": "Object manipulation",
+      "caption": "Octopus is resting in the den",
+      "ethogram_label": "Stationary in den",
       "captioned_at": "2026-06-27T19:22:43",
       "caption_model": "Qwen3-VL-30B-A3B-Instruct-AWQ",
-      "review": "rejected",
-      "reviewed_at": "2026-06-27T17:49:10"
+      "review": "approved",
+      "reviewed_at": "2026-06-28T21:36:38"
     },
     {
       "video": "data/aquarium/full/2026-02-20/135421/Right_Left.mp4",
@@ -137,12 +137,12 @@
       "mean_motion": 0.01646,
       "clip_path": "data/octopus_clips_verified/2026-02-20/135421/Right_Left_1277-1297.mp4",
       "added_at": "2026-06-27T02:23:51",
-      "caption": "The octopus is visible in the aquarium, extending its arms and moving across the substrate, interacting with a ceramic pot and other objects in its environment.",
-      "ethogram_label": "Object manipulation",
+      "caption": "Octopus is resting in the den",
+      "ethogram_label": "Stationary in den",
       "captioned_at": "2026-06-27T19:22:46",
       "caption_model": "Qwen3-VL-30B-A3B-Instruct-AWQ",
-      "review": "rejected",
-      "reviewed_at": "2026-06-27T17:49:12"
+      "review": "approved",
+      "reviewed_at": "2026-06-28T21:36:25"
     },
     {
       "video": "data/aquarium/full/2026-02-20/162421/Right_Top.mp4",
