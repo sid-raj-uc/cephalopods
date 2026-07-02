@@ -151,6 +151,17 @@ All of these live in **`phase2/octo-clip-extraction/`**. Each script computes th
   `octopus_clips_verified.zip` + copy `octopus_clips_verified.json` and `ethogram_list.json` to Drive
   (`MyDrive/GSOC-Catrobat/`), caption on Colab, then copy the updated JSON back into `data/`. Successor
   to `phase2/exp23_caption_colab.ipynb` (flat clip dir + separate captions json; this writes into the index).
+- `phase2/octo-clip-extraction/caption_octopus_clips_v2.ipynb` — **improved captioner** (use this over v1).
+  Same Qwen3-VL-30B/vLLM base, but fixes the low-quality captions by improving the VLM *input* on
+  the dim IR footage: (1) **CLAHE brightness/contrast** enhancement per frame; (2) **higher res**
+  (~768px vs 512); (3) **best-frame selection** — scores candidate frames with `clip_mlp_hardneg_v2.pt`
+  and sends only the top-`N_KEEP` where `p_visible` is highest, in time order; (4) **skips no-octopus
+  clips** (if no frame's `p_visible` ≥ `PRESENT_MIN`, default 0.5, auto-labels `octopus not present`
+  and skips the VLM — catches hallucinations on empty clips); (5) lets Qwen answer **`uncertain`**
+  instead of force-guessing. Writes `caption`/`ethogram_label` + `caption_pipeline="v2-enhanced"` +
+  `max_p_visible`. **Resumable & non-destructive**: skips clips already done by v2 AND clips
+  `review=="approved"`. Needs `clip_mlp_hardneg_v2.pt` on Drive too. `PRESENT_MIN` is tunable (raise
+  = stricter; too high can skip dim/partial real octopus).
 - `ui/review_captions.py` — **caption review UI** (FastAPI, port 8005). Plays each clip from local
   disk (`data/octopus_clips_verified/`) next to its `caption` + `ethogram_label`; approve/reject,
   edit the caption (textarea) and label (dropdown of `ethogram_list.json` labels). Writes review
