@@ -43,8 +43,27 @@ def load_sources():
     return v1, v2
 
 
+def _remap():
+    """old-label -> compact-label, from the v2 sheet's maps_from."""
+    m = {}
+    try:
+        for bd in json.load(open(ETHOGRAM))["behaviors"]:
+            for old in bd.get("maps_from", []):
+                m[old] = bd["label"]
+            m[bd["label"]] = bd["label"]
+    except Exception:
+        pass
+    m["octopus not present"] = "octopus not present"
+    return m
+
+REMAP = _remap()
+
+def remap_label(lab):
+    return REMAP.get(lab, lab) if lab else ""
+
+
 def load_items():
-    """One item per clip that exists locally. Captions sent as anonymous A/B."""
+    """One item per clip that exists locally. Captions + labels sent as anonymous A/B."""
     v1, v2 = load_sources()
     items = []
     for cp, a in v1.items():
@@ -52,11 +71,15 @@ def load_items():
             continue
         b = v2[cp]
         cap1, cap2 = a.get("caption", "") or "", b.get("caption", "") or ""
-        optA, optB = (cap1, cap2) if a_is_v1(cp) else (cap2, cap1)
+        lab1, lab2 = remap_label(a.get("ethogram_label")), remap_label(b.get("ethogram_label"))
+        if a_is_v1(cp):
+            optA, optB, labA, labB = cap1, cap2, lab1, lab2
+        else:
+            optA, optB, labA, labB = cap2, cap1, lab2, lab1
         items.append({
             "clip_path": cp, "camera": a.get("camera"), "date": a.get("date"),
             "segment": a.get("segment"), "video_timeline": a.get("video_timeline"),
-            "optA": optA, "optB": optB,
+            "optA": optA, "optB": optB, "optA_label": labA, "optB_label": labB,
         })
     return items
 
@@ -138,6 +161,7 @@ def index():
  .opt:hover{{border-color:#557}} .opt.picked{{border-color:#4a9eff;background:#12203a}}
  .opt h3{{margin:0 0 6px;font-size:12px;color:#89a;letter-spacing:.5px}}
  .opt .cap{{font-size:14px;line-height:1.45}}
+ .olab{{margin-top:7px;font-size:12px;color:#cdb;background:#243024;display:inline-block;padding:2px 8px;border-radius:5px}}
  label{{font-size:12px;color:#9ab;display:block;margin-bottom:4px}}
  textarea{{width:100%;background:#161616;color:#eee;border:1px solid #333;border-radius:6px;
    padding:8px;font-size:14px;line-height:1.4;resize:vertical;min-height:80px}}
@@ -157,8 +181,8 @@ def index():
   <div class="vid"><video id="vid" controls autoplay loop muted></video></div>
   <div class="panel">
     <div class="meta" id="meta"></div>
-    <div class="opt" id="optA" onclick="pick('A')"><h3>OPTION A</h3><div class="cap" id="capA"></div></div>
-    <div class="opt" id="optB" onclick="pick('B')"><h3>OPTION B</h3><div class="cap" id="capB"></div></div>
+    <div class="opt" id="optA" onclick="pick('A')"><h3>OPTION A</h3><div class="cap" id="capA"></div><div class="olab" id="lA"></div></div>
+    <div class="opt" id="optB" onclick="pick('B')"><h3>OPTION B</h3><div class="cap" id="capB"></div><div class="olab" id="lB"></div></div>
     <div><label>Final caption (edit freely, or write your own)</label>
       <textarea id="cap" oninput="unpickIfEdited()"></textarea></div>
     <div><label>Ethogram label</label><select id="etho"></select></div>
@@ -191,6 +215,8 @@ function render(){{
  $('meta').innerHTML=`<span>${{it.camera}}</span><span>${{it.date}} ${{it.segment}}</span><span>⏱ ${{fmt(it.video_timeline)}}</span>`;
  $('capA').textContent=it.optA||'(empty)';
  $('capB').textContent=it.optB||'(empty)';
+ $('lA').textContent=it.optA_label?'label: '+it.optA_label:'';
+ $('lB').textContent=it.optB_label?'label: '+it.optB_label:'';
  $('optA').classList.remove('picked'); $('optB').classList.remove('picked');
  const d=done[it.clip_path];
  $('cap').value=d?d.caption:'';
@@ -205,6 +231,8 @@ function render(){{
 function pick(which){{
  const it=items[i]; picked=which;
  $('cap').value=which=='A'?it.optA:it.optB;
+ const lab=which=='A'?it.optA_label:it.optB_label;      // adopt that option's label too
+ if(LABELS.includes(lab)) $('etho').value=lab;
  $('optA').classList.toggle('picked',which=='A');
  $('optB').classList.toggle('picked',which=='B');
 }}
