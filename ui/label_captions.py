@@ -26,7 +26,7 @@ PROJECT   = Path(__file__).resolve().parent.parent
 V1_JSON   = PROJECT / "data" / "octopus_clips_verified.json"
 V2_JSON   = PROJECT / "data" / "octopus_clips_verified-2.json"
 CLIPS_DIR = PROJECT / "data" / "octopus_clips_verified"
-ETHOGRAM  = PROJECT / "data" / "ethogram_list.json"
+ETHOGRAM  = PROJECT / "data" / "ethogram_list_v2.json"   # compact 7-behavior sheet
 OUT_JSON  = PROJECT / "data" / "caption_training_set.json"
 
 app = FastAPI()

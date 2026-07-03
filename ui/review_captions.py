@@ -24,7 +24,7 @@ from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 PROJECT   = Path(__file__).resolve().parent.parent
 INDEX     = PROJECT / "data" / "octopus_clips_verified.json"
 CLIPS_DIR = PROJECT / "data" / "octopus_clips_verified"
-ETHOGRAM  = PROJECT / "data" / "ethogram_list.json"
+ETHOGRAM  = PROJECT / "data" / "ethogram_list_v2.json"   # compact 7-behavior sheet
 
 app = FastAPI()
 

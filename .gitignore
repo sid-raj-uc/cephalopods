@@ -22,6 +22,7 @@ data/
 !data/octopus_clips_processed.json
 !data/octopus_clips_verified.json
 !data/ethogram_list.json
+!data/ethogram_list_v2.json
 weights/
 # octo-images/
 segmented-output/
