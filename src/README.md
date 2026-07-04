@@ -17,6 +17,13 @@ records them in a JSON index.
   Re-running the extractor appends new clips and preserves existing entries' captions.
 - **`octopus_clips_processed.json`** — the **processed-video ledger** (which videos
   have already been scanned, so they're never reprocessed). Resumable.
+- **`caption_octopus_clips.ipynb`** — the **separate captioning step** (Colab/GPU,
+  Qwen3-VL-30B via vLLM). Fills `caption` + `ethogram_label` (7-class
+  `ethogram_list_v2.json`) into `octopus_clips_verified.json`. Enhances frames (CLAHE),
+  picks the clearest frames via `clip_mlp_hardneg_v2` `p_visible`, skips no-octopus
+  clips, allows `uncertain`. Resumable; skips clips already captioned or `review==approved`.
+  Run on Colab: upload the JSON + clips zip + `ethogram_list_v2.json` + the detector
+  weight to Drive, caption, copy the JSON back into `src/`.
 
 ## Depends on (kept at repo root, not copied here)
 - `weights/clip_mlp_hardneg_v2.pt` — the octopus detector.
