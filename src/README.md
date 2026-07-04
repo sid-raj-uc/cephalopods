@@ -34,15 +34,23 @@ records them in a JSON index.
 2. `caption_octopus_clips.ipynb` → fill `caption` + `ethogram_label` (Colab, Qwen3-VL-30B teacher).
 3. `train_caption_student.ipynb` → LoRA-fine-tune the small Qwen2.5-VL-3B student on those captions (Colab).
 
-## Depends on (kept at repo root, not copied here)
-- `weights/clip_mlp_hardneg_v2.pt` — the octopus detector.
-- `server_creds.py` + `.env` (`OCTOPUS_USER`/`OCTOPUS_PASS`) — footage-server creds.
-- `data/octopus_clips_verified/{date}/{segment}/*.mp4` — where extracted clip mp4s land.
+## Self-contained
+This folder runs on its own (copy it anywhere). It bundles:
+- `clip_mlp_hardneg_v2.pt` — the octopus detector.
+- `server_creds.py` — reads creds from `.env` (this folder) or env vars.
+- `motion_detector.py` — motion detection.
 
-## Run
+Extracted clip mp4s land in `octopus_clips_verified/` inside this folder (gitignored).
+
+## Setup & run
 ```bash
-venv/bin/python3 src/extract_octopus_clips.py --limit 5          # smoke test
-venv/bin/python3 src/extract_octopus_clips.py --date 2026-02-20  # one day
-venv/bin/python3 src/extract_octopus_clips.py                    # all unprocessed
+pip install -r requirements.txt          # torch, openai-clip, numpy, pillow
+# ffmpeg must be on PATH
+cp .env.example .env                     # then fill OCTOPUS_USER / OCTOPUS_PASS
+python3 extract_octopus_clips.py --limit 5          # smoke test
+python3 extract_octopus_clips.py --date 2026-02-20  # one day
+python3 extract_octopus_clips.py                    # all unprocessed
 ```
 Flags: `--limit`, `--date`, `--motion-thresh`, `--visible-frac`, `--vis-thresh`.
+
+> **Never commit `.env`** (it holds the password) — it's gitignored; only `.env.example` is tracked.

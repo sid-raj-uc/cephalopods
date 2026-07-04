@@ -4,7 +4,7 @@ Octopus clip extractor — the clean, consolidated pipeline.
 One script that does the three things the clip pipeline actually needs, each the
 *correct* way:
 
-  1. OCTOPUS DETECTION — CLIP ViT-B/32 + MLP probe (weights/clip_mlp_hardneg_v2.pt),
+  1. OCTOPUS DETECTION — CLIP ViT-B/32 + MLP probe (clip_mlp_hardneg_v2.pt, bundled in src/),
      letterbox preprocessing (no crop), per-second p_visible.
   2. MOTION DETECTION  — scan_motion_area() from motion_detector.py: the ABSOLUTE
      changed-pixel fraction with the burned-in timestamp masked out. (NOT the old
@@ -20,16 +20,20 @@ out clean in a single pass — no separate cleanup step required.
 Per video it makes two 1 fps ffmpeg passes (one for octopus, one for motion via
 scan_motion_area) so the motion logic stays a single source of truth.
 
-Outputs:
-  data/octopus_clips_verified/{date}/{segment}/{Camera}_{start}-{end}.mp4  — clips
-  data/octopus_clips_verified.json     — clip index (source url + time + scores)
-  data/octopus_clips_processed.json    — processed-video ledger (resumable)
-  (extract_clip skips a path that already exists, so existing verified clips are not overwritten)
+Self-contained: run this folder anywhere. Needs `.env` (copy `.env.example` -> `.env`,
+fill OCTOPUS_USER/OCTOPUS_PASS) or those as env vars; `ffmpeg` on PATH; `pip install -r
+requirements.txt`. The detector weight is bundled here.
 
-Usage:
-  python3 phase2/octo-clip-extraction/extract_octopus_clips.py --limit 1
-  python3 phase2/octo-clip-extraction/extract_octopus_clips.py --date 2026-02-20
-  python3 phase2/octo-clip-extraction/extract_octopus_clips.py --motion-thresh 0.01
+Outputs (all inside this folder):
+  octopus_clips_verified/{date}/{segment}/{Camera}_{start}-{end}.mp4  — clips
+  octopus_clips_verified.json     — clip index (source url + time + scores)
+  octopus_clips_processed.json    — processed-video ledger (resumable)
+  (extract_clip skips a path that already exists, so existing clips are not overwritten)
+
+Usage (from inside src/):
+  python3 extract_octopus_clips.py --limit 1
+  python3 extract_octopus_clips.py --date 2026-02-20
+  python3 extract_octopus_clips.py --motion-thresh 0.01
 """
 import argparse, datetime, json, re, subprocess, sys, time, urllib.parse
 from concurrent.futures import ThreadPoolExecutor
@@ -42,15 +46,14 @@ from PIL import Image
 
 from motion_detector import scan_motion_area   # same folder (src/); correct absolute motion
 
-HERE    = Path(__file__).resolve().parent        # src/
-PROJECT = HERE.parent                            # repo root
-sys.path.insert(0, str(PROJECT))
-from server_creds import USER, PASS              # creds from env / .env, not hardcoded
+HERE = Path(__file__).resolve().parent            # src/ — fully self-contained
+sys.path.insert(0, str(HERE))
+from server_creds import USER, PASS               # bundled server_creds.py; reads src/.env or env vars
 
-CKPT_PATH   = PROJECT / "weights" / "clip_mlp_hardneg_v2.pt"       # detector (large; kept at repo root)
-CLIPS_DIR   = PROJECT / "data" / "octopus_clips_verified"          # extracted clip mp4s (large; kept in data/)
-INDEX_JSON  = HERE / "octopus_clips_verified.json"                # clip index — captions filled later by a separate script
-PROCESSED   = HERE / "octopus_clips_processed.json"               # processed-video ledger (do-not-reprocess)
+CKPT_PATH   = HERE / "clip_mlp_hardneg_v2.pt"                     # bundled octopus detector
+CLIPS_DIR   = HERE / "octopus_clips_verified"                    # extracted clip mp4s land here
+INDEX_JSON  = HERE / "octopus_clips_verified.json"               # clip index — captions filled later by the captioning notebook
+PROCESSED   = HERE / "octopus_clips_processed.json"              # processed-video ledger (do-not-reprocess)
 
 BASE = "https://repo.octopus-intelligence.org/public/O-vulgaris-Nity-2026-2-20--"
 CAMERAS = ["Right Back", "Right Front", "Right Left", "Right Right", "Right Top"]
@@ -300,7 +303,7 @@ def main():
                     "video_timeline": f"{w['start_sec']//60:02d}:{w['start_sec']%60:02d}-"
                                       f"{w['end_sec']//60:02d}:{w['end_sec']%60:02d}",
                     "visible_frac": w["visible_frac"], "mean_motion": w["mean_motion"],
-                    "clip_path": str(clip_path.relative_to(PROJECT)),
+                    "clip_path": str(clip_path.relative_to(HERE)),
                     "added_at": datetime.datetime.now().isoformat(timespec="seconds")})
                 n_saved += 1
         proc_reg["processed"].append({"video": c["video"], "date": c["date"],
@@ -312,7 +315,7 @@ def main():
 
     print("-" * 64)
     print(f"DONE. clips: {clip_idx['count']} | processed videos: {proc_reg['count']}")
-    print(f"index -> {INDEX_JSON.relative_to(PROJECT)} | clips dir -> {CLIPS_DIR.relative_to(PROJECT)}/")
+    print(f"index -> {INDEX_JSON.relative_to(HERE)} | clips dir -> {CLIPS_DIR.relative_to(HERE)}/")
 
 
 if __name__ == "__main__":
