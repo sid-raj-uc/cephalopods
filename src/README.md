@@ -24,6 +24,15 @@ records them in a JSON index.
   clips, allows `uncertain`. Resumable; skips clips already captioned or `review==approved`.
   Run on Colab: upload the JSON + clips zip + `ethogram_list_v2.json` + the detector
   weight to Drive, caption, copy the JSON back into `src/`.
+- **`train_caption_student.ipynb`** — the **caption-student training** step (Colab/GPU).
+  LoRA (4-bit QLoRA) fine-tune of `Qwen2.5-VL-3B-Instruct` that distills the teacher
+  captions in `octopus_clips_verified.json` into a small student model; saves the LoRA
+  adapter (zipped) back to Drive. This is the final "train the LoRA adapter" step.
+
+## Pipeline order
+1. `extract_octopus_clips.py` → clips + `octopus_clips_verified.json` metadata (local).
+2. `caption_octopus_clips.ipynb` → fill `caption` + `ethogram_label` (Colab, Qwen3-VL-30B teacher).
+3. `train_caption_student.ipynb` → LoRA-fine-tune the small Qwen2.5-VL-3B student on those captions (Colab).
 
 ## Depends on (kept at repo root, not copied here)
 - `weights/clip_mlp_hardneg_v2.pt` — the octopus detector.
