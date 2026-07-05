@@ -2,3 +2,4 @@ torch
 openai-clip
 numpy
 pillow
+requests
