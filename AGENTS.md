@@ -189,8 +189,64 @@ false positives as hard negatives. Workflow:
 - Open follow-up (not yet done): optionally add the 166 confirmed-visible Right_Back frames as
   `visible` training data for better back-angle coverage.
 
+## `src/` — canonical self-contained pipeline (use this going forward)
+The clean, portable pipeline lives in **`src/`** (extracted from `phase2/octo-clip-extraction/`).
+A bare copy of `src/` runs standalone (verified): all paths are `HERE`-relative, and it bundles
+its own `clip_mlp_hardneg_v2.pt` (detector), `server_creds.py`, `ethogram_list_v2.json`, and the two
+state JSONs. Contents:
+- `extract_octopus_clips.py` — the extractor (clips land in `src/octopus_clips_verified/`, index in
+  `src/octopus_clips_verified.json`, ledger `src/octopus_clips_processed.json`).
+- `motion_detector.py` — `scan_motion_area`.
+- `caption_octopus_clips.ipynb` — **Colab** captioner, teacher = Qwen3-VL-30B (vLLM).
+- `caption_openrouter.py` — **local** captioner via the **OpenRouter API** (see below).
+- `train_caption_student.ipynb` — LoRA fine-tune of Qwen2.5-VL-3B (caption student).
+- `.env.example`, `requirements.txt`, `README.md`. `.env` (real creds) is gitignored — never commit it.
+- **Deliverable branch `octopus-pipeline-src`** (orphan, on GitHub): only `src/` + `weights/` + a root
+  README — the clean shareable package.
+
+## Captioning: 30B teacher, 235B via API, and the comparison
+Two captioners, both write a one-sentence `caption` + a 7-class `ethogram_label`:
+- **Colab / Qwen3-VL-30B** (`src/caption_octopus_clips.ipynb`, vLLM, A100).
+- **Local / Qwen3-VL-235B via OpenRouter** (`src/caption_openrouter.py`) — `qwen/qwen3-vl-235b-a22b-instruct`,
+  no GPU, just `OPENROUTER_API_KEY` in `.env`. Per clip: CLAHE-enhance frames → score with
+  `clip_mlp_hardneg_v2` → skip if no frame `p_visible ≥ PRESENT_MIN` (0.5) → send top-N clearest frames
+  to the API. Flags `--index`, `--clips-root`, `--cap-key`, `--etho-key`, `--limit`. Resumable.
+- **30B vs 235B comparison** lives in `data/octopus_clips_verified.json`: `caption` = 30B,
+  **`caption_235b`** = 235B (written via `--cap-key caption_235b`, non-destructive).
+- **KEY FINDING (2026-07-05):** running 235B over all 847 "verified" clips, **534 (63%) came back
+  `octopus not present`** — the extraction massively over-extracts, almost all `Right_Left` reflections
+  the CLIP detector fires on at `p_visible=1.0`. Takeaways: **drop `Right_Left` from `CAMERAS`**, and the
+  VLM is a far better presence filter than the detector. (Right_Top/Back/Front are the real den angles.)
+
+## Ethogram — now 7 classes
+`data/ethogram_list_v2.json` (7 behaviors, reduced from the 19 in `ethogram_list.json` — 6 of which had
+zero clips). Each has a `maps_from` list folding in the originals. All captioning/labeling/training uses
+the 7-class sheet. Order: Resting / Exploration/manipulation / Crawling / Swimming/jetting /
+Reaching out of water / Human/enrichment interaction / Colour change/defensive (+ `octopus not present`).
+
+## Distillation students
+- **Behavior classifier** (`train_behavior_student.py`, local): frozen CLIP feats (mean+max pooled) → MLP,
+  copies the v2 labels. **Failed** — 45% val acc, *below* the 50% majority-class baseline; per-class F1≈0
+  on everything but presence. Lesson: static pooled features can't classify behavior — it needs
+  **temporal/motion features**, not more labels.
+- **Caption student** (`train_caption_student.ipynb`, Colab): QLoRA fine-tune of Qwen2.5-VL-3B distilling
+  the teacher captions; `demo_video_to_captions.ipynb` runs base vs LoRA on a fresh video.
+
+## Review / labeling UIs (FastAPI, local)
+- `ui/review_captions.py` (8005) — approve/reject/edit caption+label, writes into the index.
+- `ui/compare_captions.py` (8007) — v1 vs v2 caption A/B (local video).
+- `ui/label_captions.py` (8008) — **blind** A/B labeling (v1/v2 shown as anonymous Options A/B) → builds
+  `data/caption_training_set.json` (human ground truth; `caption_source` = v1/v2/human).
+- `ui/compare_base_lora.py` (8009) — base vs LoRA captions, streams clips from the server.
+- `ui/review_hardneg.py` (8004) — hard-negative frame review.
+
+## Credentials
+`.env` (repo root, gitignored) holds `OCTOPUS_USER`/`OCTOPUS_PASS` (footage server) and
+`OPENROUTER_API_KEY` (captioning). Never commit any of these; only `.env.example` files are tracked.
+Notebooks read creds via getpass/env; scripts via `server_creds.py` / env.
+
 ## Dataset layout
-- `data/frames/{visible,hidden}/` — training frames (currently ~3970 visible / 3982 hidden) + manifest.
+- `data/frames/{visible,hidden}/` — training frames (~3970 visible / ~5.6k hidden after 2026-06 mining) + manifest.
 - `data/octopus_clips_verified/{date}/{segment}/{Camera}_{start}-{end}.mp4` — curated behavior clips.
 - `data/scanned_frames/`, `data/hard_negatives/`, `data/saliency/`, `data/motion_debug/` — pipeline outputs.
 

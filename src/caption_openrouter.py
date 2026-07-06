@@ -170,15 +170,24 @@ def call_openrouter(image_urls, prompt, retries=4):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None, help="max clips to caption this run")
+    ap.add_argument("--index", type=str, default=str(INDEX_JSON), help="clip-index JSON to read/write")
+    ap.add_argument("--clips-root", type=str, default=str(CLIPS_ROOT), help="dir the clip mp4s live under")
+    ap.add_argument("--cap-key", type=str, default="caption",
+                    help="field to write the caption into (e.g. caption_235b to compare vs an existing caption)")
+    ap.add_argument("--etho-key", type=str, default="ethogram_label", help="field to write the ethogram label into")
     args = ap.parse_args()
     if not API_KEY:
         sys.exit("OPENROUTER_API_KEY not set — put it in src/.env or the environment.")
 
+    index_path = Path(args.index); clips_root = Path(args.clips_root)
+    cap_key, etho_key = args.cap_key, args.etho_key
+    model_key = f"{cap_key}_model"
+
     prompt = build_prompt()
-    index = json.load(open(INDEX_JSON)); clips = index["clips"]
-    todo = [c for c in clips if not c.get("caption") and c.get("review") != "approved"]
+    index = json.load(open(index_path)); clips = index["clips"]
+    todo = [c for c in clips if not c.get(cap_key)]           # resume on THIS caption field
     if args.limit: todo = todo[:args.limit]
-    print(f"{len(clips)} clips | {len(todo)} to caption via {OR_MODEL}\n" + "-" * 60, flush=True)
+    print(f"{len(clips)} clips | {len(todo)} to caption -> '{cap_key}' via {OR_MODEL}\n" + "-" * 60, flush=True)
     if not todo:
         print("nothing to do."); return
 
@@ -186,18 +195,18 @@ def main():
     done = absent = 0
     for i, e in enumerate(todo, 1):
         rel = e["clip_path"].split("octopus_clips_verified/", 1)[-1]
-        cp = CLIPS_ROOT / rel
+        cp = clips_root / rel
         print(f"[{i}/{len(todo)}] {e['clip_path']}", flush=True)
         if not cp.exists():
-            print("  ! missing file"); continue
+            print(f"  ! missing file: {cp}"); continue
         with tempfile.TemporaryDirectory() as tmp:
             frames = extract_frames(cp, tmp)
             if not frames:
                 print("  no frames"); continue
             sc = score(frames, cm, pre, clf, vis, dev); maxp = max(sc)
-            e["max_p_visible"] = round(maxp, 4)
+            e[f"{cap_key}_max_p"] = round(maxp, 4)
             if maxp < PRESENT_MIN:
-                e["caption"] = "octopus not present"; e["ethogram_label"] = "octopus not present"
+                e[cap_key] = "octopus not present"; e[etho_key] = "octopus not present"
                 absent += 1; print("  -> octopus not present (skipped API)")
             else:
                 order = sorted(range(len(frames)), key=lambda k: sc[k], reverse=True)[:N_KEEP]
@@ -208,14 +217,14 @@ def main():
                 except Exception as ex:
                     print(f"  ! API failed: {ex}"); continue
                 cap, etho = parse(raw)
-                e["caption"] = cap; e["ethogram_label"] = etho
+                e[cap_key] = cap; e[etho_key] = etho
                 print(f"  {etho} :: {cap[:90]}")
-        e["caption_model"] = OR_MODEL; e["caption_pipeline"] = PIPELINE_TAG
-        e["captioned_at"] = datetime.datetime.now().isoformat(timespec="seconds")
-        json.dump(index, open(INDEX_JSON, "w"), indent=2); done += 1
+        e[model_key] = OR_MODEL
+        e[f"{cap_key}_at"] = datetime.datetime.now().isoformat(timespec="seconds")
+        json.dump(index, open(index_path, "w"), indent=2); done += 1
 
     print("-" * 60 + f"\nDone. captioned {done} ({absent} auto no-octopus). "
-          f"with caption now: {sum(1 for c in clips if c.get('caption'))}/{len(clips)}")
+          f"'{cap_key}' filled: {sum(1 for c in clips if c.get(cap_key))}/{len(clips)}")
 
 
 if __name__ == "__main__":
