@@ -137,7 +137,7 @@ def load_model():
 # ── SINGLE-PASS scan: octopus p_visible + motion from one decode ──
 def scan_video(url, hwaccel):
     cmd = ["ffmpeg"]
-    if hwaccel: cmd += ["-hwaccel", "cuda"]
+    if hwaccel and hwaccel != "none": cmd += ["-hwaccel", hwaccel]   # cuda (NVDEC) or videotoolbox (Apple)
     cmd += ["-loglevel", "error", "-i", auth(url),
             "-vf", f"fps={SAMPLE_FPS},scale={DW}:{DH}", "-f", "image2pipe",
             "-vcodec", "rawvideo", "-pix_fmt", "rgb24", "-"]
@@ -222,13 +222,14 @@ def main():
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--date", type=str, default=None)
     ap.add_argument("--workers", type=int, default=8, help="videos processed in parallel")
-    ap.add_argument("--hwaccel", choices=["none", "cuda"], default="none", help="cuda = NVDEC GPU decode")
+    ap.add_argument("--hwaccel", choices=["none", "cuda", "videotoolbox"], default="none",
+                    help="cuda = NVDEC (NVIDIA); videotoolbox = Apple Silicon hardware decode")
     ap.add_argument("--motion-thresh", type=float, default=MOTION_THRESH)
     ap.add_argument("--visible-frac", type=float, default=MIN_VISIBLE_FRAC)
     ap.add_argument("--vis-thresh", type=float, default=VIS_THRESH)
     args = ap.parse_args()
     MOTION_THRESH, MIN_VISIBLE_FRAC, VIS_THRESH = args.motion_thresh, args.visible_frac, args.vis_thresh
-    hwaccel = args.hwaccel == "cuda"
+    hwaccel = None if args.hwaccel == "none" else args.hwaccel
 
     CLIPS_DIR.mkdir(parents=True, exist_ok=True)
     load_model()
@@ -240,7 +241,7 @@ def main():
     todo = [c for c in cands if c["video"] not in done]                # skip already-processed
     if args.limit: todo = todo[:args.limit]
     print(f"{len(cands)} candidates; {len(todo)} to process | {args.workers} workers | "
-          f"hwaccel={'cuda' if hwaccel else 'cpu'}\n" + "-" * 64, flush=True)
+          f"hwaccel={hwaccel or 'cpu'}\n" + "-" * 64, flush=True)
     if not todo: print("nothing to do."); return
 
     t0 = time.perf_counter(); n_done = 0
