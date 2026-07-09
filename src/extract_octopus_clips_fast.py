@@ -49,6 +49,7 @@ VIS_THRESH       = 0.60
 MOTION_THRESH    = 0.008
 MOTION_PIX       = 25
 DW, DH, BATCH    = 640, 360, 64          # single-pass decode size (16:9), CLIP batch
+IO_TIMEOUT_US    = 30_000_000            # ffmpeg -rw_timeout (µs): abort a stalled HTTP read after 30s
 
 device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 _model_lock = threading.Lock()           # serialize GPU inference across worker threads
@@ -138,7 +139,8 @@ def load_model():
 def scan_video(url, hwaccel):
     cmd = ["ffmpeg"]
     if hwaccel and hwaccel != "none": cmd += ["-hwaccel", hwaccel]   # cuda (NVDEC) or videotoolbox (Apple)
-    cmd += ["-loglevel", "error", "-i", auth(url),
+    cmd += ["-rw_timeout", str(IO_TIMEOUT_US),                       # abort a stalled HTTP read instead of hanging forever
+            "-loglevel", "error", "-i", auth(url),
             "-vf", f"fps={SAMPLE_FPS},scale={DW}:{DH}", "-f", "image2pipe",
             "-vcodec", "rawvideo", "-pix_fmt", "rgb24", "-"]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -167,7 +169,9 @@ def scan_video(url, hwaccel):
         buf.append(Image.fromarray(arr))
         if len(buf) >= BATCH: flush()
     flush()
-    proc.stdout.close(); proc.wait()
+    proc.stdout.close(); rc = proc.wait()
+    if rc != 0:                                    # non-zero => stalled/timed-out/errored input; treat as failure
+        raise RuntimeError(f"ffmpeg exit {rc} (stalled or read timeout)")
     return np.array(pv, np.float32), np.array(motion, np.float32)
 
 
@@ -188,20 +192,27 @@ def hhmmss(x): return f"{x//60:02d}:{x%60:02d}"
 def extract_clip(url, s, e, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists() and path.stat().st_size > 10000: return True     # skip already-extracted
-    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-ss", str(s), "-to", str(e),
-                        "-i", auth(url), "-c", "copy", str(path)], capture_output=True)
+    r = subprocess.run(["ffmpeg", "-rw_timeout", str(IO_TIMEOUT_US), "-loglevel", "error", "-y",
+                        "-ss", str(s), "-to", str(e), "-i", auth(url), "-c", "copy", str(path)],
+                       capture_output=True)
     return path.exists() and path.stat().st_size > 10000
 
 
-def process_video(c, hwaccel):
-    """Worker: scan one video, extract its qualifying clips. Returns (c, clip_entries, n_frames)."""
-    try:
-        pv, mot = scan_video(c["url"], hwaccel)
-    except Exception as e:
-        print(f"  ! scan failed {c['date']} {c['segment']} {c['camera']}: {e}", flush=True)
-        return c, [], 0
-    if len(pv) == 0:
-        return c, [], 0
+def process_video(c, hwaccel, attempts=3):
+    """Worker: scan one video, extract its qualifying clips.
+    Returns (c, clip_entries, n_frames, ok). ok=False => scan failed/stalled;
+    caller must NOT mark the video processed so a later run retries it."""
+    pv = mot = None
+    for a in range(1, attempts + 1):
+        try:
+            pv, mot = scan_video(c["url"], hwaccel)
+            break
+        except Exception as e:
+            print(f"  ! scan failed (try {a}/{attempts}) {c['date']} {c['segment']} {c['camera']}: {e}", flush=True)
+            pv = None
+            time.sleep(3 * a)                       # brief backoff before retry (server may be throttling)
+    if pv is None or len(pv) == 0:
+        return c, [], 0, False
     entries = []
     for w in find_windows(pv, mot):
         path = CLIPS_DIR / c["date"] / c["segment"] / f"{c['camera']}_{w['start_sec']:04d}-{w['end_sec']:04d}.mp4"
@@ -213,7 +224,7 @@ def process_video(c, hwaccel):
                             "visible_frac": w["visible_frac"], "mean_motion": w["mean_motion"],
                             "clip_path": str(path.relative_to(HERE)),
                             "added_at": datetime.datetime.now().isoformat(timespec="seconds")})
-    return c, entries, int(len(pv))
+    return c, entries, int(len(pv)), True
 
 
 def main():
@@ -244,11 +255,15 @@ def main():
           f"hwaccel={hwaccel or 'cpu'}\n" + "-" * 64, flush=True)
     if not todo: print("nothing to do."); return
 
-    t0 = time.perf_counter(); n_done = 0
+    t0 = time.perf_counter(); n_done = 0; n_fail = 0
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = {ex.submit(process_video, c, hwaccel): c for c in todo}
         for fut in as_completed(futs):
-            c, entries, nframes = fut.result()
+            c, entries, nframes, ok = fut.result()
+            if not ok:                                                 # stalled/failed scan -> leave OUT of ledger, retry later
+                n_fail += 1
+                print(f"  [skip {n_fail}] {c['date']} {c['segment']} {c['camera']} -> scan failed, will retry on a later run", flush=True)
+                continue
             with _json_lock:                                           # serialized write, same schema
                 clip_idx["clips"].extend(entries)
                 proc_reg["processed"].append({"video": c["video"], "date": c["date"],
@@ -260,7 +275,7 @@ def main():
             print(f"  [{n_done}/{len(todo)}] {c['date']} {c['segment']} {c['camera']} "
                   f"-> {len(entries)} clips | {rate*60:.1f} vids/min", flush=True)
 
-    print("-" * 64 + f"\nDONE. clips: {clip_idx['count']} | processed videos: {proc_reg['count']}")
+    print("-" * 64 + f"\nDONE. clips: {clip_idx['count']} | processed videos: {proc_reg['count']} | scan failures skipped: {n_fail}")
 
 
 if __name__ == "__main__":
