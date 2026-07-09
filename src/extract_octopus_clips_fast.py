@@ -39,7 +39,7 @@ INDEX_JSON = HERE / "octopus_clips_verified.json"
 PROCESSED  = HERE / "octopus_clips_processed.json"
 
 BASE = "https://repo.octopus-intelligence.org/public/O-vulgaris-Nity-2026-2-20--"
-CAMERAS = ["Right Back", "Right Front", "Right Left", "Right Right", "Right Top"]
+CAMERAS = ["Right Back", "Right Front", "Right Top"]   # den angles only; Right Left/Right are reflection noise (63% no-octopus per 235B)
 
 # ── gates (identical to extract_octopus_clips.py) ──
 SAMPLE_FPS       = 1.0
