@@ -1,0 +1,139 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{accent}{RGB}{20,90,140}
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+  {-2.5ex \@plus -1ex \@minus -.2ex}{1.3ex \@plus.2ex}%
+  {\normalfont\large\bfseries\color{accent}}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {-2ex \@plus -1ex \@minus -.2ex}{1ex \@plus.2ex}%
+  {\normalfont\normalsize\bfseries}}
+\makeatother
+\setlist[itemize]{leftmargin=1.4em,itemsep=2pt,topsep=3pt}
+
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries GSoC Mid-Term Evaluation Report}\\[4pt]
+  {\large Cephalopod Behavioral Analysis --- detecting \& captioning the octopus ``Nity'' (\textit{O.\ vulgaris})}\\[8pt]
+  \begin{tabular}{ll}
+    \textbf{Organization:} & Catrobat \\
+    \textbf{Contributor:} & Siddharth Raj \\
+    \textbf{Period:} & 2026-05-16 \ $\rightarrow$\ 2026-07-08 \\
+  \end{tabular}
+\end{center}
+
+\vspace{0.5em}
+\hrule
+\vspace{1em}
+
+\section{Goal}
+
+Build an end-to-end pipeline that ingests live aquarium camera footage, detects when the octopus is present, extracts short behavioral clips, and automatically captions each clip with a natural-language description and a behavior (ethogram) label --- producing a curated, labeled dataset of octopus behavior.
+
+\section{Pipeline Overview}
+
+\begin{center}
+\fbox{Remote footage} $\rightarrow$
+\fbox{Motion gate} $\rightarrow$
+\fbox{Octopus detector} $\rightarrow$
+\fbox{20s clip extraction} $\rightarrow$
+\fbox{VLM captioning} $\rightarrow$
+\fbox{Human review}
+\end{center}
+
+\noindent The stages are: remote footage from the server; an absolute changed-pixel motion gate; a CLIP + MLP presence detector; \code{ffmpeg} clip extraction; vision--language-model captioning with an ethogram label; and a human-review UI. Everything is consolidated into a clean, self-contained package under \code{src/}.
+
+\section{What Was Accomplished}
+
+\subsection{Detection --- CLIP + MLP probe (working approach)}
+\begin{itemize}
+  \item Built an octopus presence classifier: \textbf{CLIP ViT-B/32 (frozen) $\rightarrow$ MLP probe (512$\to$256$\to$64$\to$2)}, classifying each frame as \code{visible} vs \code{hidden}.
+  \item \textbf{Key finding:} an earlier attempt at zero-shot CLIP scoring was found unreliable (camera-bias baselines) and abandoned; the trained probe replaced it.
+  \item \textbf{Critical fix --- preprocessing:} switched from CLIP's default center-crop (which discards 33--44\% of a 16:9 frame) to \textbf{letterbox padding}. Aspect-ratio mismatch --- not model architecture --- was the root cause of poor field performance.
+  \item \textbf{Hard-negative mining with label verification:} mined the model's confident false positives, then \emph{independently verified} them rather than trusting the labels. Of 232 candidate frames, 166 actually contained the octopus (model was right) and only 66 were genuine hard negatives. Folding in verified negatives cut the hidden false-positive rate from 24\% $\rightarrow$ 3\% while holding visible recall $\sim$0.97.
+  \item Current production model: \code{clip\_mlp\_hardneg\_v2.pt} ($\sim$96.8\% accuracy on a hardened test set).
+  \item Training dataset assembled: \textbf{$\sim$3{,}970 visible / $\sim$5{,}626 hidden} labeled frames.
+\end{itemize}
+
+\subsection{Motion detection}
+\begin{itemize}
+  \item Found and fixed a significant bug: the original per-video \textbf{normalized} motion gate let static videos through (a flickering lamp normalizes up to ``motion'').
+  \item Replaced with an \textbf{absolute changed-pixel-fraction} method that also masks the ticking-clock timestamp region so it isn't counted as motion.
+\end{itemize}
+
+\subsection{Clip extraction}
+\begin{itemize}
+  \item Consolidated the whole extraction flow into one script (\code{extract\_octopus\_clips.py}): per video it runs the octopus detector + absolute motion gate, slides a non-overlapping 20s window, and keeps windows that are octopus-visible AND moving. This replaced a fragile 3-notebook chain (extract $\rightarrow$ verify $\rightarrow$ audit).
+  \item Produced \textbf{847 candidate behavioral clips} in the curated index, with per-clip metadata (camera, source timeline, scores).
+\end{itemize}
+
+\subsection{Captioning (VLM)}
+\begin{itemize}
+  \item Built two captioners that write both a one-sentence \code{caption} and a 7-class \code{ethogram\_label} per clip: \textbf{Qwen3-VL-30B} teacher on Colab/GPU (vLLM), and \textbf{Qwen3-VL-235B} via the OpenRouter API (runs locally, no GPU).
+  \item Input-quality improvements for the dim IR footage: CLAHE contrast enhancement, higher resolution, best-frame selection, and skipping empty clips.
+  \item \textbf{Key finding (data quality):} running the 235B model over all 847 clips revealed \textbf{534 (63\%) had no octopus} --- the extractor massively over-extracts, mostly \code{Right\_Left} reflections the detector fires on. Actionable takeaway: drop the \code{Right\_Left} camera and use the VLM as a stronger presence filter than the detector.
+\end{itemize}
+
+\subsection{Ethogram}
+\begin{itemize}
+  \item Reduced the behavior sheet from 19 $\rightarrow$ \textbf{7 classes} (6 originals had zero clips), with a \code{maps\_from} mapping preserving the originals. All labeling/training now uses the 7-class sheet.
+\end{itemize}
+
+\subsection{Distillation (student models)}
+\begin{itemize}
+  \item \textbf{Caption student:} QLoRA fine-tune of Qwen2.5-VL-3B distilling the teacher captions.
+  \item \textbf{Behavior classifier:} attempted (frozen CLIP feats $\rightarrow$ MLP) but \textbf{failed} (below majority-class baseline) --- an informative negative result: behavior classification needs temporal/motion features, not static pooled ones.
+\end{itemize}
+
+\subsection{Tooling \& infrastructure}
+\begin{itemize}
+  \item Five FastAPI review/labeling UIs (caption review, blind A/B labeling, base-vs-LoRA comparison, hard-negative review).
+  \item Security hardening: removed hardcoded server credentials from code, moved to a gitignored \code{.env} loaded via \code{server\_creds.py}.
+  \item Packaged a clean, portable \code{src/} pipeline plus a shareable deliverable branch (\code{octopus-pipeline-src}).
+\end{itemize}
+
+\section{Key Results}
+
+\begin{center}
+\begin{tabular}{@{}p{0.6\textwidth}p{0.3\textwidth}@{}}
+\toprule
+\textbf{Metric} & \textbf{Result} \\
+\midrule
+Octopus detector accuracy & $\sim$96.8\% (hardened test set) \\
+Hidden false-positive rate & 24\% $\rightarrow$ \textbf{3\%} \\
+Visible recall & $\sim$0.97 \\
+Labeled training frames & $\sim$3{,}970 visible / $\sim$5{,}626 hidden \\
+Candidate clips extracted & 847 \\
+Ethogram classes & 7 (from 19) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Lessons Learned}
+\begin{itemize}
+  \item \textbf{Preprocessing beat architecture} --- letterboxing fixed field performance without changing the model.
+  \item \textbf{Always verify labels before training} --- 166 of 232 ``negatives'' were actually positives.
+  \item \textbf{Absolute $>$ normalized} for motion gating on near-static footage.
+  \item \textbf{The VLM is a better presence filter than the detector} --- 63\% of ``verified'' clips were empty, revealing over-extraction.
+\end{itemize}
+
+\section{Remaining Work (Second Half)}
+\begin{itemize}
+  \item Drop \code{Right\_Left} and re-run extraction using the VLM as a presence filter to produce a clean clip set.
+  \item Finalize and evaluate the LoRA caption student against the teacher.
+  \item Explore temporal/motion features for behavior classification (the static-feature approach failed).
+  \item Optionally add the 166 confirmed back-angle frames as \code{visible} training data.
+\end{itemize}
+
+\end{document}
