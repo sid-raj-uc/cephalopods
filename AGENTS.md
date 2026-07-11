@@ -200,6 +200,21 @@ state JSONs. Contents:
 - `caption_octopus_clips.ipynb` — **Colab** captioner, teacher = Qwen3-VL-30B (vLLM).
 - `caption_openrouter.py` — **local** captioner via the **OpenRouter API** (see below).
 - `train_caption_student.ipynb` — LoRA fine-tune of Qwen2.5-VL-3B (caption student).
+- `TRAINING_PLAN.md` — the **caption-student plan** (locked 2026-07): caption-ONLY distillation of
+  the Qwen3-VL-235B teacher into a **Qwen3-VL-2B** student (QLoRA), loss = LM cross-entropy on the
+  caption tokens only. **Incremental = retrain from base on a versioned cumulative snapshot** (Option
+  A; "continue when more clips arrive" = rebuild the bigger snapshot + retrain — NOT resume-on-new,
+  to avoid catastrophic forgetting). Ethogram label deliberately NOT trained here (its own model later).
+- `build_caption_dataset.py` — **dataset builder** (local, run after captioning). Selects present +
+  captioned + local clips (caption source `caption_235b`>`caption`, drops "octopus not present"),
+  CLIP-dedups within source video (reuses `clip_embeddings.npz`), splits train/val BY SOURCE VIDEO,
+  and writes best-N CLAHE frames (identical to teacher input) → `src/dataset/vN/` (frames + train.jsonl
+  + val.jsonl + snapshot.json). Flags `--version --dedup-thresh --val-frac --n-frames --caption-keys`.
+- `train_caption_student_qwen3vl.ipynb` — **the Colab QLoRA notebook (use this)**. Loads
+  `Qwen/Qwen3-VL-2B-Instruct` 4-bit via `AutoModelForImageTextToText` (fallback `MODEL_ID` =
+  Qwen2.5-VL-3B), phase-0 smoke test, trains on a `build_caption_dataset.py` snapshot zip (uploaded to
+  Drive `caption-student/`), saves the adapter to Drive, evals base-vs-LoRA (emb-sim + rougeL) on the
+  held-out val split.
 - `.env.example`, `requirements.txt`, `README.md`. `.env` (real creds) is gitignored — never commit it.
 - **Deliverable branch `octopus-pipeline-src`** (orphan, on GitHub): only `src/` + `weights/` + a root
   README — the clean shareable package.
