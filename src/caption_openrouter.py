@@ -13,7 +13,8 @@ Setup: put OPENROUTER_API_KEY in src/.env (or the environment). `ffmpeg` on PATH
 Run:   python3 caption_openrouter.py            # all uncaptioned clips
        python3 caption_openrouter.py --limit 5  # first 5
 """
-import os, sys, json, base64, argparse, subprocess, tempfile, time, datetime
+import os, sys, json, base64, argparse, subprocess, tempfile, time, datetime, threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
@@ -167,9 +168,49 @@ def call_openrouter(image_urls, prompt, retries=4):
     raise RuntimeError("OpenRouter: retries exhausted")
 
 
+_model_lock = threading.Lock()      # serialize CLIP inference (shared model, MPS not thread-safe)
+_json_lock  = threading.Lock()      # serialize index writes
+
+
+def process_one(e, clips_root, cap_key, etho_key, model_key, prompt, detector):
+    """Caption one clip (thread worker). Mutates e in place; returns (e, status).
+    status: captioned | absent | missing | noframes | apifail:<msg>"""
+    cm, pre, clf, vis, dev = detector
+    rel = e["clip_path"].split("octopus_clips_verified/", 1)[-1]
+    cp = clips_root / rel
+    if not cp.exists():
+        return e, "missing"
+    with tempfile.TemporaryDirectory() as tmp:
+        frames = extract_frames(cp, tmp)
+        if not frames:
+            return e, "noframes"
+        with _model_lock:                                   # CLIP scoring is fast; only this is serialized
+            sc = score(frames, cm, pre, clf, vis, dev)
+        maxp = max(sc)
+        e[f"{cap_key}_max_p"] = round(maxp, 4)
+        if maxp < PRESENT_MIN:
+            e[cap_key] = "octopus not present"; e[etho_key] = "octopus not present"
+            status = "absent"
+        else:
+            order = sorted(range(len(frames)), key=lambda k: sc[k], reverse=True)[:N_KEEP]
+            best = [frames[k] for k in sorted(order)]
+            imgs = [b64_image(f) for f in best]
+            try:
+                raw = call_openrouter(imgs, prompt)          # I/O-bound -> the win from running many in parallel
+            except Exception as ex:
+                return e, f"apifail:{ex}"
+            cap, etho = parse(raw)
+            e[cap_key] = cap; e[etho_key] = etho
+            status = "captioned"
+    e[model_key] = OR_MODEL
+    e[f"{cap_key}_at"] = datetime.datetime.now().isoformat(timespec="seconds")
+    return e, status
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=None, help="max clips to caption this run")
+    ap.add_argument("--workers", type=int, default=10, help="concurrent API requests (I/O-bound -> big speedup)")
     ap.add_argument("--index", type=str, default=str(INDEX_JSON), help="clip-index JSON to read/write")
     ap.add_argument("--clips-root", type=str, default=str(CLIPS_ROOT), help="dir the clip mp4s live under")
     ap.add_argument("--cap-key", type=str, default="caption",
@@ -187,43 +228,31 @@ def main():
     index = json.load(open(index_path)); clips = index["clips"]
     todo = [c for c in clips if not c.get(cap_key)]           # resume on THIS caption field
     if args.limit: todo = todo[:args.limit]
-    print(f"{len(clips)} clips | {len(todo)} to caption -> '{cap_key}' via {OR_MODEL}\n" + "-" * 60, flush=True)
+    print(f"{len(clips)} clips | {len(todo)} to caption -> '{cap_key}' via {OR_MODEL} | {args.workers} workers\n" + "-" * 60, flush=True)
     if not todo:
         print("nothing to do."); return
 
-    cm, pre, clf, vis, dev = load_detector()
-    done = absent = 0
-    for i, e in enumerate(todo, 1):
-        rel = e["clip_path"].split("octopus_clips_verified/", 1)[-1]
-        cp = clips_root / rel
-        print(f"[{i}/{len(todo)}] {e['clip_path']}", flush=True)
-        if not cp.exists():
-            print(f"  ! missing file: {cp}"); continue
-        with tempfile.TemporaryDirectory() as tmp:
-            frames = extract_frames(cp, tmp)
-            if not frames:
-                print("  no frames"); continue
-            sc = score(frames, cm, pre, clf, vis, dev); maxp = max(sc)
-            e[f"{cap_key}_max_p"] = round(maxp, 4)
-            if maxp < PRESENT_MIN:
-                e[cap_key] = "octopus not present"; e[etho_key] = "octopus not present"
-                absent += 1; print("  -> octopus not present (skipped API)")
-            else:
-                order = sorted(range(len(frames)), key=lambda k: sc[k], reverse=True)[:N_KEEP]
-                best = [frames[k] for k in sorted(order)]
-                imgs = [b64_image(f) for f in best]
-                try:
-                    raw = call_openrouter(imgs, prompt)
-                except Exception as ex:
-                    print(f"  ! API failed: {ex}"); continue
-                cap, etho = parse(raw)
-                e[cap_key] = cap; e[etho_key] = etho
-                print(f"  {etho} :: {cap[:90]}")
-        e[model_key] = OR_MODEL
-        e[f"{cap_key}_at"] = datetime.datetime.now().isoformat(timespec="seconds")
-        json.dump(index, open(index_path, "w"), indent=2); done += 1
+    detector = load_detector()
+    done = absent = apifail = missing = 0
+    completed = 0
+    with ThreadPoolExecutor(max_workers=args.workers) as ex:
+        futs = {ex.submit(process_one, e, clips_root, cap_key, etho_key, model_key, prompt, detector): e for e in todo}
+        for fut in as_completed(futs):
+            e, status = fut.result()
+            completed += 1
+            if status == "captioned":   done += 1
+            elif status == "absent":    absent += 1; done += 1
+            elif status == "missing":   missing += 1
+            elif status.startswith("apifail"): apifail += 1
+            label = e.get(etho_key, status); cap = str(e.get(cap_key, ""))[:70]
+            print(f"[{completed}/{len(todo)}] {status} :: {label} :: {cap}", flush=True)
+            with _json_lock:                                 # periodic durable save (resumable); full save at end
+                if completed % 20 == 0:
+                    json.dump(index, open(index_path, "w"), indent=2)
+    with _json_lock:
+        json.dump(index, open(index_path, "w"), indent=2)
 
-    print("-" * 60 + f"\nDone. captioned {done} ({absent} auto no-octopus). "
+    print("-" * 60 + f"\nDone. captioned {done} ({absent} auto/vlm no-octopus, {apifail} api-fail, {missing} missing-file). "
           f"'{cap_key}' filled: {sum(1 for c in clips if c.get(cap_key))}/{len(clips)}")
 
 
