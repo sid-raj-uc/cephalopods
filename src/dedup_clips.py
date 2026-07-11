@@ -81,6 +81,8 @@ def greedy_keep(items, emb, thresh):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", type=float, default=None, help="write keep/dup_of into the index at this threshold (within-video)")
+    ap.add_argument("--out", type=str, default=None, help="write dedup results to this SEPARATE json (index untouched)")
+    ap.add_argument("--out-thresh", type=float, default=0.93, help="within-video threshold for per-clip keep in --out")
     args = ap.parse_args()
 
     try:
@@ -102,11 +104,31 @@ def main():
         groups[(c["date"], c["segment"], c["camera"])].append((c["clip_path"], c.get("start_sec", 0)))
 
     print(f"{'thresh':>7} | {'within-video survivors':>22} | {'global survivors':>16}")
+    survivors = {}
     for T in [0.90, 0.93, 0.95, 0.97]:
         wv = sum(len(greedy_keep(v, emb, T)) for v in groups.values())
         gl = len(greedy_keep([(c["clip_path"], c.get("start_sec", 0)) for c in clips_e], emb, T))
+        survivors[f"{T:.2f}"] = {"within_video": wv, "global": gl}
         print(f"{T:7.2f} | {wv:22d} | {gl:16d}")
     print(f"\n(total embedded clips: {len(clips_e)} | source videos: {len(groups)})")
+
+    if args.out is not None:
+        import datetime
+        T = args.out_thresh
+        keep = set()
+        for v in groups.values():
+            keep.update(greedy_keep(v, emb, T))
+        results = {
+            "generated": datetime.datetime.now().isoformat(timespec="seconds"),
+            "index": INDEX.name, "n_embedded": len(clips_e), "n_videos": len(groups),
+            "survivors_by_threshold": survivors,
+            "keep_thresh_within_video": T, "n_keep": len(keep),
+            "clips": [{"clip_path": c["clip_path"], "date": c["date"], "segment": c["segment"],
+                       "camera": c["camera"], "start_sec": c.get("start_sec", 0),
+                       "keep": c["clip_path"] in keep} for c in clips_e],
+        }
+        json.dump(results, open(args.out, "w"), indent=2)
+        print(f"\nwrote dedup results -> {args.out}  ({len(keep)} kept / {len(clips_e)} at within-video {T})")
 
     if args.write is not None:
         T = args.write
