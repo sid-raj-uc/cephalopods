@@ -1,8 +1,8 @@
 {
   "task": "octopus_clip_extraction",
   "description": "Videos processed by the consolidated 20s-clip pipeline (scan_motion_area motion + >50% octopus visible). Do not reprocess. (seeded from clip_pipeline_processed.json so old exp27 videos are not rescanned)",
-  "updated_at": "2026-07-07T19:55:30",
-  "count": 568,
+  "updated_at": "2026-07-11T00:35:20",
+  "count": 1117,
   "processed": [
     {
       "video": "data/aquarium/full/2026-02-20/085420/Right_Front.mp4",
@@ -6250,6 +6250,6045 @@
       "n_frames": 1799,
       "sources": [
         "extract_octopus_clips"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/170002/Right_Right.mp4",
+      "date": "2026-02-22",
+      "segment": "170002",
+      "camera": "Right_Right",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/160002/Right_Right.mp4",
+      "date": "2026-02-22",
+      "segment": "160002",
+      "camera": "Right_Right",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/150001/Right_Right.mp4",
+      "date": "2026-02-22",
+      "segment": "150001",
+      "camera": "Right_Right",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/163002/Right_Right.mp4",
+      "date": "2026-02-22",
+      "segment": "163002",
+      "camera": "Right_Right",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/143001/Right_Right.mp4",
+      "date": "2026-02-22",
+      "segment": "143001",
+      "camera": "Right_Right",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/153002/Right_Right.mp4",
+      "date": "2026-02-22",
+      "segment": "153002",
+      "camera": "Right_Right",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/053001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "053001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/030000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "030000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/010000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "010000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/033000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "033000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/003000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "003000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/050001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "050001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/043000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "043000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/023000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "023000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/013000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "013000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/020000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "020000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/040000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "040000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/000000/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "000000",
+      "camera": "Right_Top",
+      "n_clips": 40,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/060001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "060001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/070001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "070001",
+      "camera": "Right_Top",
+      "n_clips": 2,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/063001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "063001",
+      "camera": "Right_Top",
+      "n_clips": 5,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/073001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "073001",
+      "camera": "Right_Top",
+      "n_clips": 26,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/080001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "080001",
+      "camera": "Right_Top",
+      "n_clips": 72,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/083001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "083001",
+      "camera": "Right_Top",
+      "n_clips": 79,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/103002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "103002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/113002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "113002",
+      "camera": "Right_Top",
+      "n_clips": 84,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/110002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "110002",
+      "camera": "Right_Top",
+      "n_clips": 83,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/100001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "100001",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/090001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "090001",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/093001/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "093001",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/133002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "133002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/130002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "130002",
+      "camera": "Right_Top",
+      "n_clips": 52,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/123002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "123002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/120002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "120002",
+      "camera": "Right_Top",
+      "n_clips": 79,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/140002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "140002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/143002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "143002",
+      "camera": "Right_Top",
+      "n_clips": 3,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/160003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "160003",
+      "camera": "Right_Top",
+      "n_clips": 4,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/163003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "163003",
+      "camera": "Right_Top",
+      "n_clips": 3,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/153003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "153003",
+      "camera": "Right_Top",
+      "n_clips": 18,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/150002/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "150002",
+      "camera": "Right_Top",
+      "n_clips": 53,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/180003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "180003",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/170003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "170003",
+      "camera": "Right_Top",
+      "n_clips": 39,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/173003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "173003",
+      "camera": "Right_Top",
+      "n_clips": 52,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/000000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "000000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/183003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "183003",
+      "camera": "Right_Top",
+      "n_clips": 20,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/003000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "003000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/010000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "010000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/013000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "013000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/020000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "020000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/193003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "193003",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/030000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "030000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/023000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "023000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/190003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "190003",
+      "camera": "Right_Top",
+      "n_clips": 22,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/033000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "033000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/043001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "043001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/040000/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "040000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/050001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "050001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/053001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "053001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/200003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "200003",
+      "camera": "Right_Top",
+      "n_clips": 7,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/203003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "203003",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/060001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "060001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/210003/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "210003",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/063001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "063001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/220004/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "220004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/070001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "070001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/213004/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "213004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/073001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "073001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/080001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "080001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/083001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "083001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/090001/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "090001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/093002/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "093002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/100002/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "100002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/103002/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "103002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/110002/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "110002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/113002/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "113002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/233004/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "233004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1791,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/123002/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "123002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/223004/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "223004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/120002/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "120002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-22/230004/Right_Top.mp4",
+      "date": "2026-02-22",
+      "segment": "230004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/130002/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "130002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/133003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "133003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/140003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "140003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1792,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/143003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "143003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/150003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "150003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/153003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "153003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/203004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "203004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/200004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "200004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/193004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "193004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/210004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "210004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/183004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "183004",
+      "camera": "Right_Back",
+      "n_clips": 5,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/160003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "160003",
+      "camera": "Right_Back",
+      "n_clips": 3,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/190004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "190004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/180003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "180003",
+      "camera": "Right_Back",
+      "n_clips": 1,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/213004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "213004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1792,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/223004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "223004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/220004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "220004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/230004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "230004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/233004/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "233004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1787,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/173003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "173003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/170003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "170003",
+      "camera": "Right_Back",
+      "n_clips": 9,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/003000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "003000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/000000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "000000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/013000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "013000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/163003/Right_Back.mp4",
+      "date": "2026-02-23",
+      "segment": "163003",
+      "camera": "Right_Back",
+      "n_clips": 19,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/040000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "040000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/010000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "010000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/033000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "033000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/023000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "023000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/030000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "030000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/020000/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "020000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/043001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "043001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/060001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "060001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/073001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "073001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/070001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "070001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/080001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "080001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/053001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "053001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/063001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "063001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/050001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "050001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/103002/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "103002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/100002/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "100002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/083001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "083001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/090001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "090001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/093001/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "093001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/110002/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "110002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/113002/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "113002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/123002/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "123002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/133002/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "133002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/130002/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "130002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/120002/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "120002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/140003/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "140003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/143003/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "143003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/150003/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "150003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/153003/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "153003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/160003/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "160003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/163003/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "163003",
+      "camera": "Right_Front",
+      "n_clips": 5,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/193004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "193004",
+      "camera": "Right_Front",
+      "n_clips": 16,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/180004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "180004",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/190004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "190004",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/173003/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "173003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/183004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "183004",
+      "camera": "Right_Front",
+      "n_clips": 4,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/170003/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "170003",
+      "camera": "Right_Front",
+      "n_clips": 6,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/203004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "203004",
+      "camera": "Right_Front",
+      "n_clips": 30,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/200004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "200004",
+      "camera": "Right_Front",
+      "n_clips": 28,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/210004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "210004",
+      "camera": "Right_Front",
+      "n_clips": 46,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/230005/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "230005",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/233005/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "233005",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1789,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/213004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "213004",
+      "camera": "Right_Front",
+      "n_clips": 39,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/220004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "220004",
+      "camera": "Right_Front",
+      "n_clips": 17,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/223004/Right_Front.mp4",
+      "date": "2026-02-23",
+      "segment": "223004",
+      "camera": "Right_Front",
+      "n_clips": 3,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/010000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "010000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/013000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "013000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/003000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "003000",
+      "camera": "Right_Top",
+      "n_clips": 6,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/000000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "000000",
+      "camera": "Right_Top",
+      "n_clips": 4,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/020000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "020000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/030000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "030000",
+      "camera": "Right_Top",
+      "n_clips": 5,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/023000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "023000",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/043001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "043001",
+      "camera": "Right_Top",
+      "n_clips": 15,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/033000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "033000",
+      "camera": "Right_Top",
+      "n_clips": 18,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/040000/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "040000",
+      "camera": "Right_Top",
+      "n_clips": 6,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/050001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "050001",
+      "camera": "Right_Top",
+      "n_clips": 44,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/083001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "083001",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/073001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "073001",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/080001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "080001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/070001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "070001",
+      "camera": "Right_Top",
+      "n_clips": 17,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/063001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "063001",
+      "camera": "Right_Top",
+      "n_clips": 47,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/090001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "090001",
+      "camera": "Right_Top",
+      "n_clips": 4,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/093001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "093001",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/053001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "053001",
+      "camera": "Right_Top",
+      "n_clips": 87,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/100002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "100002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/103002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "103002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/060001/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "060001",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/110002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "110002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/113002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "113002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/120002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "120002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/130002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "130002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/123002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "123002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/133002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "133002",
+      "camera": "Right_Top",
+      "n_clips": 7,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/140002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "140002",
+      "camera": "Right_Top",
+      "n_clips": 20,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/143002/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "143002",
+      "camera": "Right_Top",
+      "n_clips": 35,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/160003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "160003",
+      "camera": "Right_Top",
+      "n_clips": 59,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/163003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "163003",
+      "camera": "Right_Top",
+      "n_clips": 51,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/153003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "153003",
+      "camera": "Right_Top",
+      "n_clips": 90,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/150003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "150003",
+      "camera": "Right_Top",
+      "n_clips": 79,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/170003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "170003",
+      "camera": "Right_Top",
+      "n_clips": 88,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/190003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "190003",
+      "camera": "Right_Top",
+      "n_clips": 88,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/173003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "173003",
+      "camera": "Right_Top",
+      "n_clips": 77,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/000000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "000000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/003000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "003000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/183003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "183003",
+      "camera": "Right_Top",
+      "n_clips": 79,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/180003/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "180003",
+      "camera": "Right_Top",
+      "n_clips": 75,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/010000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "010000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/013000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "013000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/020000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "020000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/023000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "023000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/030000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "030000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/033000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "033000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/040000/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "040000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/043001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "043001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/050001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "050001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/053001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "053001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/060001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "060001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/063001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "063001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/070001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "070001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/073001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "073001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/080001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "080001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/083001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "083001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/090001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "090001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/193004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "193004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/093001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "093001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/203004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "203004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/100001/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "100001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/103002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "103002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/200004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "200004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/113002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "113002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/123002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "123002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/210004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "210004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/110002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "110002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/120002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "120002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/130002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "130002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/140002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "140002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/133002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "133002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/143002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "143002",
+      "camera": "Right_Back",
+      "n_clips": 2,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/153002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "153002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/223004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "223004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/150002/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "150002",
+      "camera": "Right_Back",
+      "n_clips": 2,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/220004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "220004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/213004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "213004",
+      "camera": "Right_Top",
+      "n_clips": 90,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/160003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "160003",
+      "camera": "Right_Back",
+      "n_clips": 6,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/193003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "193003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/190003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "190003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/200003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "200003",
+      "camera": "Right_Back",
+      "n_clips": 1,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/203003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "203003",
+      "camera": "Right_Back",
+      "n_clips": 1,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/230004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "230004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/183003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "183003",
+      "camera": "Right_Back",
+      "n_clips": 4,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/220004/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "220004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/213004/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "213004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1792,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/210004/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "210004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/223004/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "223004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/230004/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "230004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/233004/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "233004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1788,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/003000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "003000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/000000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "000000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-23/233004/Right_Top.mp4",
+      "date": "2026-02-23",
+      "segment": "233004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1790,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/010000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "010000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/170003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "170003",
+      "camera": "Right_Back",
+      "n_clips": 25,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/013000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "013000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/023000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "023000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/020000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "020000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/163003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "163003",
+      "camera": "Right_Back",
+      "n_clips": 43,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/030000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "030000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/180003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "180003",
+      "camera": "Right_Back",
+      "n_clips": 45,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/173003/Right_Back.mp4",
+      "date": "2026-02-24",
+      "segment": "173003",
+      "camera": "Right_Back",
+      "n_clips": 53,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/033000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "033000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/043000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "043000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/040000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "040000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/060000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "060000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/050000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "050000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/053000/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "053000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/070001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "070001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/073001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "073001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/063001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "063001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/080001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "080001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/090001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "090001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/143002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "143002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 0,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/100001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "100001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/083001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "083001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/093001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "093001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/140002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "140002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/103001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "103001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/123001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "123001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/150002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "150002",
+      "camera": "Right_Front",
+      "n_clips": 2,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/130001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "130001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/133002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "133002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/110001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "110001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/113001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "113001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/120001/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "120001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/153002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "153002",
+      "camera": "Right_Front",
+      "n_clips": 4,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/160002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "160002",
+      "camera": "Right_Front",
+      "n_clips": 19,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/200003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "200003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/190003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "190003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/183003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "183003",
+      "camera": "Right_Front",
+      "n_clips": 14,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/193003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "193003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/213003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "213003",
+      "camera": "Right_Front",
+      "n_clips": 4,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/203003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "203003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/163002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "163002",
+      "camera": "Right_Front",
+      "n_clips": 72,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/210003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "210003",
+      "camera": "Right_Front",
+      "n_clips": 9,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/170002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "170002",
+      "camera": "Right_Front",
+      "n_clips": 65,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/220003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "220003",
+      "camera": "Right_Front",
+      "n_clips": 8,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/173002/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "173002",
+      "camera": "Right_Front",
+      "n_clips": 73,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/180003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "180003",
+      "camera": "Right_Front",
+      "n_clips": 80,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/223003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "223003",
+      "camera": "Right_Front",
+      "n_clips": 1,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/230003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "230003",
+      "camera": "Right_Front",
+      "n_clips": 31,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/050001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "050001",
+      "camera": "Right_Top",
+      "n_clips": 9,
+      "n_frames": 190,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/233003/Right_Front.mp4",
+      "date": "2026-02-24",
+      "segment": "233003",
+      "camera": "Right_Front",
+      "n_clips": 17,
+      "n_frames": 1790,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/043001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "043001",
+      "camera": "Right_Top",
+      "n_clips": 23,
+      "n_frames": 474,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/040000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "040000",
+      "camera": "Right_Top",
+      "n_clips": 35,
+      "n_frames": 716,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/033000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "033000",
+      "camera": "Right_Top",
+      "n_clips": 55,
+      "n_frames": 1100,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/073001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "073001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 9,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/080001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "080001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 3,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/023000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "023000",
+      "camera": "Right_Top",
+      "n_clips": 59,
+      "n_frames": 1212,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/030000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "030000",
+      "camera": "Right_Top",
+      "n_clips": 59,
+      "n_frames": 1186,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/000000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "000000",
+      "camera": "Right_Top",
+      "n_clips": 87,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/020000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "020000",
+      "camera": "Right_Top",
+      "n_clips": 88,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/063001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "063001",
+      "camera": "Right_Top",
+      "n_clips": 21,
+      "n_frames": 464,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/070001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "070001",
+      "camera": "Right_Top",
+      "n_clips": 21,
+      "n_frames": 467,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/010000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "010000",
+      "camera": "Right_Top",
+      "n_clips": 82,
+      "n_frames": 1640,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/013000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "013000",
+      "camera": "Right_Top",
+      "n_clips": 88,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/003000/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "003000",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/060001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "060001",
+      "camera": "Right_Top",
+      "n_clips": 39,
+      "n_frames": 801,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/053001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "053001",
+      "camera": "Right_Top",
+      "n_clips": 41,
+      "n_frames": 823,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/090001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "090001",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/093001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "093001",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/083001/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "083001",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/100002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "100002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/110002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "110002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/103002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "103002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/120002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "120002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/123002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "123002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/113002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "113002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/133002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "133002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/130002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "130002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/140002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "140002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/143002/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "143002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/200004/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "200004",
+      "camera": "Right_Top",
+      "n_clips": 76,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/153003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "153003",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/173003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "173003",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/150003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "150003",
+      "camera": "Right_Top",
+      "n_clips": 90,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/160003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "160003",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/183003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "183003",
+      "camera": "Right_Top",
+      "n_clips": 81,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/193003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "193003",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/180003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "180003",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/170003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "170003",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/190003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "190003",
+      "camera": "Right_Top",
+      "n_clips": 88,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/013000/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "013000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/010000/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "010000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/163003/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "163003",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/020000/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "020000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1792,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/023000/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "023000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/003000/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "003000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/030000/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "030000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/033000/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "033000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/040001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "040001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/043001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "043001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/050001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "050001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/053001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "053001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/000000/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "000000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/060001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "060001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/063001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "063001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/083001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "083001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/070001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "070001",
+      "camera": "Right_Back",
+      "n_clips": 2,
+      "n_frames": 1792,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/090002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "090002",
+      "camera": "Right_Back",
+      "n_clips": 1,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/073001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "073001",
+      "camera": "Right_Back",
+      "n_clips": 5,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/093002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "093002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/100002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "100002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/103002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "103002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1792,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/110002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "110002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1792,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/120002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "120002",
+      "camera": "Right_Back",
+      "n_clips": 1,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/113002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "113002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/080001/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "080001",
+      "camera": "Right_Back",
+      "n_clips": 15,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/130002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "130002",
+      "camera": "Right_Back",
+      "n_clips": 10,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/140002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "140002",
+      "camera": "Right_Back",
+      "n_clips": 10,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/123002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "123002",
+      "camera": "Right_Back",
+      "n_clips": 38,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/143002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "143002",
+      "camera": "Right_Back",
+      "n_clips": 18,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/133002/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "133002",
+      "camera": "Right_Back",
+      "n_clips": 41,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/203004/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "203004",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/153003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "153003",
+      "camera": "Right_Back",
+      "n_clips": 4,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/210004/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "210004",
+      "camera": "Right_Top",
+      "n_clips": 76,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/150003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "150003",
+      "camera": "Right_Back",
+      "n_clips": 24,
+      "n_frames": 1792,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/213004/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "213004",
+      "camera": "Right_Top",
+      "n_clips": 80,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/220004/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "220004",
+      "camera": "Right_Top",
+      "n_clips": 71,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/180003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "180003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/223004/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "223004",
+      "camera": "Right_Top",
+      "n_clips": 81,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/230004/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "230004",
+      "camera": "Right_Top",
+      "n_clips": 70,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/173003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "173003",
+      "camera": "Right_Back",
+      "n_clips": 13,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/203004/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "203004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/163003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "163003",
+      "camera": "Right_Back",
+      "n_clips": 29,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/210004/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "210004",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/160003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "160003",
+      "camera": "Right_Back",
+      "n_clips": 52,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-24/233004/Right_Top.mp4",
+      "date": "2026-02-24",
+      "segment": "233004",
+      "camera": "Right_Top",
+      "n_clips": 86,
+      "n_frames": 1790,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/213004/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "213004",
+      "camera": "Right_Back",
+      "n_clips": 4,
+      "n_frames": 1793,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/170003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "170003",
+      "camera": "Right_Back",
+      "n_clips": 30,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/200003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "200003",
+      "camera": "Right_Back",
+      "n_clips": 6,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/233004/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "233004",
+      "camera": "Right_Back",
+      "n_clips": 2,
+      "n_frames": 1787,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/183003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "183003",
+      "camera": "Right_Back",
+      "n_clips": 30,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/230004/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "230004",
+      "camera": "Right_Back",
+      "n_clips": 4,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/220004/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "220004",
+      "camera": "Right_Back",
+      "n_clips": 9,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/023000/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "023000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 156,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/013000/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "013000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 255,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/010000/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "010000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 412,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/030000/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "030000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 66,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/033000/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "033000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 24,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/020000/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "020000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 264,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/003000/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "003000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 549,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/000000/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "000000",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 263,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/050001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "050001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 306,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/070001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "070001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 128,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/060001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "060001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 246,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/040001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "040001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 198,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/080001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "080001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 75,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/063001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "063001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 210,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/043001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "043001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 229,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/073001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "073001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 180,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/223004/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "223004",
+      "camera": "Right_Back",
+      "n_clips": 8,
+      "n_frames": 1479,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/123002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "123002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/193003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "193003",
+      "camera": "Right_Back",
+      "n_clips": 31,
+      "n_frames": 1673,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/190003/Right_Back.mp4",
+      "date": "2026-02-25",
+      "segment": "190003",
+      "camera": "Right_Back",
+      "n_clips": 47,
+      "n_frames": 1599,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/083001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "083001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/053001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "053001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/090001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "090001",
+      "camera": "Right_Front",
+      "n_clips": 2,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/093001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "093001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/100001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "100001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/103001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "103001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/120002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "120002",
+      "camera": "Right_Front",
+      "n_clips": 3,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/113002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "113002",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/110001/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "110001",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/130002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "130002",
+      "camera": "Right_Front",
+      "n_clips": 47,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/133002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "133002",
+      "camera": "Right_Front",
+      "n_clips": 65,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/153002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "153002",
+      "camera": "Right_Front",
+      "n_clips": 50,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/150002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "150002",
+      "camera": "Right_Front",
+      "n_clips": 51,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/140002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "140002",
+      "camera": "Right_Front",
+      "n_clips": 71,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/143002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "143002",
+      "camera": "Right_Front",
+      "n_clips": 70,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/183003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "183003",
+      "camera": "Right_Front",
+      "n_clips": 21,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/173003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "173003",
+      "camera": "Right_Front",
+      "n_clips": 81,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/160002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "160002",
+      "camera": "Right_Front",
+      "n_clips": 84,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/170002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "170002",
+      "camera": "Right_Front",
+      "n_clips": 76,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/180003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "180003",
+      "camera": "Right_Front",
+      "n_clips": 84,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/203003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "203003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/163002/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "163002",
+      "camera": "Right_Front",
+      "n_clips": 84,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/210003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "210003",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/190003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "190003",
+      "camera": "Right_Front",
+      "n_clips": 4,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/213003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "213003",
+      "camera": "Right_Front",
+      "n_clips": 7,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/220003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "220003",
+      "camera": "Right_Front",
+      "n_clips": 7,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/200003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "200003",
+      "camera": "Right_Front",
+      "n_clips": 28,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/033000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "033000",
+      "camera": "Right_Top",
+      "n_clips": 3,
+      "n_frames": 78,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/193003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "193003",
+      "camera": "Right_Front",
+      "n_clips": 27,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/043000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "043000",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 23,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/040000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "040000",
+      "camera": "Right_Top",
+      "n_clips": 3,
+      "n_frames": 67,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/050001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "050001",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 28,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/053001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "053001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 5,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/063001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "063001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 9,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/070001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "070001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 19,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/060001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "060001",
+      "camera": "Right_Top",
+      "n_clips": 2,
+      "n_frames": 53,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/073001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "073001",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 24,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/083001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "083001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 40,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/080001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "080001",
+      "camera": "Right_Top",
+      "n_clips": 2,
+      "n_frames": 46,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/223003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "223003",
+      "camera": "Right_Front",
+      "n_clips": 39,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/030000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "030000",
+      "camera": "Right_Top",
+      "n_clips": 26,
+      "n_frames": 534,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/023000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "023000",
+      "camera": "Right_Top",
+      "n_clips": 37,
+      "n_frames": 794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/233003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "233003",
+      "camera": "Right_Front",
+      "n_clips": 55,
+      "n_frames": 1790,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/020000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "020000",
+      "camera": "Right_Top",
+      "n_clips": 47,
+      "n_frames": 995,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/003000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "003000",
+      "camera": "Right_Top",
+      "n_clips": 62,
+      "n_frames": 1302,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/013000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "013000",
+      "camera": "Right_Top",
+      "n_clips": 66,
+      "n_frames": 1392,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/230003/Right_Front.mp4",
+      "date": "2026-02-25",
+      "segment": "230003",
+      "camera": "Right_Front",
+      "n_clips": 66,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/000000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "000000",
+      "camera": "Right_Top",
+      "n_clips": 63,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/010000/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "010000",
+      "camera": "Right_Top",
+      "n_clips": 71,
+      "n_frames": 1435,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/090001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "090001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/103002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "103002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/100002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "100002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/120002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "120002",
+      "camera": "Right_Top",
+      "n_clips": 1,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/093001/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "093001",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/110002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "110002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/113002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "113002",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1794,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/143002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "143002",
+      "camera": "Right_Top",
+      "n_clips": 14,
+      "n_frames": 1795,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/133002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "133002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/150003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "150003",
+      "camera": "Right_Top",
+      "n_clips": 26,
+      "n_frames": 1800,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/130002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "130002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1797,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/123002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "123002",
+      "camera": "Right_Top",
+      "n_clips": 89,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/203004/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "203004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 14,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/190003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "190003",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 136,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/200003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "200003",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 149,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/153003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "153003",
+      "camera": "Right_Top",
+      "n_clips": 26,
+      "n_frames": 1799,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/220004/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "220004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 43,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/213004/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "213004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 44,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/210004/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "210004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 44,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/233004/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "233004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 1,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/193003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "193003",
+      "camera": "Right_Top",
+      "n_clips": 5,
+      "n_frames": 117,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/230004/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "230004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 7,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/223004/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "223004",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 6,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/000000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "000000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 88,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/010000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "010000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 562,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/013000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "013000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 466,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/023000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "023000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 349,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/020000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "020000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 519,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/003000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "003000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 371,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/030000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "030000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 109,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/043000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "043000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 425,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/053001/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "053001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 385,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/170003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "170003",
+      "camera": "Right_Top",
+      "n_clips": 9,
+      "n_frames": 1499,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/183003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "183003",
+      "camera": "Right_Top",
+      "n_clips": 12,
+      "n_frames": 596,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/140002/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "140002",
+      "camera": "Right_Top",
+      "n_clips": 82,
+      "n_frames": 1796,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/160003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "160003",
+      "camera": "Right_Top",
+      "n_clips": 13,
+      "n_frames": 1798,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/040000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "040000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 745,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/180003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "180003",
+      "camera": "Right_Top",
+      "n_clips": 11,
+      "n_frames": 1357,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/060001/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "060001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 45,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/063001/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "063001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 78,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/173003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "173003",
+      "camera": "Right_Top",
+      "n_clips": 9,
+      "n_frames": 1333,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/050000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "050000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 896,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/070001/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "070001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 16,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-25/163003/Right_Top.mp4",
+      "date": "2026-02-25",
+      "segment": "163003",
+      "camera": "Right_Top",
+      "n_clips": 8,
+      "n_frames": 1493,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-26/033000/Right_Back.mp4",
+      "date": "2026-02-26",
+      "segment": "033000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 804,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/124539/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "124539",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 372,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/184638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "184638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 84,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/191638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "191638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 13,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/154636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "154636",
+      "camera": "Right_Front",
+      "n_clips": 2,
+      "n_frames": 202,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/201638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "201638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 2,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/194638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "194638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 47,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/161636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "161636",
+      "camera": "Right_Front",
+      "n_clips": 4,
+      "n_frames": 459,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/144636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "144636",
+      "camera": "Right_Front",
+      "n_clips": 4,
+      "n_frames": 332,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/211638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "211638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 72,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/204638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "204638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 65,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/134636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "134636",
+      "camera": "Right_Front",
+      "n_clips": 5,
+      "n_frames": 378,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/131636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "131636",
+      "camera": "Right_Front",
+      "n_clips": 4,
+      "n_frames": 626,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/224638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "224638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 39,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/141636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "141636",
+      "camera": "Right_Front",
+      "n_clips": 6,
+      "n_frames": 357,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/181638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "181638",
+      "camera": "Right_Front",
+      "n_clips": 6,
+      "n_frames": 257,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/221638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "221638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 165,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/231638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "231638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 183,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/214638/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "214638",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 180,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/000000/Right_Top.mp4",
+      "date": "2026-02-28",
+      "segment": "000000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 46,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/010000/Right_Top.mp4",
+      "date": "2026-02-28",
+      "segment": "010000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 7,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/234639/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "234639",
+      "camera": "Right_Front",
+      "n_clips": 0,
+      "n_frames": 166,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/003000/Right_Top.mp4",
+      "date": "2026-02-28",
+      "segment": "003000",
+      "camera": "Right_Top",
+      "n_clips": 0,
+      "n_frames": 32,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/171636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "171636",
+      "camera": "Right_Front",
+      "n_clips": 7,
+      "n_frames": 234,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/174636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "174636",
+      "camera": "Right_Front",
+      "n_clips": 7,
+      "n_frames": 218,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/151636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "151636",
+      "camera": "Right_Front",
+      "n_clips": 10,
+      "n_frames": 334,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-02-28/164636/Right_Front.mp4",
+      "date": "2026-02-28",
+      "segment": "164636",
+      "camera": "Right_Front",
+      "n_clips": 8,
+      "n_frames": 294,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/080001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "080001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 245,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/060001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "060001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 319,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/073001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "073001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 240,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/083001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "083001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 237,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/093001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "093001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 279,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/103001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "103001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 224,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/070001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "070001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 223,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/053001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "053001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 280,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/090001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "090001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 359,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/100001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "100001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 176,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/063001/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "063001",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 214,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/050000/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "050000",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 213,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/120002/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "120002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 88,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/163003/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "163003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 24,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/153002/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "153002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 32,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/160003/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "160003",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 61,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/143002/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "143002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 56,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/133002/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "133002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 33,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/130002/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "130002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 12,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/110002/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "110002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 86,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/113002/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "113002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 76,
+      "sources": [
+        "extract_octopus_clips_fast"
+      ]
+    },
+    {
+      "video": "data/aquarium/full/2026-03-07/150002/Right_Back.mp4",
+      "date": "2026-03-07",
+      "segment": "150002",
+      "camera": "Right_Back",
+      "n_clips": 0,
+      "n_frames": 32,
+      "sources": [
+        "extract_octopus_clips_fast"
       ]
     }
   ]
