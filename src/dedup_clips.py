@@ -14,6 +14,7 @@ Run: python3 dedup_clips.py                 # report survivors at a few threshol
      python3 dedup_clips.py --write 0.93     # also write keep/dup_of into the index at 0.93
 """
 import argparse, json, subprocess, tempfile, sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from collections import defaultdict
 
@@ -41,29 +42,41 @@ def resolve(cp: str) -> Path:
     return HERE / cp                           # new clips live under src/
 
 
-def embed_all(clips, cm, pre):
+def _prep_frames(clip_path, pre):
+    """ffmpeg extract + load N_FRAMES preprocessed CPU tensors. Runs in worker THREADS
+    (ffmpeg + PIL + preprocess are CPU/IO — safe off-main-thread). NO GPU/MPS here."""
+    with tempfile.TemporaryDirectory() as t:
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-i", str(resolve(clip_path)),
+                        "-vf", "fps=1", "-q:v", "3", f"{t}/f_%03d.jpg"], capture_output=True)
+        fs = sorted(Path(t).glob("f_*.jpg"))
+        if not fs:
+            return None
+        idx = np.linspace(0, len(fs) - 1, min(N_FRAMES, len(fs))).round().astype(int)
+        return torch.stack([pre(letterbox(Image.open(fs[k]).convert("RGB"))) for k in idx])
+
+
+def embed_all(clips, cm, pre, workers=8):
     cache = {}
     if CACHE.exists():
         z = np.load(CACHE, allow_pickle=True)
         cache = {p: v for p, v in zip(list(z["paths"]), z["embs"])}
     todo = [c for c in clips if c["clip_path"] not in cache and resolve(c["clip_path"]).exists()]
-    print(f"embedding {len(todo)} clips ({len(cache)} cached) ...", flush=True)
-    for i, c in enumerate(todo, 1):
-        with tempfile.TemporaryDirectory() as t:
-            subprocess.run(["ffmpeg", "-loglevel", "error", "-i", str(resolve(c["clip_path"])),
-                            "-vf", "fps=1", "-q:v", "3", f"{t}/f_%03d.jpg"], capture_output=True)
-            fs = sorted(Path(t).glob("f_*.jpg"))
-            if not fs:
-                continue
-            idx = np.linspace(0, len(fs) - 1, min(N_FRAMES, len(fs))).round().astype(int)
-            ims = [pre(letterbox(Image.open(fs[k]).convert("RGB"))) for k in idx]
-            with torch.no_grad():
-                f = cm.encode_image(torch.stack(ims).to(device)).float(); f = f / f.norm(dim=-1, keepdim=True)
-                v = f.mean(0); v = (v / v.norm()).cpu().numpy()
-            cache[c["clip_path"]] = v
-        if i % 100 == 0 or i == len(todo):
-            print(f"  {i}/{len(todo)}", flush=True)
-            np.savez(CACHE, paths=list(cache), embs=np.array(list(cache.values()), np.float32))
+    print(f"embedding {len(todo)} clips ({len(cache)} cached) | {workers} prep-workers ...", flush=True)
+
+    # threads do ffmpeg/image prep in parallel (ordered stream); MPS encode stays on the MAIN thread
+    # (PyTorch MPS hangs if encode is called from a worker thread).
+    done = 0
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for c, ims in zip(todo, ex.map(lambda cc: _prep_frames(cc["clip_path"], pre), todo)):
+            done += 1
+            if ims is not None:
+                with torch.no_grad():                  # encode on main thread
+                    f = cm.encode_image(ims.to(device)).float(); f = f / f.norm(dim=-1, keepdim=True)
+                    v = f.mean(0); v = (v / v.norm()).cpu().numpy()
+                cache[c["clip_path"]] = v
+            if done % 100 == 0 or done == len(todo):
+                print(f"  {done}/{len(todo)}", flush=True)
+                np.savez(CACHE, paths=list(cache), embs=np.array(list(cache.values()), np.float32))
     np.savez(CACHE, paths=list(cache), embs=np.array(list(cache.values()), np.float32))
     return cache
 
@@ -83,6 +96,7 @@ def main():
     ap.add_argument("--write", type=float, default=None, help="write keep/dup_of into the index at this threshold (within-video)")
     ap.add_argument("--out", type=str, default=None, help="write dedup results to this SEPARATE json (index untouched)")
     ap.add_argument("--out-thresh", type=float, default=0.93, help="within-video threshold for per-clip keep in --out")
+    ap.add_argument("--workers", type=int, default=8, help="parallel ffmpeg frame-extraction workers")
     args = ap.parse_args()
 
     try:
@@ -95,7 +109,7 @@ def main():
     index = json.load(open(INDEX)); clips = index["clips"]
     have_file = [c for c in clips if resolve(c["clip_path"]).exists()]
     print(f"index clips: {len(clips)} | files present: {len(have_file)} | device {device}")
-    emb = embed_all(have_file, cm, pre)
+    emb = embed_all(have_file, cm, pre, workers=args.workers)
     clips_e = [c for c in have_file if c["clip_path"] in emb]
     print(f"embedded: {len(clips_e)}\n" + "-" * 60)
 
