@@ -20,13 +20,16 @@ import argparse, json, hashlib, tempfile, datetime, sys
 from pathlib import Path
 from collections import defaultdict
 
+import numpy as np
 from PIL import Image
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 # reuse the exact teacher-side helpers so training frames match caption-time frames
 from caption_openrouter import load_detector, extract_frames, score, enhance, N_KEEP, IMG_MAXSIDE
-from dedup_clips import embed_all, greedy_keep, resolve
+from dedup_clips import embed_all, greedy_keep, resolve, CACHE
+
+NOT_PRESENT = "octopus not present"     # canonical reject caption
 
 INDEX        = HERE / "octopus_clips_verified.json"
 DATASET_ROOT = HERE / "dataset"
@@ -72,6 +75,10 @@ def main():
     ap.add_argument("--val-frac", type=float, default=0.10)
     ap.add_argument("--n-frames", type=int, default=N_KEEP)
     ap.add_argument("--caption-keys", default="caption_235b,caption", help="comma-sep priority list")
+    ap.add_argument("--not-present", type=int, default=0,
+                    help="also include up to N diverse 'octopus not present' clips (teaches the reject)")
+    ap.add_argument("--np-thresh", type=float, default=0.95,
+                    help="global CLIP-sim threshold for sampling DIVERSE not-present clips")
     ap.add_argument("--limit", type=int, default=None, help="cap kept clips (debug)")
     args = ap.parse_args()
     cap_keys = [k.strip() for k in args.caption_keys.split(",")]
@@ -106,6 +113,19 @@ def main():
             keep.update(greedy_keep(g, emb, args.dedup_thresh))
         cand = [(xmap[cp], capm[cp]) for cp in keep]
         print(f"after within-video dedup @ {args.dedup_thresh}: {len(cand)}", flush=True)
+
+    if args.not_present > 0:                       # add a capped, DIVERSE sample of empty clips (reject signal)
+        npres = [x for x in clips if x.get("ethogram_label") == NOT_PRESENT and resolve(x["clip_path"]).exists()]
+        emb = {}
+        if CACHE.exists():
+            z = np.load(CACHE, allow_pickle=True)
+            emb = {p: v for p, v in zip(z["paths"].tolist(), z["embs"])}
+        with_emb = [x for x in npres if x["clip_path"] in emb]
+        kept = greedy_keep([(x["clip_path"], x.get("start_sec", 0)) for x in with_emb], emb, args.np_thresh)[:args.not_present]
+        npm = {x["clip_path"]: x for x in npres}
+        for cp in kept:
+            cand.append((npm[cp], NOT_PRESENT))
+        print(f"+ {len(kept)} diverse not-present clips (of {len(npres)} available, {len(with_emb)} embedded)", flush=True)
 
     if args.limit:
         cand = cand[:args.limit]
