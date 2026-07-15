@@ -16,7 +16,7 @@ Caption-only distillation set for the Qwen3-VL-2B student. Per run it:
 Run:  python3 build_caption_dataset.py                 # auto vN, dedup @ 0.93, 10% val
       python3 build_caption_dataset.py --version v1 --dedup-thresh 0.95 --val-frac 0.1
 """
-import argparse, json, hashlib, tempfile, datetime, sys
+import argparse, json, hashlib, tempfile, datetime, sys, re
 from pathlib import Path
 from collections import defaultdict
 
@@ -30,6 +30,11 @@ from caption_openrouter import load_detector, extract_frames, score, enhance, N_
 from dedup_clips import embed_all, greedy_keep, resolve, CACHE
 
 NOT_PRESENT = "octopus not present"     # canonical reject caption
+# reject-style captions the VLM sometimes emits despite a behavior-ish label — must NOT enter a present-only set
+_REJECT_CAP = re.compile(
+    r"not (visible|present) in (any|these|the (provided |given )?(frame|image))"
+    r"|^(the |an )?octopus (is )?(not|is not) (visible|present)"
+    r"|no octopus (is )?(visible|present)|remains hidden and not visible", re.I)
 
 INDEX        = HERE / "octopus_clips_verified.json"
 DATASET_ROOT = HERE / "dataset"
@@ -49,7 +54,7 @@ def pick_caption(x, keys):
         if v.lower().startswith("caption:"):
             v = v[8:].strip()
         low = v.lower()
-        if "not present" in low or low in ("uncertain", "unknown", ""):
+        if _REJECT_CAP.search(v) or "not present" in low or low in ("uncertain", "unknown", ""):
             continue
         return v
     return None
