@@ -215,6 +215,23 @@ state JSONs. Contents:
   Qwen2.5-VL-3B), phase-0 smoke test, trains on a `build_caption_dataset.py` snapshot zip (uploaded to
   Drive `caption-student/`), saves the adapter to Drive, evals base-vs-LoRA (emb-sim + rougeL) on the
   held-out val split.
+- `local_pipeline.py` — **optimized local pipeline module + CLI** (`python local_pipeline.py <video> --camera X`).
+  Same gates/clips/frames as `extract_octopus_clips.py` + the MLX student, but two speedups: **(A) single-decode
+  scan** — decodes the video ONCE and feeds both the CLIP octopus classifier (pad→224²) and the motion
+  detector (cv2 stretch→224² grey, timestamp-masked) from that one stream (naive thread-parallel decode is
+  SLOWER — video decode is CPU-bound + already multithreaded, so two concurrent decodes just contend). Cuts
+  scan ~219s→130s on a 30-min video, verified byte-identical clip set (89 windows). **(B) caption reuses the
+  scan's per-second p_visible** to pick best-N frames instead of re-extracting dense frames + re-running CLIP
+  per clip (equivalent captions; small win since MLX generation dominates ~5–12s/clip and is the real cost —
+  batching is the next lever). Exposes `process_video(video, out_dir, M, on_stage=, on_clip=)` for the UI.
+- `local_video_to_captions.ipynb` — **fully-local end-to-end demo notebook (video in → captions out)**.
+  Takes ONE local video (set `VIDEO_PATH`, Run All), runs the same extraction gates as
+  `extract_octopus_clips.py` (octopus CLIP+MLP + `scan_motion_area`, 20s windows, >50% visible & motion≥0.008)
+  but reads a **local file** (no server/creds), then captions each clip with the **local MLX 4-bit student**
+  (`models/qwen3vl2b_caption_v1_mlx_4bit`). Reuses `caption_openrouter`'s exact frame prep (dense→score→top-6
+  CLAHE) so the VLM input matches training. Outputs to `local_pipeline_out/` (clips + `<stem>_captions.json`);
+  does NOT touch the shared index. ~a few min to scan a 30-min video + ~3s/clip to caption on Apple Silicon.
+  Verified end-to-end 2026-07-17. See [[caption-student-mlx-4bit]].
 - `.env.example`, `requirements.txt`, `README.md`. `.env` (real creds) is gitignored — never commit it.
 - **Deliverable branch `octopus-pipeline-src`** (orphan, on GitHub): only `src/` + `weights/` + a root
   README — the clean shareable package.
@@ -246,6 +263,17 @@ Reaching out of water / Human/enrichment interaction / Colour change/defensive (
   **temporal/motion features**, not more labels.
 - **Caption student** (`train_caption_student.ipynb`, Colab): QLoRA fine-tune of Qwen2.5-VL-3B distilling
   the teacher captions; `demo_video_to_captions.ipynb` runs base vs LoRA on a fresh video.
+  - **Trained adapter (v1, DONE 2026-07-15):** `Qwen3-VL-2B` + LoRA r16/α32, 3066 train / 392 val,
+    576 steps. Eval (50 held-out val): base emb-sim 0.702 / rougeL 0.269 → **LoRA 0.834 / 0.455**.
+    Adapter on Drive `GSOC-Catrobat/caption-student/lora_out/qwen3vl2b_caption_v1(.zip)`.
+  - **Local 4-bit deploy (MLX, runs on the 16GB Mac, ~3s/caption, no CUDA):** merge adapter→fp16 base
+    then convert with mlx-vlm. Recipe (`scratchpad/merge_adapter.py` + `mlx_vlm.convert -q --q-bits 4
+    --q-group-size 64`). Outputs `models/qwen3vl2b_caption_v1_merged/` (fp16, 4.3G) and
+    `models/qwen3vl2b_caption_v1_mlx_4bit/` (**1.7G, the deliverable**). bitsandbytes NF4 is CUDA-only
+    so it does NOT run on Mac — MLX is the Apple-Silicon 4-bit path (`mlx-vlm` 0.6.3 supports `qwen3_vl`).
+    **Two config patches needed** (transformers 5.x vs mlx-vlm drift, else convert fails): in the merged
+    `config.json`, (1) add flat `text_config.rope_theta` + `rope_scaling` from `text_config.rope_parameters`;
+    (2) set `vision_config.model_type` `qwen3_vl_vision`→`qwen3_vl`. Test with `mlx_vlm.load`+`generate`.
 
 ## Review / labeling UIs (FastAPI, local)
 - `ui/review_captions.py` (8005) — approve/reject/edit caption+label, writes into the index.
@@ -254,6 +282,21 @@ Reaching out of water / Human/enrichment interaction / Colour change/defensive (
   `data/caption_training_set.json` (human ground truth; `caption_source` = v1/v2/human).
 - `ui/compare_base_lora.py` (8009) — base vs LoRA captions, streams clips from the server.
 - `ui/review_hardneg.py` (8004) — hard-negative frame review.
+- `ui/local_pipeline_app.py` (8010) — **local pipeline UI (video → clips → captions with timeline)**. Pick a
+  suggested server video (ranked by # present-octopus clips from the index) or type a local video path; runs
+  `src/local_pipeline.py` (one job at a time, models loaded once) and streams each extracted clip inline next
+  to its caption + `mm:ss-mm:ss` timeline. Endpoints: `/api/suggestions`, `POST /api/run`, `/api/status`,
+  `/clip`. Run: `venv/bin/python3 ui/local_pipeline_app.py` → http://localhost:8010.
+- `ui/demo_player.py` (8011) — **demo player: full video LEFT, synced captions RIGHT**. Pure viewer (no models):
+  reads pre-processed local demos from `data/demo_videos/` (each `*.mp4` + `*_captions.json` made by
+  `local_pipeline.process_video(..., save_clips=False)`). Tabs pick a video; the 30-min video plays on the left
+  (served via range-capable `FileResponse` → seekable) while its captions list on the right — click a caption to
+  jump the video there, and the active caption highlights + auto-scrolls as it plays. The `data/demo_videos/` set
+  is ~5–6 good-motion segments (ranked by index `mean_motion`). Also has an **⬆ Upload a video** button:
+  `POST /api/upload` saves the file into `data/demo_videos/` and runs the pipeline on it (lazy-loads models on
+  first upload, one job at a time; `save_clips=False`), polled via `/api/upload_status`; the finished video shows
+  up as a new tab with its captions. Needs `python-multipart`. Run: `venv/bin/python3 ui/demo_player.py` →
+  http://localhost:8011.
 
 ## Credentials
 `.env` (repo root, gitignored) holds `OCTOPUS_USER`/`OCTOPUS_PASS` (footage server) and
