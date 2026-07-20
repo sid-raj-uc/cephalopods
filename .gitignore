@@ -17,6 +17,11 @@ venv/
 .ipynb_checkpoints/
 
 # Data — large binary assets not suitable for git
+frames_classifier_corpus_full.zip
+models/
+src/dataset/
+src/octopus_clips_verified/
+local_pipeline_out/
 data/
 !data/ethogram_index.json
 !data/octopus_clips_processed.json
