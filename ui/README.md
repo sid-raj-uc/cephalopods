@@ -1,9 +1,14 @@
 # Captioning UI
 
 Two FastAPI apps. Both run the full local pipeline (`src/local_pipeline.py`:
-CLIP+MLP octopus detection + absolute-motion gating → 20 s windows → MLX 4-bit
-caption student). Install deps from `src/requirements.txt`, fetch the model with
+CLIP+MLP octopus detection + absolute-motion gating → 20 s windows → caption
+student). Install deps from `src/requirements.txt`, fetch the model with
 `../download_model.sh`, and make sure `ffmpeg` is on PATH.
+
+**Cross-platform:** the caption student runs on Mac, Linux, Windows, CPU or GPU —
+`local_pipeline.py` auto-selects the MLX 4-bit backend on Apple Silicon and the
+transformers LoRA backend (base Qwen3-VL-2B + adapter) everywhere else. See the
+repo root README for the backend table.
 
 ## `demo_player.py` — upload a video → synced captions (port 8011)
 

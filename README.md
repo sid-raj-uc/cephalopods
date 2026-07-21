@@ -13,17 +13,27 @@ whole video → captions loop works offline, no GPU server needed.
 
 ```bash
 pip install -r src/requirements.txt   # + ffmpeg on PATH
-./download_model.sh                   # fetches the 1.7 GB caption student from the GitHub release
+./download_model.sh                   # auto-fetches the right caption student for your platform
 python3 ui/demo_player.py             # → http://localhost:8011
 ```
 
 Click **⬆ Upload a video**: the full pipeline runs (CLIP+MLP octopus detection +
-motion gating → 20s windows → MLX caption student), and the video appears as a tab —
+motion gating → 20s windows → caption student), and the video appears as a tab —
 it plays on the left with its captions synced on the right. Click a caption to jump
-to that moment. ~2–4 min to scan a 30-min video, ~3–5 s per caption on Apple Silicon.
+to that moment.
 
-Requires macOS on Apple Silicon for the local captioner (`mlx-vlm`); the extraction
-stages alone run anywhere.
+### Runs on any platform — two caption backends, auto-selected
+
+The caption student runs on Mac, Linux, Windows, CPU or GPU. `local_pipeline.py`
+picks the backend automatically (override with `--backend mlx|hf`):
+
+| Platform | Backend | Model (fetched by `download_model.sh`) | Notes |
+|----------|---------|----------------------------------------|-------|
+| **Apple Silicon** (arm64 macOS) | `mlx` | MLX 4-bit, `models/qwen3vl2b_caption_v1_mlx_4bit/` (~1.7 GB) | fastest laptop-local path, ~3–5 s/caption |
+| **Linux / Windows / CUDA / CPU / Intel Mac** | `hf` | LoRA adapter, `models/qwen3vl2b_caption_v1_lora/` (~67 MB) | base `Qwen3-VL-2B-Instruct` auto-downloads from HF Hub; 4-bit via bitsandbytes on CUDA, fp16 on GPU, fp32 on CPU |
+
+On CUDA also `pip install bitsandbytes` for 4-bit inference. The extraction stages
+(CLIP+MLP detector, motion) already run on any device (`mps → cuda → cpu`).
 
 ## Layout
 
@@ -78,10 +88,12 @@ CLIP ViT-B/32 + `mlp_256_64` probes (visible vs hidden octopus). **Use
 `clip_mlp_hardneg_v2.pt`** — letterbox + mined IR-noise hard negatives, the model the
 pipeline uses. Others are earlier baselines kept for reference.
 
-## `models/` — the caption student (GitHub release)
-`models/qwen3vl2b_caption_v1_mlx_4bit/` — Qwen3-VL-2B fine-tuned (QLoRA) on the
-teacher captions, merged and quantized to 4-bit with MLX (~1.7 GB). Not committed;
-fetch it with `./download_model.sh` (release `caption-student-v1`).
+## `models/` — the caption student (GitHub release `caption-student-v1`)
+Qwen3-VL-2B fine-tuned (QLoRA) on the teacher captions. Not committed; fetch with
+`./download_model.sh` (auto-picks by platform, or pass `mlx` / `lora` / `both`):
+- `models/qwen3vl2b_caption_v1_mlx_4bit/` — MLX 4-bit merged model (~1.7 GB), Apple Silicon.
+- `models/qwen3vl2b_caption_v1_lora/` — LoRA adapter (~67 MB) for the cross-platform
+  transformers backend; the base `Qwen3-VL-2B-Instruct` downloads from the HF Hub.
 
 ## Data files
 - `octopus_clips_verified.json` — the clip index (one entry per extracted clip:
