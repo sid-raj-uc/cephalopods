@@ -10,7 +10,13 @@ records them in a JSON index.
   absolute changed-pixel fraction) at 1 fps, slide a non-overlapping 20s window,
   keep it when **>50% frames have `p_visible ≥ 0.6` AND mean motion ≥ 0.008**,
   extract via ffmpeg byte-range copy.
-- **`motion_detector.py`** — `scan_motion_area()` motion detection.
+- **`extract_octopus_clips_fast.py`** — same pipeline, **faster**, for a GPU box: one decode
+  pass (octopus + motion together, ~2×), parallel videos (`--workers N`), and optional NVDEC
+  GPU decode (`--hwaccel cuda`, uses CUDA for CLIP too). **Reads/writes the same JSONs, same
+  schema, same resume/tracking** as `extract_octopus_clips.py`. On an A100: `python3
+  extract_octopus_clips_fast.py --workers 12 --hwaccel cuda`.
+- **`extract_octopus_clips_fast_colab.ipynb`** — the fast extractor as a **Colab** notebook (A100): parallel + single-pass + CUDA CLIP, reads/writes the same JSONs + clips to a Drive work folder so it's **resumable across Colab sessions**. Drops noisy Right_Left/Right cameras by default.
+- **`motion_detector.py`** — `scan_motion_area()` motion detection (used by the plain extractor).
 - **`octopus_clips_verified.json`** — the **clip index** (one entry per extracted
   clip: video_url, time range, scores, clip_path). Extraction fills the clip
   metadata; **captions/labels are filled in later by a separate captioning script.**

@@ -1,4 +1,17 @@
+# Core pipeline (extraction + dataset building)
 torch
 openai-clip
 numpy
 pillow
+requests
+opencv-python
+
+# Local captioning (Apple Silicon only — MLX 4-bit caption student)
+mlx-vlm
+
+# UI apps (ui/demo_player.py, ui/local_pipeline_app.py)
+fastapi
+uvicorn
+python-multipart
+
+# System: ffmpeg must be on PATH

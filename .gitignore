@@ -1,0 +1,10 @@
+# local model + pipeline outputs — never committed
+models/
+data/
+local_pipeline_out/
+src/dataset/
+src/octopus_clips_verified/
+__pycache__/
+.env
+.DS_Store
+.ipynb_checkpoints/
