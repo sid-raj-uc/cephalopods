@@ -236,6 +236,46 @@ state JSONs. Contents:
 - **Deliverable branch `octopus-pipeline-src`** (orphan, on GitHub): only `src/` + `weights/` + a root
   README — the clean shareable package.
 
+## Behaviour analysis — structured extraction → dashboard (the project's actual goal)
+The goal is **behaviour/affect understanding of Nity, not a better captioner**. The captioner is
+effectively done (v1 student trained on ~all present clips). PoCs (2026-07-20) established the direction —
+see memories [[structured-extraction-unlocks-behaviour]] and [[footage-colour-camera-dependent]]:
+- **Treat a caption as ONE field in a structured behavioural record**, then do ethology on the aggregate.
+- **Colour is camera-gated**: Right_Back/Right_Front are colour (100%), Right_Top is pure IR (0%),
+  Right_Left/Right_Right ~10-12%. Only ~42% of present clips can carry a colour signal. Colour *change*
+  is NOT reliably measurable (whole-frame variance is movement-confounded) — needs animal segmentation (future).
+- **Affect model = arousal (motion + posture-spread + activity) + state (location/context response)**;
+  static colour is a secondary channel on colour cameras. Framed as arousal/behavioural-state, NOT emotion.
+
+The pipeline (in `src/`, all outputs under gitignored `data/`):
+- **`src/extract_behaviour_records.py`** — structured JSON extraction over all present-on-disk clips via
+  OpenRouter Qwen3-VL-235B. Reuses `caption_openrouter.py` frame prep (CLAHE + best-N by `clip_mlp_hardneg_v2`).
+  Per clip emits `{present, behavior(7-class), posture, activity, location, context, body_color,
+  color_or_texture_change, confidence}` with **snap-to-list validation**; **colour fields gated per-clip**
+  (greyscale/IR clips told to leave colour `uncertain`, detected by BGR channel divergence <6). Parallel
+  (6 workers, CLIP inference lock-guarded for MPS), **resumable** (skips clip_paths already in output),
+  cost-tracked. Writes `data/behaviour_records.json` (keyed by clip_path) — **does NOT touch the index**.
+  Full run 2026-07-20: 3,205 clips, $2.22, ~0.0006/clip. (Note: OpenRouter throttles ~36→13 clips/min under
+  sustained load; a few clips 429-fail and are recovered by re-running — resumable.)
+- **`src/analyze_behaviour.py`** — aggregates `behaviour_records.json` (joins the index for absolute clock
+  hour) → `data/behaviour_stats.json`: activity budget, exposure-normalized circadian (present ÷ all
+  extracted windows/hour), stimulus response by context, colour-by-context, per-camera. Transparent arousal
+  rubric `0.6*activity + 0.4*posture-spread` (edit in-file).
+- **`src/render_behaviour_dashboard.py`** — renders stats → `data/behaviour_dashboard.html` (self-contained,
+  theme-aware, inline SVG; validated dataviz palette). Artifact fragment → `behaviour_dashboard_artifact.html`.
+
+**Findings (3,083 present, full run):** activity budget 41% exploration / 33% resting / 14% human-interaction
+/ 9% reaching-out / 2% crawling / 1% swimming. Circadian: visible-activity rate ~1-5% overnight → **45% peak
+@17:00** (13:00-19:00 plateau) + dawn bump 05-06h. **Stimulus response: human presence nearly doubles motion
+(0.045→0.095) and lifts arousal 0.46→0.68.** Colour (colour cameras): dark_red_brown most common at baseline
+(~16%) vs during human interaction (~6%). CAVEAT: `context="enrichment_object"` fires on ~66% of clips (tank
+has permanent toys/pipes) — it means "object in tank", not "active enrichment"; the clean stimulus contrast is
+none vs human_present. Presence gate still ~66% dirty upstream — absolute levels shift after detector retrain,
+but the rate/response *contrasts* are robust.
+
+**Next (GPU): distill the 235B structured extractor into the local Qwen3-VL-2B student** — same QLoRA recipe
+as the caption student, JSON targets instead of a sentence, using `behaviour_records.json` as the training set.
+
 ## Captioning: 30B teacher, 235B via API, and the comparison
 Two captioners, both write a one-sentence `caption` + a 7-class `ethogram_label`:
 - **Colab / Qwen3-VL-30B** (`src/caption_octopus_clips.ipynb`, vLLM, A100).
