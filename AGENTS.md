@@ -296,6 +296,46 @@ zero clips). Each has a `maps_from` list folding in the originals. All captionin
 the 7-class sheet. Order: Resting / Exploration/manipulation / Crawling / Swimming/jetting /
 Reaching out of water / Human/enrichment interaction / Colour change/defensive (+ `octopus not present`).
 
+## Octopus segmentation — tiny mask model (in progress, 2026-07-21)
+**Goal:** pixel-level octopus masks to (a) **clean up extraction** (mask-based presence beats the
+CLIP gate on reflections; motion *inside the mask* ignores IR-lamp flicker) and (b) **enrich the
+behavioural record for free** (body area = posture-spread, octopus-only colour, colour-change,
+masked motion — the exact signals the affect model was missing). Plan: **`src/SEGMENTATION_PLAN.md`**.
+**Design constraint (hard): smallest model that still gives good masks** — single class, low-res
+input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
+
+- **Two-model teacher→student design.** Teacher (offline, slow): **GroundingDINO-tiny** (box) →
+  **SAM2** (mask). Student (deployed, tiny, fast): a compact U-Net / LR-ASPP distilled from the
+  teacher masks. Both teacher models run via `transformers` (`IDEA-Research/grounding-dino-tiny`,
+  `facebook/sam-vit-base`) / the `sam2` package (`facebook/sam2.1-hiera-tiny`) — **already cached
+  locally**, no compile needed. GroundingDINO deformable-attention is unstable on MPS → keep it on
+  **CPU** (SAM2 runs on MPS/CUDA).
+- **Phase 0 DONE — recipe validated (before/after on 4 cameras).** Per-frame box→SAM alone
+  over-segments (IR: grabs bright metal tools; colour: bleeds into background from the loose box).
+  **Fix = SAM2 *video propagation* seeded by GroundingDINO's most-confident frame** (temporal
+  consistency) + largest-connected-blob cleanup + area-continuity check. Results: IR tool-bleed fixed
+  (mask area 11.8%→6.5%), colour background-bleed fixed (15.5%→5.8%), clean colour no-regression,
+  and the **reflection camera (Right_Left) is correctly rejected by low seed confidence** (~0.50 on a
+  reflected human vs 0.74–0.89 on a real octopus). **Lesson: temporal consistency kills *transient*
+  errors but not *consistent* ones (a reflection present every frame) — so gate on seed confidence
+  AND drop Right_Left.** Demo before/after: `data/segmentation_demo/` + scratchpad `phase0_out/`.
+- **`src/auto_segment.py` — the auto-labeler (Phase 0/1).** clips → `(frame.jpg, mask.png)` training
+  pairs. Recipe: GroundingDINO per sampled frame → seed = argmax confidence; **GATE reject clip if
+  best conf < `MIN_SEED_CONF` (0.60)**; SAM2 propagate both directions; keep largest blob; drop frames
+  whose area is out of range or jumps >3× the clip median; emit `N_PER_CLIP` (4) clean frames + a
+  `manifest.jsonl`. Device auto (cuda→mps→cpu), **resumable** (skips clips in the manifest), excludes
+  Right_Left by default. Output `src/dataset_seg/vN/{images,masks}/`. Flags `--clips-root --out
+  --cameras --limit`.
+- **Local speed measured: ~4–5 min/clip** on the Mac (GroundingDINO on CPU ~2–3 s/frame is the
+  bottleneck; SAM2 ~1.2 fps on MPS) → ~150 h for the ~2,168 colour clips. **So data extraction runs on
+  COLAB GPU** (20–50× faster, SAM2 native CUDA), uploading a sampled ~800-clip subset (~5–6 GB) — plenty
+  for a single-class tiny model. Training the tiny segmenter: Colab too.
+- **Clips available to label:** Right_Front 861 / Right_Right 731 / Right_Back 576 (colour) + Right_Top
+  1391 (IR) + Right_Left 427 (reflection, excluded) = 3,986 verified clips (+2,380 in `octopus_clips_auto`).
+- **Next:** Colab extraction notebook + a balanced-subset sampler → mask dataset → train smallest-first
+  (compact U-Net → LR-ASPP → YOLO-seg-nano fallback), pick by IoU-vs-size curve (bar: IoU ≥ 0.85 colour),
+  then wire the mask gate into `extract_octopus_clips.py` / `local_pipeline.py` and A/B vs the current gate.
+
 ## Distillation students
 - **Behavior classifier** (`train_behavior_student.py`, local): frozen CLIP feats (mean+max pooled) → MLP,
   copies the v2 labels. **Failed** — 45% val acc, *below* the 50% majority-class baseline; per-class F1≈0
