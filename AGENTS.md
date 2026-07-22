@@ -328,13 +328,31 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
   --cameras --limit`.
 - **Local speed measured: ~4–5 min/clip** on the Mac (GroundingDINO on CPU ~2–3 s/frame is the
   bottleneck; SAM2 ~1.2 fps on MPS) → ~150 h for the ~2,168 colour clips. **So data extraction runs on
-  COLAB GPU** (20–50× faster, SAM2 native CUDA), uploading a sampled ~800-clip subset (~5–6 GB) — plenty
-  for a single-class tiny model. Training the tiny segmenter: Colab too.
+  GPU** (20–50× faster, SAM2 native CUDA) — see the A100 workflow below (~13 s/clip on the A100).
 - **Clips available to label:** Right_Front 861 / Right_Right 731 / Right_Back 576 (colour) + Right_Top
   1391 (IR) + Right_Left 427 (reflection, excluded) = 3,986 verified clips (+2,380 in `octopus_clips_auto`).
-- **Next:** Colab extraction notebook + a balanced-subset sampler → mask dataset → train smallest-first
-  (compact U-Net → LR-ASPP → YOLO-seg-nano fallback), pick by IoU-vs-size curve (bar: IoU ≥ 0.85 colour),
-  then wire the mask gate into `extract_octopus_clips.py` / `local_pipeline.py` and A/B vs the current gate.
+- **`src/sample_seg_clips.py` — balanced-subset sampler (Phase 1a, stdlib-only, runs on any box).**
+  Joins on-disk clips → index behaviour labels, drops `octopus not present` + Right_Left, water-fills a
+  `--target` count evenly across behaviours (over-samples rare Swimming/Colour-change) then round-robins
+  cameras. Writes `src/dataset_seg/sample_v1/sample_manifest.json`; `--stage` copies clips for upload.
+  Colour-first default (Right_Front/Back/Right). Present colour pool = **1,824 clips**.
+- **`src/train_segmenter.py` — the tiny-segmenter trainer (Phase 2).** Compact `TinyUNet` (4-level,
+  width set by `--base-ch`: 8→0.13M / 16→0.5M / 32→2M params) on the `(image,mask)` pairs. Split **BY
+  SOURCE VIDEO** (`date/segment`, no leakage), BCE+soft-Dice, eval IoU@0.5 / Dice / area-err vs the
+  **0.85 colour bar**. Sweep `--base-ch` for the IoU-vs-size curve. Saves `weights/octo_seg_<ver>_ch<n>.pt`.
+- **`src/segment_octopus.py` — inference module (Phase 2 deliverable + Phase 3 gate).**
+  `OctoSegmenter(ckpt).segment(frame) -> (mask, area_frac)` (largest-blob cleanup). CLI saves an overlay.
+- **A100 remote workflow (2026-07-22):** the auto-labeler runs on the GPU box **`amera-vllm-a100`
+  (10.32.0.7, us-central1-f)**, reached by SSH key `~/.ssh/id_ed25519` from `amera-siddharth` (this box's
+  service account lacks GCP compute/storage IAM, so gcloud/gsutil can't drive it — plain SSH + rsync over
+  the internal VPC instead). Setup script installs venv (torch cu124 + transformers + `sam2` built with
+  `SAM2_BUILD_CUDA=0`, no nvcc on box + ffmpeg). Sharded 3× by camera to use the GPU (~9.5 GB, models tiny),
+  merged after. The `_C`-import warning from sam2 is benign (skips optional hole-filling). Smoke test:
+  clean masks, area 3–10%, seed conf 0.75–0.89.
+- **Next:** merge shard `dataset_seg/v1_*` → dedup + human-verified val (Phase 1c) → run `train_segmenter.py`
+  sweeping `--base-ch` (smallest-first: U-Net → LR-ASPP → YOLO-seg-nano fallback), pick by IoU-vs-size curve
+  (bar IoU ≥ 0.85 colour) → wire `segment_octopus` gate into `extract_octopus_clips.py` / `local_pipeline.py`
+  and A/B vs the current gate.
 
 ## Distillation students
 - **Behavior classifier** (`train_behavior_student.py`, local): frozen CLIP feats (mean+max pooled) → MLP,
