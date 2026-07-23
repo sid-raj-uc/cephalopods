@@ -349,10 +349,25 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
   `SAM2_BUILD_CUDA=0`, no nvcc on box + ffmpeg). Sharded 3× by camera to use the GPU (~9.5 GB, models tiny),
   merged after. The `_C`-import warning from sam2 is benign (skips optional hole-filling). Smoke test:
   clean masks, area 3–10%, seed conf 0.75–0.89.
-- **Next:** merge shard `dataset_seg/v1_*` → dedup + human-verified val (Phase 1c) → run `train_segmenter.py`
-  sweeping `--base-ch` (smallest-first: U-Net → LR-ASPP → YOLO-seg-nano fallback), pick by IoU-vs-size curve
-  (bar IoU ≥ 0.85 colour) → wire `segment_octopus` gate into `extract_octopus_clips.py` / `local_pipeline.py`
-  and A/B vs the current gate.
+- **Phase 1-2 RUN DONE on the A100 (2026-07-23).** Auto-labeled 1,824 colour clips →
+  **4,412 (image,mask) pairs / 77 videos** (`data/dataset_seg/v1`). Trained the tiny segmenter (sweep +
+  aug + IR + negatives). Full trail in **`src/SEGMENTATION_LOG.md`**; logs/overlays in `results/segmentation/`;
+  weights in `weights/seg/` (local, gitignored). Headline results:
+  - **Mask pixel-IoU bar (0.85) NOT met — plateaus ~0.47** across TinyUNet(ch8/16/32), LR-ASPP(pretrained),
+    strong augmentation, and +IR. Diagnosed as a **video-diversity generalization gap** (only 62 train
+    videos; train IoU 0.68 / val 0.47; fails by *mislocating* a right-sized blob). Not fixable by
+    architecture/aug — needs more distinct verified videos.
+  - **IR (`Right_Top`) unusable as-is:** GroundingDINO low-confidence on greyscale (13% clip acceptance) +
+    SAM2 over-segments bright tools (mask area median 8.5% vs colour 2.9%). Needs the Phase-0 IR fix first.
+  - **DEPLOYMENT WIN — the presence gate works once you train with NEGATIVES.** v1 (positives-only) was a
+    random presence detector (AUC 0.50, fired on reflections). **v3 = 4,412 pos + 1,388 empty-mask negatives
+    → AUC 0.86 overall, 0.99 vs reflections** (reflection mask area → 0.000). At area≥0.01: 88% present-recall,
+    **0% reflection-FP**. This beats the CLIP gate on the Right_Left/reflection false-positives. Deployable
+    model: `weights/seg/octo_seg_v3_lraspp.pt` (LR-ASPP, 3.2M params). New scripts: `src/eval_presence.py`
+    (presence AUC eval), `src/build_v3.py` (negatives dataset). `segment_octopus.py` now loads either arch.
+- **Next:** (needs more data) more distinct colour videos + a small human-verified mask val set → raise
+  present-mask IoU + absent-case AUC; implement the Phase-0 IR fix; then wire the `segment_octopus`
+  area-gate (≥~0.01) into `extract_octopus_clips.py` / `local_pipeline.py` and A/B vs the CLIP gate.
 
 ## Distillation students
 - **Behavior classifier** (`train_behavior_student.py`, local): frozen CLIP feats (mean+max pooled) → MLP,

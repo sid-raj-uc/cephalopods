@@ -108,6 +108,36 @@ Compute: GPU box **`amera-vllm-a100`** (A100-40GB, 10.32.0.7), reached by SSH fr
 - v3 val IoU will NOT be comparable to v1 (val now contains easy negatives) — the metric that matters
   is the **presence-eval AUC** on the held-out seg_neg set.
 
-### Remaining
-- [ ] v3 presence eval (AUC) — does adding negatives make mask-area a viable presence gate?
-- [ ] Pick best model; pull weights + dataset + diagnostics; scoped-delete A100; commit + update AGENTS.md.
+### v3 RESULT — negatives fix the presence gate (the deployment win) ✅
+v3 (aug LR-ASPP, 4,412 pos + 1,388 neg). Presence eval on held-out negatives (distinct clips):
+
+| metric | v1 (no negs) | **v3 (with negs)** |
+|---|---|---|
+| AUC present vs all-neg | 0.496 (random) | **0.860** |
+| AUC vs **reflections** | 0.418 | **0.991** |
+| AUC vs absent (empty tank) | 0.575 | 0.725 |
+| reflection mask area (median/mean) | 0.039 / 0.065 | **0.000 / 0.000** |
+
+At op-threshold area≥0.01: **present-recall 0.88, reflection-FP 0.00**, absent-FP 0.52.
+**Reflections — the #1 extraction false-positive (esp. Right_Left) — are essentially solved:** the
+model emits ZERO mask on glass reflections. This is the mask-gate payoff the plan wanted, and it beats
+the CLIP gate (which fires at p=1.0 on the same reflections).
+
+### Honest bottom line
+- **Deployment payoff (reflection-rejecting presence gate): achieved.** v3 is usable to clean extraction.
+- **Mask pixel-quality bar (IoU 0.85): NOT met** — present-frame masks ~0.5 IoU (ok for coarse
+  body-area / masked-motion, not precise). Ceiling is data diversity (62 colour videos), not model/aug.
+- **Empty-tank "absent" discrimination (0.725): decent, improvable** with more absent negatives.
+- Key insight that unlocked it: **train with negatives** (v1's fatal flaw was positives-only).
+
+### Deliverables pulled back to the repo (before A100 cleanup)
+- `weights/seg/octo_seg_*.pt` — all 8 checkpoints (sweep + aug + v2 + **v3 = deployable**).
+- `data/dataset_seg/{v1,v3}` — the 4,412-pos mask dataset (+ v3 negatives). [gitignored, local]
+- `results/segmentation/` — all train/eval logs + diagnostic overlays.
+- `src/eval_presence.py`, `src/build_v3.py` — eval + negatives-dataset scripts.
+
+### Recommended next (needs more data — user offered)
+- More DISTINCT colour videos (diversity, not volume) → raises present-mask IoU + absent-case AUC.
+- A small human-verified mask val set (~100–200) for trustworthy numbers.
+- Implement the Phase-0 IR fix (point/negative prompts) before using IR.
+- Then wire `segment_octopus` (area≥~0.01 gate) into extraction and A/B vs the CLIP gate.

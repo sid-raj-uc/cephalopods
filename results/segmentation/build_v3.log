@@ -1,0 +1,10 @@
+[out#0/image2 @ 0x63297b6289c0] Output file does not contain any stream
+Error opening output file /tmp/tmpm37nuvdw/f%03d.jpg.
+Error opening output files: Invalid argument
+[out#0/image2 @ 0x645f951519c0] Output file does not contain any stream
+Error opening output file /tmp/tmpr0ly7ckg/f%03d.jpg.
+Error opening output files: Invalid argument
+[out#0/image2 @ 0x5e2e93fa79c0] Output file does not contain any stream
+Error opening output file /tmp/tmp3409ng1h/f%03d.jpg.
+Error opening output files: Invalid argument
+v3: 5800 pairs = 4412 positives + 1388 negatives (24% neg)

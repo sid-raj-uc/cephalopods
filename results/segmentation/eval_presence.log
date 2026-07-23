@@ -1,0 +1,20 @@
+[out#0/image2 @ 0x586db99999c0] Output file does not contain any stream
+Error opening output file /tmp/tmpkimzlzt7/f%02d.jpg.
+Error opening output files: Invalid argument
+model=/home/siddharth_amerahealthsolutions_c/weights_seg/octo_seg_aug_lraspp.pt  val(IoU)={'iou': 0.47296951032080364, 'dice': 0.5874276564900962, 'area_err': 0.02365843454996745, 'n': 720}
+
+PRESENT (n=300):   area median=0.027 mean=0.040
+REFLECTION (n=180): area median=0.039 mean=0.065
+ABSENT (n=177):     area median=0.017 mean=0.045
+
+AUC (area separates present vs all-neg): 0.496
+AUC vs reflection only: 0.418  | vs absent only: 0.575
+
+threshold sweep (area >= t => 'octopus present'):
+     t  present_recall   refl_FP  absent_FP
+ 0.005            0.96      0.91       0.89
+ 0.010            0.83      0.84       0.73
+ 0.020            0.58      0.68       0.44
+ 0.030            0.45      0.59       0.28
+ 0.050            0.21      0.33       0.19
+ 0.080            0.11      0.21       0.13
