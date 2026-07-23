@@ -136,6 +136,12 @@ the CLIP gate (which fires at p=1.0 on the same reflections).
 - `results/segmentation/` — all train/eval logs + diagnostic overlays.
 - `src/eval_presence.py`, `src/build_v3.py` — eval + negatives-dataset scripts.
 
+### A100 cleaned up (2026-07-23)
+- All segmentation artifacts deleted from `amera-vllm-a100` (home 31G → 28K): dataset_seg, seg_clips*,
+  ir_shard*, seg-venv, weights_seg, all scripts + logs, and the HF/torch/pip/.nv caches I created.
+- Left intact (not ours / shared): default dotfiles, `~/.ssh` (SSH access key), and the apt system
+  packages (ffmpeg, python3-pip, python3-venv). GPU idle, 189G free. All artifacts already pulled to the repo.
+
 ### Recommended next (needs more data — user offered)
 - More DISTINCT colour videos (diversity, not volume) → raises present-mask IoU + absent-case AUC.
 - A small human-verified mask val set (~100–200) for trustworthy numbers.
