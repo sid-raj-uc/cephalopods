@@ -76,6 +76,36 @@ class TinyUNet(nn.Module):
         return self.head(y)  # logits [B,1,H,W]
 
 
+class LRASPP(nn.Module):
+    """torchvision LR-ASPP on a MobileNetV3-Large backbone (ImageNet-pretrained).
+
+    A pretrained encoder dramatically improves localization on limited data vs. the
+    from-scratch U-Net, at ~3.2M params (~3 MB INT8) — still within the deploy budget.
+    """
+    def __init__(self):
+        super().__init__()
+        from torchvision.models.segmentation import lraspp_mobilenet_v3_large
+        from torchvision.models import MobileNet_V3_Large_Weights
+        net = lraspp_mobilenet_v3_large(num_classes=1,
+                                        weights_backbone=MobileNet_V3_Large_Weights.IMAGENET1K_V1)
+        self.net = net
+
+    def forward(self, x):
+        return self.net(x)["out"]  # logits [B,1,H,W] at input resolution
+
+
+def build_model(arch, base_ch):
+    if arch == "unet":
+        return TinyUNet(base_ch=base_ch)
+    if arch == "lraspp":
+        return LRASPP()
+    raise ValueError(f"unknown arch {arch}")
+
+
+def n_params_of(model):
+    return sum(p.numel() for p in model.parameters())
+
+
 # ── data ────────────────────────────────────────────────────────────────────────
 IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], np.float32)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225], np.float32)
@@ -88,23 +118,46 @@ def source_video(clip_path):
 
 
 class SegDS(Dataset):
-    def __init__(self, rows, ds_root, size=256, train=False):
-        self.rows, self.root, self.size, self.train = rows, Path(ds_root), size, train
+    def __init__(self, rows, ds_root, size=256, train=False, aug="strong"):
+        self.rows, self.root, self.size, self.train, self.aug = rows, Path(ds_root), size, train, aug
 
     def __len__(self):
         return len(self.rows)
+
+    def _augment(self, img, m):
+        """Strong spatial + photometric aug (image & mask kept in lock-step).
+
+        Targets the v1 failure mode — the model finds an octopus-sized blob in the WRONG
+        place — by teaching position/scale/rotation invariance. Affine keeps the (small)
+        octopus mostly in-frame, unlike aggressive random-resized-crop which would blank it out.
+        """
+        import random as _r
+        from torchvision.transforms import functional as TF
+        from torchvision.transforms import InterpolationMode as IM
+        if _r.random() < 0.5:
+            img = TF.hflip(img); m = TF.hflip(m)
+        if self.aug == "strong":
+            ang = _r.uniform(-15, 15)
+            tr = [_r.uniform(-0.10, 0.10) * self.size, _r.uniform(-0.10, 0.10) * self.size]
+            sc = _r.uniform(0.75, 1.25)
+            img = TF.affine(img, angle=ang, translate=tr, scale=sc, shear=[0.0],
+                            interpolation=IM.BILINEAR, fill=[128, 128, 128])
+            m = TF.affine(m, angle=ang, translate=tr, scale=sc, shear=[0.0],
+                          interpolation=IM.NEAREST, fill=[0])
+        img = TF.adjust_brightness(img, _r.uniform(0.75, 1.25))
+        img = TF.adjust_contrast(img, _r.uniform(0.75, 1.25))
+        return img, m
 
     def __getitem__(self, i):
         r = self.rows[i]
         img = Image.open(self.root / r["image"]).convert("RGB").resize((self.size, self.size), Image.BILINEAR)
         m = Image.open(self.root / r["mask"]).convert("L").resize((self.size, self.size), Image.NEAREST)
+        if self.train and self.aug != "none":
+            img, m = self._augment(img, m)
         img = np.asarray(img, np.float32) / 255.0
         m = (np.asarray(m, np.float32) > 127).astype(np.float32)
-        if self.train:
-            if np.random.rand() < 0.5:                       # horizontal flip
-                img = img[:, ::-1].copy(); m = m[:, ::-1].copy()
-            if np.random.rand() < 0.5:                       # brightness/contrast jitter (image only)
-                img = np.clip(img * np.random.uniform(0.8, 1.2) + np.random.uniform(-0.08, 0.08), 0, 1)
+        if self.train and self.aug == "strong":              # mild sensor noise
+            img = np.clip(img + np.random.normal(0, 0.02, img.shape).astype(np.float32), 0, 1)
         img = (img - IMAGENET_MEAN) / IMAGENET_STD
         return (torch.from_numpy(img.transpose(2, 0, 1)),
                 torch.from_numpy(m)[None])
@@ -141,8 +194,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ds", default=str(HERE / "dataset_seg" / "v1"))
     ap.add_argument("--ver", default="v1")
+    ap.add_argument("--arch", default="unet", choices=["unet", "lraspp"])
     ap.add_argument("--base-ch", type=int, default=16)
     ap.add_argument("--in-size", type=int, default=256)
+    ap.add_argument("--aug", default="strong", choices=["strong", "basic", "none"])
     ap.add_argument("--epochs", type=int, default=40)
     ap.add_argument("--batch", type=int, default=32)
     ap.add_argument("--lr", type=float, default=3e-4)
@@ -169,15 +224,15 @@ def main():
     print(f"device={device}  pairs={len(rows)}  videos={len(vids)} "
           f"(train {len(vids)-n_val} / val {n_val})  ->  train {len(tr)} / val {len(va)} frames", flush=True)
 
-    tl = DataLoader(SegDS(tr, ds_root, args.in_size, train=True), batch_size=args.batch,
+    tl = DataLoader(SegDS(tr, ds_root, args.in_size, train=True, aug=args.aug), batch_size=args.batch,
                     shuffle=True, num_workers=4, pin_memory=(device == "cuda"), drop_last=True)
     vl = DataLoader(SegDS(va, ds_root, args.in_size), batch_size=args.batch,
                     shuffle=False, num_workers=4, pin_memory=(device == "cuda"))
 
-    model = TinyUNet(base_ch=args.base_ch).to(device)
-    n_params = sum(p.numel() for p in model.parameters())
-    print(f"TinyUNet base_ch={args.base_ch}: {n_params/1e6:.3f}M params "
-          f"(~{n_params*4/1e6:.1f} MB fp32)", flush=True)
+    model = build_model(args.arch, args.base_ch).to(device)
+    n_params = n_params_of(model)
+    tag = f"{args.arch}" + (f" base_ch={args.base_ch}" if args.arch == "unet" else "")
+    print(f"{tag}: {n_params/1e6:.3f}M params (~{n_params*4/1e6:.1f} MB fp32)", flush=True)
 
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs)
@@ -202,11 +257,12 @@ def main():
             best_iou = m["iou"]; best_metrics = m
             best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
 
-    out = Path(args.out) if args.out else (REPO / "weights" / f"octo_seg_{args.ver}_ch{args.base_ch}.pt")
+    suffix = f"ch{args.base_ch}" if args.arch == "unet" else args.arch
+    out = Path(args.out) if args.out else (REPO / "weights" / f"octo_seg_{args.ver}_{suffix}.pt")
     out.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({"state_dict": best_state, "arch": "TinyUNet", "base_ch": args.base_ch,
-                "in_size": args.in_size, "val": best_metrics, "n_params": n_params,
-                "ds": str(ds_root)}, out)
+    torch.save({"state_dict": best_state, "arch": args.arch, "base_ch": args.base_ch,
+                "in_size": args.in_size, "aug": args.aug, "epochs": args.epochs,
+                "val": best_metrics, "n_params": n_params, "ds": str(ds_root)}, out)
     bar = "PASS" if best_iou >= 0.85 else "below 0.85 bar"
     print(f"\nBEST val IoU {best_iou:.4f} ({bar})  |  {n_params/1e6:.3f}M params  ->  {out}", flush=True)
 
