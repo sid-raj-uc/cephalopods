@@ -16,7 +16,7 @@ from PIL import Image
 import torch
 import torch.nn.functional as F
 
-from train_segmenter import TinyUNet, IMAGENET_MEAN, IMAGENET_STD
+from train_segmenter import build_model, IMAGENET_MEAN, IMAGENET_STD
 
 
 def _largest_blob(mask):
@@ -37,7 +37,8 @@ class OctoSegmenter:
                                   else "mps" if torch.backends.mps.is_available() else "cpu")
         c = torch.load(ckpt, map_location=self.device)
         self.in_size = c.get("in_size", 256)
-        self.model = TinyUNet(base_ch=c.get("base_ch", 16)).to(self.device).eval()
+        self.arch = c.get("arch", "unet")
+        self.model = build_model(self.arch, c.get("base_ch", 16)).to(self.device).eval()
         self.model.load_state_dict(c["state_dict"])
         self.val = c.get("val")
 
