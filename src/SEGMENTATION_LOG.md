@@ -97,6 +97,17 @@ Compute: GPU box **`amera-vllm-a100`** (A100-40GB, 10.32.0.7), reached by SSH fr
   model learns "no octopus → no mask". This directly targets the presence-gate goal (and should sharpen
   localization). Keep the eval's seg_neg set held-out (distinct clips). Retrain, re-run presence eval.
 
+### v3 built + training
+- v2 (colour+189 IR) final: **val IoU 0.492** — marginal vs colour-only, IR confirmed not helpful.
+- Built **v3 = 5,800 pairs** (4,412 positives + 1,388 empty-mask negatives from 350 reflection/absent
+  clips, 24% neg). Training aug LR-ASPP, 60 ep (~65 s/ep — bigger set + CPU-bound aug).
+- **Infra note (bug hit + fixed):** the background waiter scripts used `pgrep -c -f build_v3.py` /
+  `train_segmenter.py`, which **match pgrep's own command line** (self-match) → count always ≥1 → the
+  chained automation stalled at step 1 and never launched v3, and an earlier waiter never fired.
+  Fix: `pgrep -cf "[t]rain_segmenter"` (bracket trick). Relaunched clean.
+- v3 val IoU will NOT be comparable to v1 (val now contains easy negatives) — the metric that matters
+  is the **presence-eval AUC** on the held-out seg_neg set.
+
 ### Remaining
-- [ ] Build v3 (positives + empty-mask negatives), retrain, re-run presence eval (AUC is the real metric).
+- [ ] v3 presence eval (AUC) — does adding negatives make mask-area a viable presence gate?
 - [ ] Pick best model; pull weights + dataset + diagnostics; scoped-delete A100; commit + update AGENTS.md.
