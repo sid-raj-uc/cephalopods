@@ -51,8 +51,27 @@ Compute: GPU box **`amera-vllm-a100`** (A100-40GB, 10.32.0.7), reached by SSH fr
   teach position-invariance. Then, if short, add IR Right_Top (1,391 clips) for video diversity.
   (No `octopus_clips_auto` on this box; colour clips essentially exhausted.)
 
-### Next (in progress)
-- [ ] Strong aug in trainer → retrain U-Net + LR-ASPP @256, compare to baselines.
-- [ ] If aug helps: sweep resolution (320), pick best.
-- [ ] Maybe add IR data + retrain.
-- [ ] Pull weights + dataset + diagnostics back; scoped-delete A100 seg files; commit.
+### Experiment: strong augmentation (affine/translate/scale + flips + color jitter + noise)
+- U-Net ch32 + aug: **0.469** (was 0.474) — no change.
+- LR-ASPP + aug: **0.473** (was 0.447) — +0.026, marginal.
+- **Verdict: aug does NOT close the gap.** LR-ASPP still drives train loss to ~0.18 while val
+  stays ~0.47 → confirms a genuine video-diversity generalization gap, not something aug fixes.
+
+### Per-video val IoU (aug LR-ASPP) — diversity gap confirmed
+- Range **0.00 → 0.82** across the 15 val videos, broad gradient (worst: 116-frame Right_Back @0.28;
+  best 0.66–0.82). Not one pathological video → the model does ok on train-like videos, fails on
+  dissimilar ones. Classic limited-diversity overfitting (only 62 train videos). macro 0.455 / micro 0.473.
+
+### Decision: add IR Right_Top data (more video diversity + it's a real deployment camera)
+- Colour clips are exhausted; the available diversity is IR Right_Top (1,391 clips). Right_Top is the
+  BIGGEST deployment camera, so an IR-capable model is wanted (not a compromise) — supersedes the
+  earlier colour-only-v1 call given the generalization evidence.
+- Sampled **653 present IR clips** (`sample_seg_clips.py --cameras Right_Top --target 800`), rsynced to
+  the A100, distributed round-robin into 4 shards, auto-labeling in parallel (~35 min).
+- NEXT: merge IR pairs + colour v1 → dataset v2; retrain aug LR-ASPP on v2; eval PER-CAMERA (check IR
+  doesn't tank colour, and measure IR quality — watch for the known IR over-segmentation on bright tools).
+
+### Remaining
+- [ ] Merge → v2 dataset (colour + IR), retrain aug LR-ASPP, per-camera eval.
+- [ ] Pick best model; update segment_octopus for the chosen arch.
+- [ ] Pull weights + dataset + diagnostics; scoped-delete A100 seg files; commit + update AGENTS.md.
