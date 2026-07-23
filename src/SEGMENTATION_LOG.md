@@ -71,7 +71,32 @@ Compute: GPU box **`amera-vllm-a100`** (A100-40GB, 10.32.0.7), reached by SSH fr
 - NEXT: merge IR pairs + colour v1 → dataset v2; retrain aug LR-ASPP on v2; eval PER-CAMERA (check IR
   doesn't tank colour, and measure IR quality — watch for the known IR over-segmentation on bright tools).
 
+### IR auto-labeling — FAILED the quality bar (confirms plan's IR caution)
+- 653 present IR clips → only **87 accepted (13%)**: GroundingDINO isn't confident on greyscale IR,
+  so the seed-conf gate rejects 86%.
+- Accepted IR masks **over-segment**: area median 8.5% / mean 14.7% / 27.5% >20% (vs colour 2.9%) —
+  SAM2 grabs bright metal tools/pipes. `auto_segment.py` lacks the Phase-0 IR fix (point/negative prompts).
+- Hard-filtered to octopus-range area (0.012–0.13) → only 189 of 345 IR pairs survived → v2 = 4,412
+  colour + 189 IR. v2 retrain (aug LR-ASPP): val IoU ~0.47 — IR neither helped nor hurt colour.
+- **Verdict: IR unusable without the Phase-0 IR fix. Defer to v2 as the plan said.**
+
+### Presence-gate eval — THE deployment test (`scratchpad/eval_presence.py`) — v1 FAILS
+- Ran best colour model (aug LR-ASPP) on 300 present val frames vs held-out negatives
+  (60 Right_Left reflections + 60 octopus-absent colour clips).
+- Mask-area medians: **present 0.027, reflection 0.039, absent 0.017**.
+- **AUC (area separates present vs neg) = 0.496 — essentially RANDOM.** vs reflection 0.418 (worse than
+  chance — reflections get BIGGER masks than real octopus). Threshold sweep: reflection-FP ≥ present-recall
+  at every threshold. **v1 is NOT a usable presence gate.**
+- **ROOT CAUSE (key insight): the model was trained ONLY on octopus-present frames** — every one of the
+  4,412 masks contains an octopus, so it learned to ALWAYS emit an octopus-shaped blob, including on
+  reflections/empty tank. It was never shown a negative. This also explains the "blob in the wrong place"
+  mislocation and why arch/aug/IR couldn't move val IoU.
+
+### Decision: add NEGATIVE (empty-mask) frames to training → v3
+- Extract frames from reflection + octopus-absent clips, pair with EMPTY masks, add to training so the
+  model learns "no octopus → no mask". This directly targets the presence-gate goal (and should sharpen
+  localization). Keep the eval's seg_neg set held-out (distinct clips). Retrain, re-run presence eval.
+
 ### Remaining
-- [ ] Merge → v2 dataset (colour + IR), retrain aug LR-ASPP, per-camera eval.
-- [ ] Pick best model; update segment_octopus for the chosen arch.
-- [ ] Pull weights + dataset + diagnostics; scoped-delete A100 seg files; commit + update AGENTS.md.
+- [ ] Build v3 (positives + empty-mask negatives), retrain, re-run presence eval (AUC is the real metric).
+- [ ] Pick best model; pull weights + dataset + diagnostics; scoped-delete A100; commit + update AGENTS.md.
