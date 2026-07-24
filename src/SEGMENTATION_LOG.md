@@ -171,3 +171,19 @@ the CLIP gate (which fires at p=1.0 on the same reflections).
   held-out negatives for the presence eval).
 - **v4 plan:** auto-label the 392 harvest clips → merge with v3 → train aug LR-ASPP → presence eval.
   Run: `modal run src/modal_seg.py`.
+
+### v4 RESULT — diversity ↑, but teacher-label quality is the new ceiling
+- Ran end-to-end on Modal A100 (image build + parallel auto-label + train + eval, ~50 min).
+- **Training videos 77 → 170** (~2× diversity — the goal). But the 392 harvest clips yielded only
+  **532 mask pairs**: GroundingDINO's conf gate **rejected most** (harvest is resting/still/camouflaged
+  octopus — the detector isn't confident on those). v4 = 6,332 pairs (4,944 pos + 1,388 neg).
+- **Mask val IoU 0.490** (v3 0.529) — but on a HARDER val (34 videos vs 15), so ~flat, not a regression.
+- **Presence AUC 0.66** BUT **confounded**: the v4 eval used HARVEST frames as positives (intrinsically
+  hard/resting; model median area only 0.6%), whereas v3's 0.86 used the clearer original positives. Not
+  apples-to-apples. Reflection rejection **held** (neg mask area → 0.0) — the robust property survives.
+- **Conclusion: raw video diversity alone isn't the fix.** Both teacher and student are weak on the
+  resting/camouflaged regime that dominates real footage. Real levers now: (1) better teacher labels on
+  hard frames — the Phase-0 point/negative-prompt fix or lower conf + human verification; (2) a small
+  human-verified mask set. More auto-harvested clips just re-hit the same GroundingDINO gate.
+- Artifacts pulled: `weights/seg/octo_seg_v4_lraspp.pt`, `data/dataset_seg/harvest/` (532 pairs).
+  Modal Volume `octo-seg-data` left in place (more harvest data is coming from the harvester run).
