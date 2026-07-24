@@ -369,6 +369,40 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
   present-mask IoU + absent-case AUC; implement the Phase-0 IR fix; then wire the `segment_octopus`
   area-gate (≥~0.01) into `extract_octopus_clips.py` / `local_pipeline.py` and A/B vs the CLIP gate.
 
+## Diverse-footage harvest — the data-gen fix (in progress, 2026-07-23)
+**Why:** both students are footage-diversity-limited — the whole corpus was **7 dates (one week)**.
+Plan: `src/DATA_PLAN.md`. Running results ledger: `PAPER_NOTES.md`.
+- **The server has WAY more than we used.** It exposes HTML directory listings (crawlable). 6 collections /
+  ~5 animals: **Nity ~209 days** (`O-vulgaris-Nity-2025-9-17--` 157d + `-2026-2-20--` 52d) + others
+  (Heidi 155d, a 2024 vulgaris 122d, Maya 48d, Eledone 1d). Creds `octopus`/`communication42` (in `.env`).
+- **Network reality (measured on Colab):** server download is **~5 MB/s and PARALLELISM BARELY HELPS**
+  (1→5 streams = only 1.6×; near-total server-side cap). So: **one CPU box, 2–3 stream workers, no GPU**
+  (GPU idles on a network-bound job — costs 10–50× for zero speedup). Stream-scan is viable
+  (~5 video-sec/s), so we **stream + early-exit, never bulk-download** (30 days of full videos = ~1 TB).
+- **`src/harvest_stream.py` — THE harvester (self-contained).** Crawls listings for the Nity colour
+  cameras (Right front/back/right; excludes Right_Left reflections + IR Right_Top), and per video:
+  **probe-first** (`N_PROBES`=10 cheap input-seek frames; if none reach `p_visible≥PROBE_THRESH` 0.50,
+  skip the full scan) → else stream 1fps CLIP+MLP (`clip_mlp_hardneg_v2.pt`, letterbox) → **VISIBILITY-only
+  gate** (`REQUIRE_MOTION=False` — still-but-visible octopus is good seg/caption data; motion still
+  recorded) → keep 2 windows spread `SPREAD_SEC`=60s apart → **early-exit at 2**, extract via ffmpeg
+  byte-range from the URL. Validation A/B (same 8 vids): motion-gate 1 clip-video/2 clips → **visibility-gate
+  4 clip-videos/8 clips**. Sampling for VIDEO diversity (`MAX_SEG_PER_DAYCAM`=3). Device auto.
+- **ONE resumable ledger** `harvest_ledger.json` keyed by `video_url` = the tracker AND a **detailed
+  coverage report** per video: `duration`, `probe_points [[t,p]…]`, `probe_max_p`, `status`
+  (`clips`/`probed_empty`/`scanned_empty`/`failed`), `coverage`, `scanned_sec`, **`unscanned_sec`**,
+  `discard_reason` — so any skipped/partial video can be mined for MORE later. Clips also emitted in
+  `octopus_clips_verified.json` entry format (`harvest_clips_index.json`) for merge. Resumable (skips
+  video_urls already in ledger).
+- **`src/modal_harvest.py` — Modal app (CPU, `sidraj` profile).** Image = ffmpeg+git / torch+torchvision+
+  `openai-clip`+`setuptools<81` (needed: latest setuptools drops `pkg_resources` which openai-clip imports).
+  Secret `octopus-creds`, Volume `octopus-harvest-vol` (periodic `vol.commit` = resumable across timeouts).
+  Run: `MODAL_PROFILE=sidraj modal run --detach src/modal_harvest.py --workers 2 --max-scan-sec 400`
+  (**must be `--detach`** — a foreground `modal run` dies if the local client's gRPC heartbeat drops).
+  Fetch: `modal volume get octopus-harvest-vol /harvest ./harvest_dl`.
+- **Full run launched 2026-07-23:** ~209 Nity colour days = **1,769 videos**, probe-first + visibility gate.
+  Projected ~6–12 h (probe-first cut it from ~37 h; now bounded by probe-seek latency + the ~5 MB/s cap).
+- **`src/colab_speedtest.py`** — the server bandwidth / stream-scan / parallel-speedup probe.
+
 ## Distillation students
 - **Behavior classifier** (`train_behavior_student.py`, local): frozen CLIP feats (mean+max pooled) → MLP,
   copies the v2 labels. **Failed** — 45% val acc, *below* the 50% majority-class baseline; per-class F1≈0

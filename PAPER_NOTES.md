@@ -70,6 +70,19 @@ stimulus-response). Framed as **arousal / behavioural-state**, not emotion.
 - **Temporal consistency (SAM2 video propagation)** kills *transient* auto-label errors — but NOT *consistent* ones (a reflection present every frame). Gate on seed confidence + drop reflection camera.
 - **Structured extraction > captioning** for behaviour: a caption is one field; posture/colour/context need a JSON re-prompt.
 
+## R5 — Diverse-footage harvest (data-gen, in progress 2026-07-23)
+- **Diagnosis:** whole corpus was 7 dates/one week → both students diversity-limited. Server actually holds
+  ~6 collections / ~5 animals; **Nity alone ~209 days**. (Method note: server exposes crawlable HTML listings.)
+- **Network finding (measured, Colab→server):** ~5 MB/s download; **parallelism barely helps** (1→5 streams =
+  1.6×, near-total server-side cap) → single CPU box, 2–3 streams, NO GPU (network-bound; GPU idles).
+  Stream-scan ~5 video-sec/s → stream + early-exit, never bulk-download.
+- **Method:** `src/harvest_stream.py` (Modal CPU) — probe-first empty-skip (10 seek-frames; skip if
+  `p_visible<0.5` everywhere) + **visibility-only gate** + 2 clips/video (60s spread) + early-exit. A/B (same
+  8 vids): motion-gate 1 clip-video → visibility-gate **4 clip-videos** (motion gate was discarding
+  still-but-visible octopus, which IS good seg/caption data). Detailed coverage ledger records probe points +
+  `unscanned_sec` per video so skipped footage can be mined later.
+- Full run: 1,769 Nity colour videos; projected ~6–12 h.
+
 ## Open rigor items (must close before paper claims)
 - **No shared human-verified held-out test sets yet.** Segmentation has none; captioning has partial
   (`data/caption_training_set.json`). Every "A beats B" (e.g. seg gate vs CLIP gate) needs a head-to-head
