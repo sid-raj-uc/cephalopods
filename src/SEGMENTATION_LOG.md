@@ -147,3 +147,27 @@ the CLIP gate (which fires at p=1.0 on the same reflections).
 - A small human-verified mask val set (~100–200) for trustworthy numbers.
 - Implement the Phase-0 IR fix (point/negative prompts) before using IR.
 - Then wire `segment_octopus` (area≥~0.01 gate) into extraction and A/B vs the CLIP gate.
+
+---
+
+## 2026-07-24 — Session 2: new diverse data + move to Modal
+
+### New harvest dataset (`data/harvest_clips/`) — exactly the diversity we needed
+- **392 clean colour clips** (Right_Front 224 + Right_Back 168, **0 zero-byte**), from **~204 distinct
+  (date,segment,camera) source videos / 180 sessions** — vs the old 62 train videos, ~3× the diversity.
+- Date span **2025-09-17 → 2026-02-20** (~6 months); **111 of 112 dates are NEW** (old set was 7 days in
+  Feb 2026). Low redundancy (mostly ≤2 clips/video).
+- Caveats: low-motion skew (resting-heavy; motion median 0.0004), presence via the CLIP gate (Front/Back
+  so low reflection risk), and these are RAW clips — still need the teacher to auto-label them into masks.
+
+### Ported the pipeline to Modal (`src/modal_seg.py`) — A100, serverless
+- Reason: repeated label→train→eval as data arrives; Modal gives a reproducible image, a persistent
+  Volume, and trivial parallel auto-labeling via `.map()` (no manual SSH/pgrep sharding).
+- App `octo-seg`: A100 image (ffmpeg + torch cu124 + transformers + sam2 `SAM2_BUILD_CUDA=0` + opencv),
+  Volume `octo-seg-data` at /data, functions `auto_label(shard)` / `train` / `presence_eval` reusing the
+  exact logic from `auto_segment.py` / `train_segmenter.py` / `segment_octopus.py` (added to the image).
+- Client installed here via a venv + get-pip (no system pip). Workspace `amera`.
+- Uploaded to the Volume: `harvest_clips` (raw), `dataset_seg/v3` (positives+negatives), `seg_neg` (120
+  held-out negatives for the presence eval).
+- **v4 plan:** auto-label the 392 harvest clips → merge with v3 → train aug LR-ASPP → presence eval.
+  Run: `modal run src/modal_seg.py`.
