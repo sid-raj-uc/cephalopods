@@ -1,25 +1,5 @@
-# Core pipeline (extraction + dataset building) — all platforms
 torch
 openai-clip
 numpy
 pillow
 requests
-opencv-python
-
-# Cross-platform caption student (Linux / Windows / CUDA / CPU / Intel Mac):
-# base Qwen3-VL-2B + LoRA adapter via transformers.
-transformers>=4.57
-peft
-accelerate
-# On CUDA, install bitsandbytes too for 4-bit inference:  pip install bitsandbytes
-
-# Apple-Silicon caption student (macOS arm64 ONLY — the fast laptop-local path).
-# Skip this line on non-Mac; pip will fail to find it there.
-mlx-vlm ; sys_platform == "darwin" and platform_machine == "arm64"
-
-# UI apps (ui/demo_player.py, ui/local_pipeline_app.py)
-fastapi
-uvicorn
-python-multipart
-
-# System: ffmpeg must be on PATH

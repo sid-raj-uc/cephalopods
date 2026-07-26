@@ -1,0 +1,197 @@
+"""
+Caption A/B — compare v2 (Qwen3-VL-30B) vs Qwen3-VL-235B captions/labels side by side.
+
+Both captions live in the same index (data/octopus_clips_verified.json):
+  left  = v2 / 30B   -> `caption` + `ethogram_label`   (caption_model)
+  right = 235B       -> `caption_235b` + `ethogram_label_235b` (caption_235b_model)
+Plays the local clip next to both, flags label disagreements and clips the 235B
+model called "octopus not present" (with its max p_visible), and lets you vote
+which caption is better (30B / 235B / tie / both bad). Votes -> data/caption_v2_235b_votes.json.
+
+Only clips whose .mp4 exists locally are shown.
+
+Usage:  venv/bin/python3 ui/compare_v2_235b.py   ->  http://localhost:8006
+"""
+import json
+from pathlib import Path
+from collections import Counter
+
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+
+PROJECT   = Path(__file__).resolve().parent.parent
+INDEX     = PROJECT / "data" / "octopus_clips_verified.json"
+CLIPS_DIR = PROJECT / "data" / "octopus_clips_verified"
+VOTES     = PROJECT / "data" / "caption_v2_235b_votes.json"
+
+app = FastAPI()
+
+
+def _np(text: str) -> bool:
+    return "not present" in (text or "").strip().lower()
+
+
+def load_pairs():
+    data = json.load(open(INDEX))
+    clips = data["clips"] if isinstance(data, dict) else data
+    pairs = []
+    for c in clips:
+        cp = c.get("clip_path")
+        # only clips that have BOTH captions and exist on local disk
+        if not cp or not c.get("caption") or not c.get("caption_235b"):
+            continue
+        if not (PROJECT / cp).exists():
+            continue
+        lab_v2, lab_235 = c.get("ethogram_label", ""), c.get("ethogram_label_235b", "")
+        pairs.append({
+            "clip_path": cp, "camera": c.get("camera"), "date": c.get("date"),
+            "segment": c.get("segment"), "video_timeline": c.get("video_timeline"),
+            "max_p": c.get("caption_235b_max_p"),
+            "v2_caption": c.get("caption", ""),      "v2_label": lab_v2,
+            "b_caption": c.get("caption_235b", ""),  "b_label": lab_235,
+            "differs": lab_v2 != lab_235,
+            "np235": _np(c.get("caption_235b")),
+        })
+    return pairs
+
+
+def load_votes():
+    return json.load(open(VOTES)) if VOTES.exists() else {}
+
+
+@app.get("/video")
+def video(path: str):
+    p = (PROJECT / path).resolve()
+    if not str(p).startswith(str(CLIPS_DIR.resolve())) or not p.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return FileResponse(p, media_type="video/mp4")
+
+
+@app.post("/vote")
+async def vote(req: Request):
+    body = await req.json()
+    votes = load_votes()
+    if body.get("vote") == "clear":
+        votes.pop(body["clip_path"], None)
+    else:
+        votes[body["clip_path"]] = body["vote"]
+    json.dump(votes, open(VOTES, "w"), indent=2)
+    c = Counter(votes.values())
+    return JSONResponse({"ok": True, **{k: c.get(k, 0) for k in ["v2", "b235", "tie", "bad"]}, "total": len(votes)})
+
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    pairs = load_pairs()
+    votes = load_votes()
+    return f"""<!doctype html><html><head><meta charset=utf-8>
+<title>Caption A/B — 30B vs 235B</title><style>
+ *{{box-sizing:border-box}} body{{font-family:system-ui;margin:0;background:#0d0d0d;color:#eee;
+   height:100vh;display:flex;flex-direction:column;overflow:hidden}}
+ header{{background:#1c1c1c;padding:8px 16px;border-bottom:1px solid #333;display:flex;align-items:center;gap:16px;flex-wrap:wrap}}
+ h1{{font-size:15px;margin:0}} .counts span{{margin-right:10px;font-size:13px}}
+ label.tog{{font-size:12px;color:#9ab}} .keys{{font-size:12px;color:#aaa;margin-left:auto}} .keys b{{color:#ddd}}
+ .stage{{flex:1;display:flex;min-height:0;gap:14px;padding:14px}}
+ .vid{{flex:1;display:flex;align-items:center;justify-content:center;min-width:0}}
+ video{{max-width:100%;max-height:100%;border:3px solid #333;border-radius:8px;background:#000}}
+ .cols{{flex:1.2;display:flex;flex-direction:column;gap:10px;overflow:auto}}
+ .meta span{{display:inline-block;background:#262626;border-radius:5px;padding:3px 8px;margin:2px;font-size:12px}}
+ .ab{{display:flex;gap:10px}}
+ .card{{flex:1;background:#161616;border:1px solid #333;border-radius:8px;padding:10px}}
+ .card h3{{margin:0 0 6px;font-size:13px;color:#89a}} .card.b235 h3{{color:#c8a0e0}}
+ .lab{{display:inline-block;background:#2c3e50;border-radius:5px;padding:2px 8px;font-size:12px;margin-bottom:6px}}
+ .lab.diff{{background:#7d5a1e}} .lab.np{{background:#7b241c}} .cap{{font-size:14px;line-height:1.45}}
+ .path{{font-size:11px;color:#888;word-break:break-all}}
+ .diffbadge{{background:#7d5a1e;color:#fff;font-size:11px;padding:2px 7px;border-radius:5px}}
+ .npbadge{{background:#7b241c;color:#fff;font-size:11px;padding:2px 7px;border-radius:5px}}
+ footer{{background:#1c1c1c;border-top:1px solid #333;padding:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}}
+ footer button{{border:0;padding:9px 15px;border-radius:6px;color:#fff;cursor:pointer;font-size:14px}}
+ .b1{{background:#2c3e50}} .b2{{background:#6a3d8f}} .tie{{background:#555}} .bad{{background:#7b241c}} .nav{{background:#222}}
+ .voted{{outline:3px solid #fff}} footer button:hover{{filter:brightness(1.3)}}
+</style></head><body>
+<header><h1>⚖️ Caption A/B — 30B (v2) vs 235B</h1>
+<div class="counts"><span>clip <b id=pos>1</b>/<b id=tot>0</b></span>
+<span style="color:#89a">30B <b id=cv2>0</b></span><span style="color:#c8a0e0">235B <b id=cb>0</b></span>
+<span>tie <b id=cvt>0</b></span><span style="color:#e88">bad <b id=cvb>0</b></span>
+<span id=diffn style="color:#d9a441"></span></div>
+<label class="tog"><input type=checkbox id=only onchange="applyFilter()"> labels differ</label>
+<label class="tog"><input type=checkbox id=onlynp onchange="applyFilter()"> 235B: not present</label>
+<div class="keys"><b>1</b> 30B · <b>2</b> 235B · <b>3</b> tie · <b>0</b> both bad · <b>←/→</b> nav · <b>U</b> clear</div>
+</header>
+<div class="stage">
+  <div class="vid"><video id="vid" controls autoplay loop muted></video></div>
+  <div class="cols">
+    <div class="meta" id="meta"></div>
+    <div class="ab">
+      <div class="card v2"><h3>30B (v2 enhanced)</h3><span class="lab" id="l1"></span><div class="cap" id="c1"></div></div>
+      <div class="card b235"><h3>235B (OpenRouter)</h3><span class="lab" id="l2"></span><div class="cap" id="c2"></div></div>
+    </div>
+    <div class="path" id="path"></div>
+  </div>
+</div>
+<footer>
+ <button class="nav" onclick="go(-1)">←</button>
+ <button class="b1" id="vb1" onclick="vote('v2')">30B better (1)</button>
+ <button class="tie" id="vbt" onclick="vote('tie')">tie (3)</button>
+ <button class="b2" id="vb2" onclick="vote('b235')">235B better (2)</button>
+ <button class="bad" id="vbb" onclick="vote('bad')">both bad (0)</button>
+ <button class="nav" onclick="go(1)">→</button>
+</footer>
+<script>
+const ALL={json.dumps(pairs)};
+let votes={json.dumps(votes)};
+let view=ALL, i=0;
+const $=id=>document.getElementById(id);
+function counts(){{
+ const v=Object.values(votes);
+ $('cv2').textContent=v.filter(x=>x=='v2').length; $('cb').textContent=v.filter(x=>x=='b235').length;
+ $('cvt').textContent=v.filter(x=>x=='tie').length; $('cvb').textContent=v.filter(x=>x=='bad').length;
+ $('diffn').textContent=ALL.filter(p=>p.differs).length+' differ · '+ALL.filter(p=>p.np235).length+' 235B-empty';
+ $('tot').textContent=view.length;
+}}
+function fmt(v){{return v===undefined||v===null?'–':v;}}
+function render(){{
+ if(!view.length){{$('meta').innerHTML='<span>no clips match filter</span>';$('c1').textContent='';$('c2').textContent='';$('l1').textContent='';$('l2').textContent='';$('vid').removeAttribute('src');$('tot').textContent=0;return;}}
+ const p=view[i];
+ $('vid').src='/video?path='+encodeURIComponent(p.clip_path);
+ $('meta').innerHTML=`<span>${{p.camera}}</span><span>${{p.date}} ${{p.segment}}</span>`+
+   `<span>⏱ ${{fmt(p.video_timeline)}}</span><span>235B max_p ${{fmt(p.max_p)}}</span>`+
+   (p.differs?`<span class="diffbadge">labels differ</span>`:``)+
+   (p.np235?`<span class="npbadge">235B: not present</span>`:``);
+ $('l1').className='lab'+(p.differs?' diff':''); $('l1').textContent=p.v2_label;
+ $('l2').className='lab'+(p.np235?' np':(p.differs?' diff':'')); $('l2').textContent=p.b_label;
+ $('c1').textContent=p.v2_caption; $('c2').textContent=p.b_caption;
+ $('path').textContent=p.clip_path; $('pos').textContent=i+1;
+ const v=votes[p.clip_path];
+ for(const [id,val] of [['vb1','v2'],['vb2','b235'],['vbt','tie'],['vbb','bad']])
+   $(id).classList.toggle('voted', v==val);
+ counts();
+}}
+function go(d){{ if(!view.length)return; i=Math.max(0,Math.min(view.length-1,i+d)); render(); }}
+async function vote(v){{
+ if(!view.length)return;
+ const p=view[i]; const cur=votes[p.clip_path];
+ if(cur==v){{ delete votes[p.clip_path]; await fetch('/vote',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{clip_path:p.clip_path,vote:'clear'}})}}); render(); return; }}
+ votes[p.clip_path]=v;
+ await fetch('/vote',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{clip_path:p.clip_path,vote:v}})}});
+ render(); setTimeout(()=>go(1),150);
+}}
+function clearVote(){{ if(!view.length)return; const p=view[i]; delete votes[p.clip_path]; fetch('/vote',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{clip_path:p.clip_path,vote:'clear'}})}}); render(); }}
+function applyFilter(){{
+ view=ALL.filter(p=>(!$('only').checked||p.differs)&&(!$('onlynp').checked||p.np235));
+ i=0; render();
+}}
+document.addEventListener('keydown',e=>{{
+ if(e.key=='1')vote('v2'); else if(e.key=='2')vote('b235'); else if(e.key=='3')vote('tie');
+ else if(e.key=='0')vote('bad');
+ else if(e.key=='ArrowRight'||e.key==' '){{e.preventDefault();go(1);}}
+ else if(e.key=='ArrowLeft')go(-1); else if(e.key=='u'||e.key=='U')clearVote();
+}});
+render();
+</script></body></html>"""
+
+
+if __name__ == "__main__":
+    print("Caption A/B (30B vs 235B) → http://localhost:8006")
+    uvicorn.run(app, host="0.0.0.0", port=8006, log_level="warning")

@@ -13,7 +13,7 @@ same 20 s non-overlapping clips, same training-matched top-N CLAHE frames), but 
 Importable (the UI drives `process_video(..., on_stage=, on_clip=)`) and runnable as a CLI:
     python3 local_pipeline.py /path/to/video.mp4 [--camera Right_Top]
 """
-import argparse, json, platform, subprocess, sys, tempfile, time, datetime
+import argparse, json, subprocess, sys, tempfile, time, datetime
 from pathlib import Path
 
 import numpy as np
@@ -24,38 +24,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from caption_openrouter import load_detector, enhance, N_KEEP, IMG_MAXSIDE, PRESENT_MIN
 
-# repo root + default caption-student locations (bundled in src/ if packaged, else repo models/)
+# repo root + default MLX caption student location (bundled in src/ if packaged, else repo models/)
 REPO = HERE.parent
-BASE_MODEL_ID = "Qwen/Qwen3-VL-2B-Instruct"   # LoRA base (HF backend downloads this)
-
-def _first_existing(cands):
-    return next((p for p in cands if p.exists()), cands[-1])
-
-# Apple-Silicon path: MLX 4-bit merged model.
-DEFAULT_MLX = _first_existing([HERE / "qwen3vl2b_caption_v1_mlx_4bit",
-                               REPO / "models" / "qwen3vl2b_caption_v1_mlx_4bit"])
-# Cross-platform path: base Qwen3-VL-2B + this LoRA adapter (PEFT).
-DEFAULT_ADAPTER = _first_existing([HERE / "qwen3vl2b_caption_v1_lora",
-                                   REPO / "models" / "qwen3vl2b_caption_v1_lora"])
-
-
-def _is_apple_silicon():
-    return sys.platform == "darwin" and platform.machine() in ("arm64", "aarch64")
-
-
-def _mlx_available():
-    try:
-        import mlx_vlm  # noqa: F401
-        return True
-    except Exception:
-        return False
-
-
-def pick_backend():
-    """'mlx' on Apple Silicon (if mlx-vlm + the MLX model are present), else 'hf'."""
-    if _is_apple_silicon() and _mlx_available() and DEFAULT_MLX.exists():
-        return "mlx"
-    return "hf"
+_MLX_CANDS = [HERE / "qwen3vl2b_caption_v1_mlx_4bit", REPO / "models" / "qwen3vl2b_caption_v1_mlx_4bit"]
+DEFAULT_MLX = next((p for p in _MLX_CANDS if p.exists()), _MLX_CANDS[-1])
 
 # ── pipeline params (defaults match extract_octopus_clips.py) ────────────────────
 SAMPLE_FPS       = 1.0
@@ -72,57 +44,17 @@ CAP_PROMPT = ("These frames are from one short aquarium clip of Nity, an octopus
 # ── models (loaded once, reused across videos) ──────────────────────────────────
 _MODELS = None
 
-def load_models(mlx_model_path=DEFAULT_MLX, adapter_path=DEFAULT_ADAPTER, backend=None):
-    """Load the CLIP+MLP detector and the caption student once; cached module-globally.
-
-    backend='mlx'  -> Apple-Silicon MLX 4-bit model (fast, laptop-local).
-    backend='hf'   -> cross-platform: base Qwen3-VL-2B + LoRA adapter via transformers
-                      (CUDA / CPU / non-Apple). Auto-picked when None.
-    """
+def load_models(mlx_model_path=DEFAULT_MLX):
+    """Load the CLIP+MLP detector and the MLX caption student once; cached module-globally."""
     global _MODELS
     if _MODELS is not None:
         return _MODELS
-    backend = backend or pick_backend()
+    from mlx_vlm import load as mlx_load
     cm, pre, clf, vis, dev = load_detector()
-    _MODELS = {"cm": cm, "pre": pre, "clf": clf, "vis": vis, "dev": dev, "backend": backend}
-    if backend == "mlx":
-        from mlx_vlm import load as mlx_load
-        _MODELS["mlx"], _MODELS["proc"] = mlx_load(str(mlx_model_path))
-    else:
-        _MODELS.update(_load_hf_student(adapter_path))
+    mlx_model, mlx_proc = mlx_load(str(mlx_model_path))
+    _MODELS = {"cm": cm, "pre": pre, "clf": clf, "vis": vis, "dev": dev,
+               "mlx": mlx_model, "proc": mlx_proc}
     return _MODELS
-
-
-def _load_hf_student(adapter_path):
-    """Cross-platform caption student: base Qwen3-VL-2B + LoRA adapter (PEFT).
-    4-bit (bitsandbytes) on CUDA, otherwise fp16/fp32 on the best available device."""
-    from transformers import AutoModelForImageTextToText, AutoProcessor
-    cuda = torch.cuda.is_available()
-    dev = "cuda" if cuda else ("mps" if torch.backends.mps.is_available() else "cpu")
-    dtype = torch.float16 if dev in ("cuda", "mps") else torch.float32
-    kw = {"dtype": dtype}
-    if cuda:                                      # bitsandbytes 4-bit — CUDA only
-        try:
-            from transformers import BitsAndBytesConfig
-            kw = {"quantization_config": BitsAndBytesConfig(
-                load_in_4bit=True, bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.float16, bnb_4bit_use_double_quant=True),
-                "device_map": "auto"}
-        except Exception:
-            kw["device_map"] = "auto"
-    model = AutoModelForImageTextToText.from_pretrained(BASE_MODEL_ID, **kw)
-    ap = Path(adapter_path)
-    if ap.exists():
-        from peft import PeftModel
-        model = PeftModel.from_pretrained(model, str(ap))
-    else:
-        print(f"WARNING: LoRA adapter not found at {ap} — running the BASE model (run download_model.sh).",
-              file=sys.stderr)
-    if not cuda:
-        model = model.to(dev)
-    model.eval()
-    proc = AutoProcessor.from_pretrained(BASE_MODEL_ID)
-    return {"hf_model": model, "proc": proc, "hf_dev": dev}
 
 
 # ── scan: ONE decode feeds both octopus + motion  [SPEEDUP A] ────────────────────
@@ -236,7 +168,9 @@ def caption_window(video_path, start, pv, M):
 
 def caption_clip(clip_path, start, pv, M):
     """[B] Pick the best-N seconds from the whole-video scan scores (no per-clip CLIP re-run),
-    CLAHE-enhance just those frames, and caption with the student (MLX or HF backend)."""
+    CLAHE-enhance just those frames, and caption with the MLX student."""
+    from mlx_vlm import generate as mlx_generate
+    from mlx_vlm.prompt_utils import apply_chat_template
     win = pv[start:start + CLIP_LEN]
     maxp = float(win.max()) if len(win) else 0.0
     if maxp < PRESENT_MIN:                                   # presence gate (skip the VLM)
@@ -253,31 +187,10 @@ def caption_clip(clip_path, start, pv, M):
         for j, f in enumerate(best):                         # CLAHE == training / teacher input
             im = Image.open(f).convert("RGB"); im.thumbnail((IMG_MAXSIDE, IMG_MAXSIDE)); im = enhance(im)
             outp = f"{tmp}/best_{j:02d}.jpg"; im.save(outp, quality=90); prepped.append(outp)
-        cap = (_caption_mlx if M.get("backend") == "mlx" else _caption_hf)(prepped, M)
+        fmt = apply_chat_template(M["proc"], M["mlx"].config, CAP_PROMPT, num_images=len(prepped))
+        out = mlx_generate(M["mlx"], M["proc"], fmt, prepped, max_tokens=80, temperature=0.0, verbose=False)
+        cap = (out.text if hasattr(out, "text") else out).strip()
         return {"caption": cap, "max_p_visible": round(maxp, 3), "status": "captioned"}
-
-
-def _caption_mlx(image_paths, M):
-    """Apple-Silicon MLX generation."""
-    from mlx_vlm import generate as mlx_generate
-    from mlx_vlm.prompt_utils import apply_chat_template
-    fmt = apply_chat_template(M["proc"], M["mlx"].config, CAP_PROMPT, num_images=len(image_paths))
-    out = mlx_generate(M["mlx"], M["proc"], fmt, image_paths, max_tokens=80, temperature=0.0, verbose=False)
-    return (out.text if hasattr(out, "text") else out).strip()
-
-
-def _caption_hf(image_paths, M):
-    """Cross-platform transformers generation (base Qwen3-VL-2B + LoRA)."""
-    model, proc, dev = M["hf_model"], M["proc"], M["hf_dev"]
-    content = [{"type": "image", "image": Image.open(p).convert("RGB")} for p in image_paths]
-    content.append({"type": "text", "text": CAP_PROMPT})
-    messages = [{"role": "user", "content": content}]
-    inputs = proc.apply_chat_template(messages, add_generation_prompt=True, tokenize=True,
-                                      return_dict=True, return_tensors="pt").to(dev)
-    with torch.no_grad():
-        gen = model.generate(**inputs, max_new_tokens=80, do_sample=False)
-    trimmed = gen[:, inputs["input_ids"].shape[1]:]
-    return proc.batch_decode(trimmed, skip_special_tokens=True)[0].strip()
 
 
 # ── orchestration ────────────────────────────────────────────────────────────────
@@ -319,9 +232,7 @@ def process_video(video_path, out_dir, M=None, camera="cam", on_stage=None, on_c
     out_dir.mkdir(parents=True, exist_ok=True)
     result = {"video": video_path, "camera": camera,
               "processed_at": datetime.datetime.now().isoformat(timespec="seconds"),
-              "caption_model": "qwen3vl2b_caption_v1_mlx_4bit" if M.get("backend") == "mlx"
-                               else "qwen3vl2b_caption_v1_lora",
-              "caption_backend": M.get("backend"),
+              "caption_model": "qwen3vl2b_caption_v1_mlx_4bit",
               "elapsed_sec": round(time.time() - t0, 1),
               "params": {"clip_len": CLIP_LEN, "vis_thresh": VIS_THRESH,
                          "min_visible_frac": MIN_VISIBLE_FRAC, "motion_thresh": MOTION_THRESH},
@@ -337,13 +248,9 @@ def main():
     ap.add_argument("video")
     ap.add_argument("--camera", default="cam")
     ap.add_argument("--out", default=str(REPO / "local_pipeline_out"))
-    ap.add_argument("--mlx", default=str(DEFAULT_MLX), help="Apple-Silicon MLX 4-bit model dir")
-    ap.add_argument("--adapter", default=str(DEFAULT_ADAPTER), help="LoRA adapter dir (HF backend)")
-    ap.add_argument("--backend", choices=["mlx", "hf"], default=None,
-                    help="force caption backend (default: auto — mlx on Apple Silicon, else hf)")
+    ap.add_argument("--mlx", default=str(DEFAULT_MLX))
     args = ap.parse_args()
-    M = load_models(args.mlx, args.adapter, backend=args.backend)
-    print(f"caption backend: {M['backend']}", flush=True)
+    M = load_models(args.mlx)
     def stage(s, d): print(f"[{s}] {d}", flush=True)
     def clip(i, n, r): print(f"  [{i}/{n}] {r['video_timeline']} ({r['status']}) {r['caption']}", flush=True)
     res = process_video(args.video, args.out, M, camera=args.camera, on_stage=stage, on_clip=clip)

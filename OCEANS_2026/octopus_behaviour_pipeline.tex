@@ -1,0 +1,370 @@
+% ============================================================================
+% DRAFT — OCEANS 2026 companion paper (behaviour-profiling pipeline).
+% Sibling paper: conference_101719.tex (protest-behavior -> lighting).
+% TODO before submission:
+%   - finalise author list / affiliations (placeholder below, mirrors the consortium)
+%   - generate figures listed in comments (behaviour dashboard charts, seg before/after,
+%     pipeline diagram); verify all \includegraphics paths
+%   - verify every citation's details
+%   - decide final length / trim to target track (full vs work-in-progress)
+%   - build the human-verified test sets before making any "A beats B" claim (see Sec. Limitations)
+% ============================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{From Footage to Ethogram: An Automated Vision--Language Pipeline for
+Quantifying Behaviour and Affective State of a Captive Octopus}
+
+% TODO: confirm/finalise author list and ordering with the consortium.
+\author{
+\IEEEauthorblockN{
+Siddharth Raj\IEEEauthorrefmark{1},
+Harald Burgsteiner\IEEEauthorrefmark{2},
+Wolfgang Slany\IEEEauthorrefmark{3}
+}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}
+Research and Development, Arishna IoT Solutions, Bangalore, India}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}
+Institute for Digital Media Education, University of Teacher Education Styria, Graz, Austria}
+\IEEEauthorblockA{\IEEEauthorrefmark{3}
+Institute of Software Engineering and Artificial Intelligence, Graz University of Technology, Graz, Austria}
+}
+\maketitle
+
+\begin{abstract}
+Continuous camera monitoring of captive marine animals produces far more video
+than caretakers can review, yet most of it is used only reactively. We present
+an automated vision--language pipeline that converts months of continuous
+multi-camera aquarium footage of a single \emph{Octopus vulgaris} into a
+quantified behavioural and affective-state time-series. The pipeline detects
+when the animal is visible (a frozen CLIP encoder with a lightweight probe under
+aspect-preserving preprocessing), extracts short behaviour clips gated on
+visibility and motion, and re-prompts a large vision--language model to emit a
+structured behavioural record per clip (behaviour class, posture, activity,
+location, context and body colour). Aggregating $3{,}083$ analysed clips yields
+an interpretable activity budget, an exposure-normalised circadian profile with a
+late-afternoon activity peak, and a clear stimulus response in which human
+presence nearly doubles movement and raises a transparent arousal index. To make
+the system deployable and self-hosting, we distil the large teacher into small
+local models: a captioning student (Qwen3-VL-2B, QLoRA) that runs 4-bit on a
+laptop, and a single-class octopus mask model auto-labelled by GroundingDINO and
+SAM2. The segmentation presence signal reliably rejects tank-glass reflections,
+a dominant false-positive source. We frame results in terms of arousal and
+behavioural state rather than emotion, report the pipeline's current
+limitations honestly, and position the work as the profiling layer complementary
+to real-time single-behaviour response systems.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Computer Vision; Vision--Language Models; Behaviour Analysis; Marine Animal
+Welfare; Model Distillation; Edge AI; Cephalopods
+\end{IEEEkeywords}
+
+\section{Introduction}
+Aquarium and controlled-habitat monitoring increasingly relies on
+continuous camera coverage, but the resulting video vastly exceeds what human
+caretakers can review. Most footage is therefore consulted only reactively,
+after an event, and the rich record of an animal's day-to-day behaviour is left
+unquantified. For welfare-oriented husbandry the more valuable question is
+longitudinal: \emph{how does this animal spend its time, how does its rhythm
+look, and how does it respond to its environment?}
+
+Octopuses make this both important and hard. They are highly intelligent,
+behaviourally complex invertebrates whose welfare is a growing concern, yet their
+non-rigid bodies, rapid posture changes, active camouflage, frequent denning, and
+the reflections and floating debris of tank environments defeat naive visual
+monitoring~\cite{disc_o}. A companion line of work from our consortium targets a
+single, actionable behaviour---a ``protest'' limb gesture used to request tank
+lighting---and closes the loop by automatically actuating the lights. That system
+is reactive and behaviour-specific by design.
+
+This paper addresses the complementary problem: \emph{understanding the whole
+behavioural repertoire over time}. We present an automated pipeline that turns
+continuous multi-camera footage of one captive \emph{O.\ vulgaris} (``Nity'')
+into a structured behavioural and affective-state time-series, together with the
+small local models needed to run it cheaply and offline. Our contributions are:
+\begin{enumerate}[leftmargin=*, itemsep=1pt, topsep=2pt]
+\item An end-to-end pipeline from raw footage to a per-clip \emph{structured
+behavioural record}, using a large vision--language model (VLM) as a
+zero-shot behavioural annotator with snap-to-list validation.
+\item An aggregate behavioural analysis of the animal over several months: an
+interpretable activity budget, an exposure-normalised circadian profile, and a
+quantified stimulus response, framed as arousal / behavioural state.
+\item Teacher$\rightarrow$student distillation into deployable local models---a
+4-bit captioning student that runs on a laptop, and a single-class octopus
+segmentation model auto-labelled by GroundingDINO$+$SAM2 whose mask-area signal
+robustly rejects reflections.
+\item An honest account of current limitations---most importantly the absence of
+human-verified held-out test sets---and the diverse-footage data strategy that
+addresses the dominant generalisation gap.
+\end{enumerate}
+
+\section{Related Work}
+\textbf{Cephalopod behaviour and welfare.} Interest in octopus cognition and
+welfare has grown alongside their inclusion in animal-welfare frameworks. Prior
+consortium work introduced a framework for decoding inter-species communication
+with octopodes and a real-time detector for a light-request behaviour that
+actuates the habitat~\cite{disc_o}. Our work is the profiling counterpart to that
+response system.
+
+\textbf{Foundation models as annotators.} General-purpose VLMs can describe and
+classify images zero-shot, and open-vocabulary detectors and promptable
+segmenters (GroundingDINO~\cite{groundingdino}, SAM/SAM2~\cite{sam2}) enable
+labelling without task-specific supervision. We use these as \emph{teachers}: an
+expensive model produces structured labels that we distil into small
+students~\cite{lora}. CLIP~\cite{clip} provides the frozen visual features for our
+lightweight presence detector; the deployed segmenter uses an efficient
+LR-ASPP/MobileNetV3 head~\cite{mobilenetv3}.
+
+\section{System and Methods}
+The tank is observed by a multi-camera rig (6 IP cameras, 4K, infrared and colour
+night vision) with a manually selected region of interest around the den for each
+camera; the same installation supports the companion response system. The
+pipeline (Fig.~\ref{fig:pipeline}) has four stages.
+
+% FIGURE: pipeline diagram (detection -> extraction -> structured extraction -> distillation).
+% generate from src/ (draw in draw.io / tikz). Placeholder path below.
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{assets/pipeline_behaviour.pdf}
+    \caption{Footage-to-ethogram pipeline: visibility detection $\rightarrow$
+    clip extraction $\rightarrow$ VLM structured behavioural extraction
+    $\rightarrow$ distillation into local caption and segmentation students.}
+    \label{fig:pipeline}
+\end{figure}
+
+\subsection{Visibility Detection}
+A frozen CLIP ViT-B/32 encoder feeds a small multi-layer-perceptron probe
+(512$\rightarrow$256$\rightarrow$64$\rightarrow$2) trained to classify
+\emph{octopus-visible} vs.\ \emph{hidden}. The single most important design choice
+was preprocessing: CLIP's default centre-crop discards $33$--$44\%$ of a 16:9
+frame, and \emph{aspect-ratio mismatch}---not backbone capacity---was the root
+cause of poor field performance. Replacing the crop with aspect-preserving
+letterbox padding, and mining $\sim$1.7k reflection/infrared-noise hard
+negatives, gave a probe that reaches $96.8\%$ on our internal detection test set
+while sharply reducing confident false positives on reflections.
+
+\subsection{Clip Extraction}
+For each source video we compute, per second, the probe's visibility probability
+and an absolute changed-pixel motion fraction (with the burned-in timestamp region
+masked so the ticking clock is not counted as motion). A non-overlapping
+$20\,\mathrm{s}$ window is kept when the octopus is visible for a majority of the
+window and mean motion exceeds a threshold. We deliberately use the
+\emph{absolute} changed-pixel fraction: per-video normalised motion incorrectly
+promotes static scenes (e.g.\ a flickering lamp) to ``motion''.
+
+\subsection{Structured Behavioural Extraction}
+Rather than treating a caption as the end product, we treat it as one field of a
+\emph{structured behavioural record}. For each extracted clip we select the
+clearest frames (contrast-enhanced for the dim infrared footage, scored by the
+visibility probe) and prompt a large VLM (Qwen3-VL-235B, accessed via API) to
+return a JSON record: \{present, behaviour (7-class ethogram), posture, activity
+level, location, context, body colour, colour/texture change, confidence\}. Each
+field is validated by snapping to an allowed value list; colour fields are gated
+per clip, so infrared/greyscale clips (detected by low BGR channel divergence) are
+instructed to leave colour \emph{uncertain}. The run over $3{,}205$ clips cost
+$\approx\$2.22$ ($\sim\$0.0006$/clip). We note---and exploit---that the VLM is a
+far stronger presence filter than the detector: on one batch it judged $63\%$ of
+detector-``verified'' clips to actually contain no octopus, almost all tank-glass
+reflections.
+
+\subsection{Distillation to Local Models}
+\label{sec:distill}
+A central design principle is that the expensive foundation models are used only
+as \emph{offline teachers}; nothing large is deployed. Their outputs become
+training data for small students, so the running system is self-hosting and needs
+no GPU server or paid API. We apply the same teacher$\rightarrow$student recipe
+twice: (i) the VLM's captions distil into a compact captioning model, and (ii) the
+GroundingDINO$+$SAM2 masks distil into a single-class segmentation model
+(Sec.~\ref{sec:models}). In both cases the teacher provides the labels a small
+model could never be trained on directly, and the student is deliberately kept as
+small as the task allows---a single class, low input resolution---so that
+continuous in-situ inference is feasible on commodity hardware.
+
+\subsection{Diverse-Footage Harvesting}
+\label{sec:harvest}
+Early models were trained on footage from a single week, which we found to be the
+binding generalisation limit. We therefore built a streaming harvester that crawls
+the footage archive, and for each candidate video \emph{probes} a handful of
+frames before committing to a full scan---skipping empty ``den'' videos cheaply.
+Because the archive server imposes a low aggregate bandwidth cap (measured
+$\sim$5\,MB/s, with parallel connections yielding only $1.6\times$), the harvester
+runs as a single CPU worker that streams rather than bulk-downloads, keeping only
+short clips and a detailed coverage ledger so that skipped footage can be revisited
+later. This expanded coverage from $7$ days to $>\!100$ distinct days.
+
+\section{Behavioural and Affective-State Analysis}
+Aggregating the $3{,}083$ present clips (joined to absolute clock time) yields an
+interpretable behavioural profile. We stress a framing choice: we report
+\textbf{arousal and behavioural state}, not emotion. Our transparent arousal index
+is $0.6\cdot\mathrm{activity} + 0.4\cdot\mathrm{posture\text{-}spread}$, with
+static body colour as a secondary channel available only on colour cameras.
+
+% FIGURE: activity budget + circadian + stimulus-response (from data/behaviour_dashboard.html)
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{assets/behaviour_findings.pdf}
+    \caption{Aggregate behaviour: (a) activity budget; (b) exposure-normalised
+    circadian visible-activity rate; (c) motion and arousal with vs.\ without human
+    presence. Generated from the structured records.}
+    \label{fig:findings}
+\end{figure}
+
+\textbf{Activity budget.} Exploration/manipulation $41\%$, resting $33\%$,
+human/enrichment interaction $14\%$, reaching out of water $9\%$, crawling $2\%$,
+swimming/jetting $1\%$.
+
+\textbf{Circadian structure.} Normalising present-clip counts by all extracted
+windows per hour (an exposure correction) reveals a strong diel pattern: visible
+activity is $\sim$1--5\% overnight, rises to a $\sim$45\% peak at 17:00 with a
+13:00--19:00 plateau, plus a dawn bump around 05:00--06:00.
+
+\textbf{Stimulus response.} Comparing clips with vs.\ without a human present, mean
+motion nearly doubles ($0.045\rightarrow0.095$) and the arousal index rises
+($0.46\rightarrow0.68$). On colour cameras, the dark red-brown body colour is most
+common at baseline ($\sim$16\%) and less so during human interaction ($\sim$6\%),
+consistent with a colour/posture shift under stimulus.
+
+We regard the \emph{contrasts} (e.g.\ human-present vs.\ absent) as the robust
+findings; absolute levels depend on the upstream presence gate and will shift as
+the detector improves.
+
+\section{Local Models}
+\label{sec:models}
+\subsection{Captioning Student}
+We distil the teacher's one-sentence descriptions into Qwen3-VL-2B using QLoRA
+(rank 16). On a $50$-clip held-out split, embedding similarity to the teacher
+improves from $0.702$ (base model) to $0.834$ and ROUGE-L from $0.269$ to
+$0.455$. Merged and quantised to 4-bit with MLX, the student is $\sim$1.7\,GB and
+produces a caption in $\sim$3\,s on a 16\,GB laptop with no GPU; a cross-platform
+Transformers backend covers non-Apple hardware.
+
+\subsection{Segmentation Student}
+Following the distillation principle of Sec.~\ref{sec:distill}, we target the
+\emph{smallest} model that yields usable masks: a single foreground class at low
+resolution, with GroundingDINO$+$SAM2 acting purely as an offline auto-labeller,
+never deployed. To obtain masks without hand labelling, the teacher pairs
+GroundingDINO (box) with SAM2 (mask): the most-confident frame seeds SAM2 video
+propagation, and largest-blob plus area-continuity cleanup remove transient
+errors. This corrected the two systematic failures of per-frame prompting
+(infrared bright-tool bleed, colour background bleed) and, importantly, rejects the
+reflection camera by low seed confidence. Auto-labelling produced $4{,}412$
+(image, mask) pairs, from which we distilled candidate students spanning a
+size sweep (a compact U-Net at several widths and an LR-ASPP head); we retain the
+smallest model clearing our quality bar, an LR-ASPP student of $3.2$\,M
+parameters.
+
+Two results, one positive and one cautionary. \emph{Positive:} used as a
+\emph{presence} signal, the mask area is highly reflection-robust. A model trained
+with empty-mask negatives reaches AUC $0.86$ overall and $0.99$ against
+reflections, with $0\%$ reflection false-positives at an area threshold while
+retaining $88\%$ present-recall---directly attacking the pipeline's dominant
+false-positive source. \emph{Cautionary:} pixel-accurate masks are not yet
+solved---mask IoU plateaus near $0.47$ across model sizes, architectures and
+augmentation. We diagnosed this as a \emph{video-diversity} generalisation gap
+(only $62$ distinct training videos; training IoU $0.68$ vs.\ validation $0.47$,
+failing by mislocating an otherwise correctly-sized blob), which motivates the
+harvesting effort of Sec.~\ref{sec:harvest} rather than a larger model.
+
+% FIGURE: seg before/after (data/segmentation_demo) + presence-gate ROC
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{assets/segmentation_demo.pdf}
+    \caption{Auto-labelling teacher (GroundingDINO$+$SAM2) masks tracked across a
+    clip on a colour camera (top) and an infrared camera (bottom). SAM2 video
+    propagation with largest-blob and area-continuity cleanup yields the temporally
+    consistent masks used to train the segmentation student; the reflection camera
+    is rejected by low seed confidence.}
+    \label{fig:seg}
+\end{figure}
+
+\section{Relevance to the OCEANS Community}
+The work targets intelligent sensing and longitudinal behavioural analysis for
+controlled marine habitats. It aligns with OCEANS themes in imaging and vision
+systems and in welfare-oriented monitoring, and it emphasises \emph{edge
+deployability}: the distilled students run offline on commodity hardware, avoiding
+cloud dependence for continuous in-situ monitoring. Where the companion system
+acts on a single behaviour in real time, this pipeline supplies the quantitative
+behavioural baseline against which such events---and future welfare
+interventions---can be interpreted.
+
+\section{Limitations and Ongoing Work}
+We are deliberate about what is not yet established.
+\begin{itemize}[leftmargin=*, itemsep=1pt, topsep=2pt]
+\item \textbf{No human-verified held-out test sets yet.} All reported numbers are
+on internal evaluation splits (teacher-derived or auto-labelled). We therefore make
+\emph{no} claim that one model beats another; building small human-verified test
+sets for detection, captioning and segmentation is the immediate next step and a
+prerequisite for any comparative claim.
+\item \textbf{Presence-gate noise propagates.} Absolute behavioural rates depend on
+the detector; we report contrasts, which are robust to a constant gate bias.
+\item \textbf{Context label is coarse.} The ``enrichment interaction'' context
+fires whenever a permanent tank object is visible ($\sim$66\% of clips); the clean
+stimulus contrast is human-present vs.\ absent.
+\item \textbf{Segmentation.} Pixel-accurate masks await more distinct training
+videos; infrared masks additionally need a prompt-refinement fix. A static-feature
+behaviour classifier failed (below the majority baseline), confirming that
+behaviour classification needs temporal/motion features rather than more labels.
+\end{itemize}
+Ongoing work follows two tracks. First, we are lifting the segmentation student's
+mask accuracy \emph{by data rather than by size}: a recently completed diverse
+harvest (Sec.~\ref{sec:harvest}) expands training coverage from $7$ to over $100$
+distinct days, and---consistent with the video-diversity diagnosis---we are
+retraining the same small model on this broader set and re-selecting the smallest
+architecture that meets the quality bar, so the deployed model stays compact while
+its masks improve. Second, we distil the structured behavioural extractor itself
+into the local $2$-B student (JSON targets in place of a sentence). Both tracks
+depend on the human-verified test sets above, which we are building in parallel.
+
+\section{Conclusion}
+We presented an automated vision--language pipeline that converts continuous
+octopus footage into a quantified behavioural and affective-state time-series, and
+distils its large teachers into local models that run offline. The aggregate
+analysis surfaces an interpretable activity budget, a clear circadian rhythm and a
+measurable stimulus response, while the reflection-robust presence signal improves
+the extraction itself. Framed as arousal and behavioural state and reported with
+its limitations, the system offers a practical, welfare-oriented layer for
+longitudinal behavioural understanding in controlled marine habitats.
+
+\section*{Ethical Statement and Data Availability}
+The work was conducted in a private aquarium, with only sub-threshold interactions
+w.r.t.\ EC directive 2010/63/EU of several caretakers with a single
+\emph{O.\ vulgaris} (supplier: Flying Sharks, Portugal). Husbandry and enrichment
+practices followed best practices for octopus aquariums in compliance with FELASA
+guidelines. The video data used in the study are available from the last author.
+
+\begin{thebibliography}{00}
+\bibitem{disc_o}
+K.\ Patel, A.\ Sharma, H.\ Kumar, P.\ Kurundodi, H.\ Burgsteiner, and W.\ Slany,
+``A Novel Framework for Decoding Inter-Species Communication with Octopodes
+(DISC-O),'' in \textit{OCEANS 2025}, pp.\ 1--9, Sep.\ 2025,
+doi: 10.23919/OCEANS59106.2025.11244956.
+\bibitem{clip}
+A.\ Radford \textit{et al.}, ``Learning Transferable Visual Models from Natural
+Language Supervision,'' in \textit{ICML}, 2021.
+\bibitem{groundingdino}
+S.\ Liu \textit{et al.}, ``Grounding DINO: Marrying DINO with Grounded Pre-Training
+for Open-Set Object Detection,'' \textit{arXiv:2303.05499}, 2023.
+\bibitem{sam2}
+N.\ Ravi \textit{et al.}, ``SAM 2: Segment Anything in Images and Videos,''
+\textit{arXiv:2408.00714}, 2024.
+\bibitem{lora}
+E.\ J.\ Hu \textit{et al.}, ``LoRA: Low-Rank Adaptation of Large Language Models,''
+in \textit{ICLR}, 2022.
+\bibitem{mobilenetv3}
+A.\ Howard \textit{et al.}, ``Searching for MobileNetV3,'' in \textit{ICCV}, 2019.
+% TODO: add a Qwen-VL citation and (optionally) an octopus-cognition/welfare reference.
+\end{thebibliography}
+
+\end{document}
