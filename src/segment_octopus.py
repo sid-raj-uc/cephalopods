@@ -67,6 +67,28 @@ class OctoSegmenter:
             mask = _largest_blob(mask)
         return mask, float(mask.mean())
 
+    @torch.no_grad()
+    def segment_batch(self, frames, thresh=0.5, largest_only=True):
+        """Batched version of segment() — identical per-frame result, one GPU forward for the whole
+        batch. `frames` must all be the SAME size. Returns [(mask, area), ...]."""
+        rgbs = [self._to_rgb(f) for f in frames]
+        H, W = rgbs[0].shape[:2]
+        xs = []
+        for rgb in rgbs:
+            x = np.asarray(Image.fromarray(rgb).resize((self.in_size, self.in_size), Image.BILINEAR),
+                           np.float32) / 255.0
+            xs.append(((x - IMAGENET_MEAN) / IMAGENET_STD).transpose(2, 0, 1))
+        t = torch.from_numpy(np.stack(xs)).to(self.device)
+        up = F.interpolate(self.model(t), size=(H, W), mode="bilinear", align_corners=False)
+        probs = torch.sigmoid(up)[:, 0].cpu().numpy()   # (B, H, W)
+        out = []
+        for p in probs:
+            m = p > thresh
+            if largest_only and m.any():
+                m = _largest_blob(m)
+            out.append((m, float(m.mean())))
+        return out
+
 
 if __name__ == "__main__":
     import argparse
