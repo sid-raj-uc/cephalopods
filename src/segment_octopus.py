@@ -68,6 +68,21 @@ class OctoSegmenter:
         return mask, float(mask.mean())
 
     @torch.no_grad()
+    def prob(self, frame):
+        """Return the sigmoid probability map at the model's internal resolution (in_size x in_size).
+
+        Exposed for TEMPORAL SMOOTHING: a caller can keep a running EMA of this map across frames
+        (`ema = a*prob + (1-a)*ema`) and threshold the smoothed map — this removes per-frame jitter
+        while the octopus's real motion still comes through. Cheap (low-res, one forward pass).
+        """
+        rgb = self._to_rgb(frame)
+        x = np.asarray(Image.fromarray(rgb).resize((self.in_size, self.in_size), Image.BILINEAR),
+                       np.float32) / 255.0
+        x = (x - IMAGENET_MEAN) / IMAGENET_STD
+        t = torch.from_numpy(x.transpose(2, 0, 1))[None].to(self.device)
+        return torch.sigmoid(self.model(t))[0, 0].cpu().numpy()  # (in_size, in_size) float32
+
+    @torch.no_grad()
     def segment_batch(self, frames, thresh=0.5, largest_only=True):
         """Batched version of segment() — identical per-frame result, one GPU forward for the whole
         batch. `frames` must all be the SAME size. Returns [(mask, area), ...]."""

@@ -18,7 +18,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "src"))
-from segment_octopus import OctoSegmenter
+from segment_octopus import OctoSegmenter, _largest_blob
 
 CKPT = os.environ.get("SEG_CKPT", str(REPO / "weights" / "octo_seg_points_lraspp.pt"))
 CLIPS_ROOT = REPO / "src" / "octopus_clips_verified"
@@ -60,8 +60,12 @@ def suggest_clips(n=48):
     return sorted(out, key=lambda d: (d["camera"], d["name"]))
 
 
-def render_overlay(clip_path):
-    cid = hashlib.md5((CKPT + "|" + clip_path).encode()).hexdigest()[:12]
+EMA_ALPHA = 0.45          # temporal smoothing: lower = smoother (more lag), higher = snappier
+_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+
+
+def render_overlay(clip_path, smooth=True):
+    cid = hashlib.md5((CKPT + "|" + clip_path + ("|s" if smooth else "|r")).encode()).hexdigest()[:12]
     out_mp4 = OUT / f"{cid}.mp4"
     stats_f = OUT / f"{cid}.json"
     if out_mp4.exists() and out_mp4.stat().st_size > 10000 and stats_f.exists():
@@ -70,34 +74,48 @@ def render_overlay(clip_path):
     cap = cv2.VideoCapture(clip_path)
     fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
     areas = []
+    ema = None
     with tempfile.TemporaryDirectory() as td:
         i = 0
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
-            mask, area = S.segment(frame)
-            areas.append(round(float(area), 4))
-            arr = frame.astype(np.float32)
-            if mask is not None and mask.any():
-                arr[mask] = (1 - ALPHA) * arr[mask] + ALPHA * MASK_RGB[::-1]
+            prob = S.prob(frame)                       # (in_size, in_size) float
+            used = prob
+            if smooth:
+                ema = prob if ema is None else (EMA_ALPHA * prob + (1 - EMA_ALPHA) * ema)
+                used = ema
+            m = used > 0.5
+            if m.any():
+                m = _largest_blob(m)
+                m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_CLOSE, _KERNEL).astype(bool)
+            area = float(m.mean())
+            areas.append(round(area, 4))
+            # downscale the display frame first (source is often 4K), then paint the mask on it
+            disp = frame
+            if disp.shape[1] > 1280:
+                nh = (round(disp.shape[0] * 1280 / disp.shape[1]) // 2) * 2
+                disp = cv2.resize(disp, (1280, nh))
+            mask_disp = cv2.resize(m.astype(np.uint8), (disp.shape[1], disp.shape[0]),
+                                   interpolation=cv2.INTER_NEAREST).astype(bool)
+            arr = disp.astype(np.float32)
+            if mask_disp.any():
+                arr[mask_disp] = (1 - ALPHA) * arr[mask_disp] + ALPHA * MASK_RGB[::-1]
             im = arr.astype(np.uint8)
-            # downscale to <=720p for a light browser video + tiny temp footprint (source is often 4K)
-            if im.shape[1] > 1280:
-                nh = (round(im.shape[0] * 1280 / im.shape[1]) // 2) * 2
-                im = cv2.resize(im, (1280, nh))
             cv2.rectangle(im, (0, 0), (im.shape[1], 30), (0, 0, 0), -1)
             present = area >= 0.01
             txt = f"octopus {area*100:4.1f}%" if present else "no octopus"
             col = (120, 255, 0) if present else (120, 120, 120)
-            cv2.putText(im, txt, (8, 21), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+            tag = "  [smoothed]" if smooth else "  [raw]"
+            cv2.putText(im, txt + tag, (8, 21), cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
             cv2.imwrite(f"{td}/f{i:05d}.jpg", im, [cv2.IMWRITE_JPEG_QUALITY, 85])
             i += 1
         cap.release()
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", f"{fps:.3f}",
                         "-i", f"{td}/f%05d.jpg", "-c:v", "libx264", "-pix_fmt", "yuv420p",
                         str(out_mp4)], check=False)
-    stats = {"frames": len(areas), "fps": round(fps, 2),
+    stats = {"frames": len(areas), "fps": round(fps, 2), "smooth": smooth,
              "mean_area": round(float(np.mean(areas)) * 100, 2) if areas else 0,
              "max_area": round(float(np.max(areas)) * 100, 2) if areas else 0,
              "present_frac": round(float(np.mean([a >= 0.01 for a in areas])) * 100, 1) if areas else 0,
@@ -121,8 +139,9 @@ async def api_render(body: dict):
     clip = (body.get("clip") or "").strip()
     if not clip or not os.path.exists(clip):
         return JSONResponse({"error": f"video not found: {clip}"}, status_code=404)
+    smooth = bool(body.get("smooth", True))
     with _LOCK:
-        out_mp4, stats = render_overlay(clip)
+        out_mp4, stats = render_overlay(clip, smooth=smooth)
     return JSONResponse({"id": out_mp4.stem, "stats": stats})
 
 
@@ -157,6 +176,8 @@ video{max-width:96%;max-height:66vh;background:#000;border-radius:10px;border:1p
   <h3>Octopus Segmentation</h3>
   <div class=model id=model>loading model…</div>
   <input id=path placeholder="paste any local video path…">
+  <label style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12.5px;color:var(--dim)">
+    <input type=checkbox id=smooth checked style="width:auto"> temporal smoothing (no jitter)</label>
   <button onclick="runPath()">▶ Run segmentation</button>
   <div class=hint>or pick a clip below</div>
   <div id=list style="margin-top:10px">loading clips…</div>
@@ -181,7 +202,8 @@ async function run(path,el){
   document.querySelectorAll('.clip').forEach(x=>x.classList.remove('active'));if(el)el.classList.add('active');
   document.getElementById('status').textContent='Segmenting (first run renders frame-by-frame)…';
   document.getElementById('stats').textContent='';
-  const r=await (await fetch('/api/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clip:path})})).json();
+  const smooth=document.getElementById('smooth').checked;
+  const r=await (await fetch('/api/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clip:path,smooth:smooth})})).json();
   if(r.error){document.getElementById('status').textContent='Error: '+r.error;return;}
   const v=document.getElementById('vid');v.src='/video/'+r.id+'?t='+Date.now();
   const s=r.stats;document.getElementById('model').textContent='model: '+s.model;
