@@ -224,3 +224,24 @@ Goal: raise teacher-label quality (the diagnosed ceiling — see the failure rep
 - Run at scale on GPU: `auto_segment.py --min-seed-conf 0.45 --debug-dir ...` over colour+IR, rebuild
   dataset (points-on), retrain, compare mask IoU + IR acceptance vs the old box-only v1/v2.
 - Route the newly-accepted low-conf frames through a human-verify UI before training (Change 4).
+
+### Colab A100 A/B run (2026-07-26) — Phase-0 validated at GPU scale
+- Ran `auto_segment.py` (points-on vs `--no-points`) on **27 clips** (Front 8 / Back 3 / Right 8 / Top 8 IR)
+  from the Drive `octopus_clips_verified.zip`, on a Colab **A100** (~3–4 s/clip, both recipes). fps=1,
+  min_seed_conf=0.30.
+- **100% accepted** (27/27) at conf≥0.30 — incl. IR clips at conf 0.44–0.59 that the old 0.60 gate rejected.
+- Mean mask area (median-per-clip), box → points:
+  | camera | box | points |
+  |---|---|---|
+  | Right_Front | 0.102 | 0.100 |
+  | Right_Back | 0.0595 | 0.0604 |
+  | Right_Right | 0.045 | 0.0486 |
+  | **Right_Top (IR)** | **0.0664** | **0.0602** (−9%, less tool-bleed) |
+  | overall | 0.0698 | 0.0686 |
+- Overlays (`results/segmentation/phase0_colab_ab_montage.jpg`, full set on Drive
+  `GSOC-Catrobat/seg_phase0_out/`): negatives land on bright lights/tools, positives on the octopus;
+  points fill the octopus body (row 02 IR) and don't regress clean cases.
+- **Verdict:** non-regressing + correctly-steering + accepts hard frames. IR area reduction is the right
+  direction. This sample was fairly clean (no severe box-only tool-bleed case), so the *dataset-level* IoU
+  win still needs a full rebuild + retrain. NOTE: the Drive zip is a partial set (mostly Right_Left); a
+  full rebuild needs the complete clip set on the GPU box.
