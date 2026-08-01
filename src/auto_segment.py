@@ -2,12 +2,19 @@
 
 Recipe (validated 2026-07-21, before/after on 4 cameras):
   1. GroundingDINO ("an octopus.") per sampled frame -> pick the HIGHEST-confidence frame as seed.
-  2. GATE: if the best confidence < MIN_SEED_CONF, reject the whole clip (this is what filters out
+  2. GATE: if the best confidence < min_seed_conf, reject the whole clip (this is what filters out
      the reflection cameras — a human reflected in the glass grounds at ~0.50, real octopus 0.7-0.9).
   3. SAM2 video propagation from the seed frame (both directions) -> temporally-consistent masks.
   4. Cleanup: keep the largest connected component (drops detached tool/pipe/reflection fragments);
      area-continuity check drops frames whose area jumps >3x the clip median (transient errors).
   5. Emit N_PER_CLIP evenly-spaced clean frames as (image.jpg, mask.png) pairs + a manifest row.
+
+Phase-0 fix (2026-07-26, `build_prompts`): seed SAM2 with box + POSITIVE points inside the box AND
+NEGATIVE points on the brightest regions outside it (metal tools/pipes on IR, specular reflections)
+plus the frame corners (background). The box alone gave SAM2 no "what is NOT octopus" cue, so it bled
+onto bright tools (the #1 IR failure) and loose background (the colour failure). Toggle with
+`--no-points` for an A/B; `--min-seed-conf` lowers the gate to accept resting/camouflaged frames
+(route those through human-verify); `--debug-dir/--debug-n` dump seed overlays (box+prompts+mask).
 
 Device auto-selects cuda -> (mps) -> cpu, so the SAME script runs locally (slow, CPU) or on a
 Colab GPU (fast). Resumable: skips clips already in the manifest. Right_Left is excluded by default.
@@ -76,12 +83,67 @@ def largest_blob(mask):
     return lab == k
 
 
-def segment_clip(clip, M):
-    """Return list of (PIL frame, bool mask) for a clip, or [] if rejected/failed."""
+def build_prompts(img, box, n_neg_bright=4, bright_pct=99.0):
+    """Phase-0 fix: return (points [K,2] float32, labels [K] int) to steer SAM2.
+
+    POSITIVE points anchor the octopus body inside the GroundingDINO box; NEGATIVE points sit on the
+    brightest regions OUTSIDE the box (metal tools / pipes on IR, specular reflections) and the frame
+    corners (background). This stops SAM2 bleeding the mask onto bright tools (the #1 IR failure) and
+    into the loose background (the colour failure) — the box alone gives it no "what is NOT octopus" cue.
+    """
+    W, H = img.size
+    x0, y0, x1, y1 = box
+    bw, bh = max(1.0, x1 - x0), max(1.0, y1 - y0)
+    pts, labs = [[(x0 + x1) / 2, (y0 + y1) / 2]], [1]           # box centre = strong positive
+    for fx in (0.35, 0.65):                                      # interior grid keeps the whole body
+        for fy in (0.35, 0.65):
+            pts.append([x0 + fx * bw, y0 + fy * bh]); labs.append(1)
+    g = np.asarray(img.convert("L"), np.float32)
+    out = np.ones(g.shape, bool)
+    out[int(max(0, y0)):int(y1), int(max(0, x0)):int(x1)] = False   # exclude the box region
+    if out.any():
+        thr = np.percentile(g[out], bright_pct)
+        ys, xs = np.where((g >= thr) & out)
+        if len(xs):
+            idx = np.linspace(0, len(xs) - 1, min(n_neg_bright, len(xs))).astype(int)
+            for k in idx:
+                pts.append([float(xs[k]), float(ys[k])]); labs.append(0)   # bright tool/reflection
+    for px, py in [(4, 4), (W - 4, 4), (4, H - 4), (W - 4, H - 4)]:         # background corners
+        if not (x0 <= px <= x1 and y0 <= py <= y1):
+            pts.append([float(px), float(py)]); labs.append(0)
+    return np.array(pts, np.float32), np.array(labs, np.int32)
+
+
+def save_debug_overlay(img, box, pts, labs, mask, path):
+    """Dump the seed frame with box (yellow), +points (green), -points (red), mask (green) for eyeballing."""
+    import cv2
+    im = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR).copy()
+    if mask is not None and mask.any():
+        im[mask] = (0.45 * im[mask] + 0.55 * np.array([0, 200, 0])).astype(np.uint8)
+    x0, y0, x1, y1 = [int(v) for v in box]
+    cv2.rectangle(im, (x0, y0), (x1, y1), (0, 220, 220), 2)
+    for (px, py), l in zip(pts, labs):
+        cv2.circle(im, (int(px), int(py)), 5, (0, 220, 0) if l == 1 else (0, 0, 230), -1)
+        cv2.circle(im, (int(px), int(py)), 5, (255, 255, 255), 1)
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(path), im)
+
+
+def segment_clip(clip, M, cfg=None, debug_path=None):
+    """Return list of (PIL frame, bool mask) for a clip, or [] if rejected/failed.
+
+    cfg overrides: min_seed_conf, fps, n_per_clip, use_points (Phase-0 point/negative prompts).
+    debug_path: if set, write a seed-frame overlay (box + prompts + mask) there for A/B eyeballing.
+    """
+    cfg = cfg or {}
+    min_conf = cfg.get("min_seed_conf", MIN_SEED_CONF)
+    fps = cfg.get("fps", FPS)
+    n_per = cfg.get("n_per_clip", N_PER_CLIP)
+    use_points = cfg.get("use_points", True)
     with tempfile.TemporaryDirectory() as td:
         fdir = f"{td}/frames"; os.makedirs(fdir)
         subprocess.run(["ffmpeg", "-v", "error", "-i", str(clip), "-vf",
-                        f"fps={FPS},scale='min({MAXSIDE},iw)':-2", f"{fdir}/%05d.jpg"], check=False)
+                        f"fps={fps},scale='min({MAXSIDE},iw)':-2", f"{fdir}/%05d.jpg"], check=False)
         files = sorted(glob.glob(f"{fdir}/*.jpg"))
         if not files:
             return [], {"reason": "no_frames"}
@@ -90,12 +152,20 @@ def segment_clip(clip, M):
         boxes = [gd_best_box(im, M) for im in imgs]
         scores = [s for _, s in boxes]
         seed = int(np.argmax(scores))
-        if boxes[seed][0] is None or scores[seed] < MIN_SEED_CONF:
+        if boxes[seed][0] is None or scores[seed] < min_conf:
             return [], {"reason": "low_conf", "best_conf": round(max(scores), 3)}
         sam2 = M["sam2"]
         st = sam2.init_state(video_path=fdir)
+        # Phase-0 fix: box + positive/negative points (falls back to box-only on any failure)
+        pts = labs = None
+        if use_points:
+            try:
+                pts, labs = build_prompts(imgs[seed], boxes[seed][0])
+            except Exception:
+                pts = labs = None
         sam2.add_new_points_or_box(st, frame_idx=seed, obj_id=1,
-                                   box=np.array(boxes[seed][0], np.float32))
+                                   box=np.array(boxes[seed][0], np.float32),
+                                   points=pts, labels=labs)
         masks = [None] * len(imgs)
         for oi, _, logits in sam2.propagate_in_video(st, start_frame_idx=seed):
             masks[oi] = (logits[0] > 0).cpu().numpy()[0]
@@ -104,16 +174,19 @@ def segment_clip(clip, M):
         masks = [largest_blob(m) if (m is not None and m.any()) else None for m in masks]
         areas = np.array([m.mean() if m is not None else 0.0 for m in masks])
         med = np.median(areas[areas > 0]) if (areas > 0).any() else 0.0
+        if debug_path is not None:
+            dp, dl = (pts, labs) if pts is not None else (np.array([]).reshape(0, 2), np.array([]))
+            save_debug_overlay(imgs[seed], boxes[seed][0], dp, dl, masks[seed], debug_path)
         # keep clean frames: area in range, not a >3x jump
         good = [k for k in range(len(imgs))
                 if masks[k] is not None and AREA_MIN <= areas[k] <= AREA_MAX
                 and (med == 0 or areas[k] <= 3 * med)]
         if not good:
             return [], {"reason": "no_clean_frames", "best_conf": round(scores[seed], 3)}
-        pick = [good[i] for i in np.linspace(0, len(good) - 1, min(N_PER_CLIP, len(good))).astype(int)]
+        pick = [good[i] for i in np.linspace(0, len(good) - 1, min(n_per, len(good))).astype(int)]
         return [(imgs[k], masks[k]) for k in sorted(set(pick))], \
                {"reason": "ok", "best_conf": round(scores[seed], 3), "seed": seed,
-                "n_frames": len(imgs), "n_good": len(good)}
+                "area_med": round(float(med), 4), "n_frames": len(imgs), "n_good": len(good)}
 
 
 def camera_of(path):
@@ -129,7 +202,18 @@ def main():
     ap.add_argument("--out", default=str(REPO / "src" / "dataset_seg" / "v1"))
     ap.add_argument("--cameras", nargs="+", default=DEFAULT_CAMERAS)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--min-seed-conf", type=float, default=MIN_SEED_CONF,
+                    help="reject clip if best GroundingDINO conf below this; lower to accept "
+                         "resting/camouflaged frames (route those through human-verify)")
+    ap.add_argument("--fps", type=int, default=FPS)
+    ap.add_argument("--n-per-clip", type=int, default=N_PER_CLIP)
+    ap.add_argument("--no-points", action="store_true",
+                    help="disable the Phase-0 point/negative prompts (box-only, the old recipe) — for A/B")
+    ap.add_argument("--debug-dir", default=None, help="write seed-frame prompt/mask overlays here")
+    ap.add_argument("--debug-n", type=int, default=0, help="how many clips to emit debug overlays for")
     args = ap.parse_args()
+    cfg = {"min_seed_conf": args.min_seed_conf, "fps": args.fps,
+           "n_per_clip": args.n_per_clip, "use_points": not args.no_points}
 
     out = Path(args.out); (out / "images").mkdir(parents=True, exist_ok=True)
     (out / "masks").mkdir(parents=True, exist_ok=True)
@@ -152,8 +236,12 @@ def main():
     with open(manifest, "a") as mf:
         for i, clip in enumerate(clips):
             cam = camera_of(clip)
+            dbg = None
+            if args.debug_dir and i < args.debug_n:
+                tag = "pts" if not args.no_points else "box"
+                dbg = str(Path(args.debug_dir) / f"seed_{i:03d}_{cam}_{tag}.png")
             try:
-                pairs, info = segment_clip(clip, M)
+                pairs, info = segment_clip(clip, M, cfg=cfg, debug_path=dbg)
             except Exception as e:
                 info = {"reason": f"error:{type(e).__name__}"}; pairs = []
             stats[info["reason"]] = stats.get(info["reason"], 0) + 1

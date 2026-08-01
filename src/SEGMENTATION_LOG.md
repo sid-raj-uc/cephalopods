@@ -187,3 +187,40 @@ the CLIP gate (which fires at p=1.0 on the same reflections).
   human-verified mask set. More auto-harvested clips just re-hit the same GroundingDINO gate.
 - Artifacts pulled: `weights/seg/octo_seg_v4_lraspp.pt`, `data/dataset_seg/harvest/` (532 pairs).
   Modal Volume `octo-seg-data` left in place (more harvest data is coming from the harvester run).
+
+---
+
+## 2026-07-26 — Session 3: Phase-0 teacher fix (point/negative prompts)
+
+Goal: raise teacher-label quality (the diagnosed ceiling — see the failure report) by giving SAM2 a
+"what is NOT octopus" cue, and accept the resting/camouflaged frames GroundingDINO was rejecting.
+
+### `auto_segment.py` changes
+- **`build_prompts()`** — seed SAM2 with box + POSITIVE points inside the box (centre + interior grid,
+  anchors the whole body) AND NEGATIVE points on the brightest regions OUTSIDE the box (metal tools /
+  pipes on IR, specular reflections) + frame corners (background). Falls back to box-only on any error.
+- **`--min-seed-conf`** flag (was hard-coded 0.60) — lower it to accept camouflaged/resting frames;
+  route those through human-verify. **`--no-points`** for A/B; **`--debug-dir/--debug-n`** dump seed
+  overlays (box=yellow, +pts=green, -pts=red, mask=green).
+- New default is points-ON.
+
+### Local A/B smoke test (2 clips, fps=1, min_seed_conf=0.25, MPS)
+| clip | conf | recipe | mask area (median) | good frames |
+|---|---|---|---|---|
+| Right_Front (colour) | 0.49 | box-only | 0.0406 | 4/20 |
+| Right_Front (colour) | 0.49 | **box+points** | **0.0384** | **6/20** |
+| Right_Top (IR) | 0.808 | box-only | 0.0424 (holey mask) | 20/20 |
+| Right_Top (IR) | 0.808 | **box+points** | 0.0447 (solid body) | 20/20 |
+
+- Colour: points → tighter area (less background bleed) + more area-consistent frames.
+- IR: points **fill the octopus body** (box-only left holes); negatives landed correctly on the bright
+  specular light + white tools + corners (verified in overlays), none on the octopus. Clean cases not regressed.
+- The colour clip (conf 0.49) would have been **rejected by the old 0.60 gate** — now usable.
+- Overlays: `scratchpad/seg_ab/{Right_Front,Right_Top}_{box,pts}.png`.
+- Caveat: smoke test didn't hit a severe tool-bleed frame; dataset-level validation (mask-area distribution
+  + downstream IoU) needs a GPU rebuild. Recipe is sound and non-destructive.
+
+### Next
+- Run at scale on GPU: `auto_segment.py --min-seed-conf 0.45 --debug-dir ...` over colour+IR, rebuild
+  dataset (points-on), retrain, compare mask IoU + IR acceptance vs the old box-only v1/v2.
+- Route the newly-accepted low-conf frames through a human-verify UI before training (Change 4).
