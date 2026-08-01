@@ -86,19 +86,19 @@ def render_overlay(clip_path, smooth=True):
             if smooth:
                 ema = prob if ema is None else (EMA_ALPHA * prob + (1 - EMA_ALPHA) * ema)
                 used = ema
-            m = used > 0.5
-            if m.any():
-                m = _largest_blob(m)
-                m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_CLOSE, _KERNEL).astype(bool)
-            area = float(m.mean())
-            areas.append(round(area, 4))
-            # downscale the display frame first (source is often 4K), then paint the mask on it
+            # downscale the display frame first (source is often 4K)
             disp = frame
             if disp.shape[1] > 1280:
                 nh = (round(disp.shape[0] * 1280 / disp.shape[1]) // 2) * 2
                 disp = cv2.resize(disp, (1280, nh))
-            mask_disp = cv2.resize(m.astype(np.uint8), (disp.shape[1], disp.shape[0]),
-                                   interpolation=cv2.INTER_NEAREST).astype(bool)
+            # threshold at DISPLAY resolution (bilinear-upsampled prob) -> smooth mask edge, no blockiness
+            prob_disp = cv2.resize(used, (disp.shape[1], disp.shape[0]), interpolation=cv2.INTER_LINEAR)
+            mask_disp = prob_disp > 0.5
+            if mask_disp.any():
+                mask_disp = _largest_blob(mask_disp)
+                mask_disp = cv2.morphologyEx(mask_disp.astype(np.uint8), cv2.MORPH_CLOSE, _KERNEL).astype(bool)
+            area = float(mask_disp.mean())
+            areas.append(round(area, 4))
             arr = disp.astype(np.float32)
             if mask_disp.any():
                 arr[mask_disp] = (1 - ALPHA) * arr[mask_disp] + ALPHA * MASK_RGB[::-1]
