@@ -246,7 +246,12 @@ def main():
                 info = {"reason": f"error:{type(e).__name__}"}; pairs = []
             stats[info["reason"]] = stats.get(info["reason"], 0) + 1
             for j, (img, mask) in enumerate(pairs):
-                stem = f"{Path(clip).stem}_{cam}_{i:05d}_{j}"
+                # key the filename on date/segment (NOT the run-local index i) so it is stable across
+                # resumes — the harvest has many same-named clips (e.g. Right_Back_0-20.mp4) across
+                # different dates, and i resets on resume (line 229 filters done clips first), so an
+                # i-based stem would collide/overwrite across runs.
+                vid = f"{Path(clip).parent.parent.name}_{Path(clip).parent.name}"
+                stem = f"{vid}_{Path(clip).stem}_{cam}_{j}"
                 img.save(out / "images" / f"{stem}.jpg", quality=90)
                 Image.fromarray((mask * 255).astype(np.uint8)).save(out / "masks" / f"{stem}.png")
                 mf.write(json.dumps({"clip": clip, "camera": cam, "image": f"images/{stem}.jpg",
