@@ -48,16 +48,20 @@ def pick_device():
     return "cpu"
 
 
-def load_models(device):
+def load_models(device, gd_model="tiny", sam2_model="tiny"):
     from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
     from sam2.sam2_video_predictor import SAM2VideoPredictor
-    gd_proc = AutoProcessor.from_pretrained("IDEA-Research/grounding-dino-tiny")
-    gd = AutoModelForZeroShotObjectDetection.from_pretrained(
-        "IDEA-Research/grounding-dino-tiny").to(device).eval()
+    GD = {"tiny": "IDEA-Research/grounding-dino-tiny", "base": "IDEA-Research/grounding-dino-base"}
+    SAM = {"tiny": "facebook/sam2.1-hiera-tiny", "small": "facebook/sam2.1-hiera-small",
+           "base-plus": "facebook/sam2.1-hiera-base-plus", "large": "facebook/sam2.1-hiera-large"}
+    gd_id, sam_id = GD.get(gd_model, gd_model), SAM.get(sam2_model, sam2_model)
+    print(f"teacher: GD={gd_id}  SAM2={sam_id}", flush=True)
+    gd_proc = AutoProcessor.from_pretrained(gd_id)
+    gd = AutoModelForZeroShotObjectDetection.from_pretrained(gd_id).to(device).eval()
     # GroundingDINO's deformable-attention is unstable on MPS -> keep it on CPU there.
     gd_dev = "cpu" if device == "mps" else device
     if gd_dev != device: gd = gd.to(gd_dev)
-    sam2 = SAM2VideoPredictor.from_pretrained("facebook/sam2.1-hiera-tiny", device=device)
+    sam2 = SAM2VideoPredictor.from_pretrained(sam_id, device=device)
     return {"gd_proc": gd_proc, "gd": gd, "gd_dev": gd_dev, "sam2": sam2}
 
 
@@ -211,6 +215,10 @@ def main():
                     help="disable the Phase-0 point/negative prompts (box-only, the old recipe) — for A/B")
     ap.add_argument("--debug-dir", default=None, help="write seed-frame prompt/mask overlays here")
     ap.add_argument("--debug-n", type=int, default=0, help="how many clips to emit debug overlays for")
+    ap.add_argument("--gd-model", default="tiny", choices=["tiny", "base"],
+                    help="GroundingDINO size (base = better seed boxes, fewer mislocations)")
+    ap.add_argument("--sam2-model", default="tiny", choices=["tiny", "small", "base-plus", "large"],
+                    help="SAM2 size (large = sharper/cleaner masks — raises the teacher-label ceiling)")
     args = ap.parse_args()
     cfg = {"min_seed_conf": args.min_seed_conf, "fps": args.fps,
            "n_per_clip": args.n_per_clip, "use_points": not args.no_points}
@@ -230,7 +238,7 @@ def main():
     if args.limit: clips = clips[:args.limit]
     print(f"device={pick_device()}  clips to do={len(clips)}  (already done={len(done)})", flush=True)
 
-    M = load_models(pick_device())
+    M = load_models(pick_device(), gd_model=args.gd_model, sam2_model=args.sam2_model)
     print("models loaded.", flush=True)
     stats = {"ok": 0, "low_conf": 0, "no_clean_frames": 0, "no_frames": 0, "pairs": 0}
     with open(manifest, "a") as mf:

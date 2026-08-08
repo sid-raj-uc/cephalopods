@@ -43,16 +43,25 @@ GPU = "A10G"  # GD-tiny + SAM2-tiny are small; A10G (24 GB) is plenty and cheap
 
 @app.function(image=image, gpu=GPU, timeout=86400, volumes={"/data": vol})
 def autolabel(limit: int = 0, min_seed_conf: float = 0.60,
-              cameras: str = "Right_Front,Right_Back", out: str = "/data/dataset_seg_harvest"):
-    """Teacher over /data/harvest clips -> (image, mask) pairs on the volume. Resumable."""
+              cameras: str = "Right_Front,Right_Back", out: str = "/data/dataset_seg_harvest",
+              clips_root: str = "/data/harvest", gd_model: str = "tiny", sam2_model: str = "tiny",
+              debug_n: int = 0):
+    """Teacher over clips_root -> (image, mask) pairs on the volume. Resumable.
+
+    gd_model/sam2_model pick the teacher size: 'base'+'large' = HQ teacher (better seed boxes + sharper
+    masks) to raise the label-quality ceiling the student is capped by. debug_n dumps N seed overlays.
+    """
     import os, subprocess, glob
     os.environ["HF_HOME"] = "/data/hf_cache"      # cache GD/SAM2 weights on the volume (persist across runs)
     cmd = ["python", "/root/auto_segment.py",
-           "--clips-root", "/data/harvest", "--out", out,
+           "--clips-root", clips_root, "--out", out,
            "--cameras", *cameras.split(","),
-           "--min-seed-conf", str(min_seed_conf)]
+           "--min-seed-conf", str(min_seed_conf),
+           "--gd-model", gd_model, "--sam2-model", sam2_model]
     if limit:
         cmd += ["--limit", str(limit)]
+    if debug_n:
+        cmd += ["--debug-dir", f"{out}/dbg", "--debug-n", str(debug_n)]
     print("RUN:", " ".join(cmd), flush=True)
     subprocess.run(cmd, check=True)
     vol.commit()
