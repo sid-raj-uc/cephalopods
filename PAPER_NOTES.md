@@ -64,10 +64,23 @@ stimulus-response). Framed as **arousal / behavioural-state**, not emotion.
   100 vid / 732 pairs = 0.245** (overfits: 588 frames too few) → **merged 176 vid / 5,144 pairs = 0.494** (best,
   on a HARDER diverse-date 35-video val). Model `weights/seg/octo_seg_merged_lraspp.pt`.
 - **Interpretation (paper):** diversity helps *robustly but modestly* (+0.026, and on a genuinely harder val);
-  the merged val plateaus flat at ~0.49 with NO overfitting (loss 1.06→0.28) → **the limit has moved from data
-  quantity to TEACHER-LABEL QUALITY.** A distilled student cannot exceed its noisy GD+SAM2 targets. Next lever is
-  a human-verified mask val set (true IoU) + cleaner teacher, NOT more clips. Supersedes the R3 "limit is data"
-  framing: it was data up to ~176 videos, then it's label quality.
+  the merged val plateaus flat at ~0.49 with NO overfitting. Diversity helped up to ~176 videos, then flat.
+
+### R3c — HQ-teacher upgrade: an HONEST NEGATIVE RESULT (2026-08-08)
+Hypothesis: the ~0.49 plateau is teacher-label quality (a distilled student can't beat noisy GD+SAM2-tiny masks).
+Motivating evidence: the merged model scored 0.49 vs tiny masks but 0.70 vs HQ masks. Test: upgrade teacher to
+**GD-base + SAM2-large**, re-label ALL clips (harvest 740 + old 3,991 = 4,731 HQ pairs), retrain.
+- **Result: held-out val IoU FLAT** — tiny 0.494 → 14%-HQ 0.508 → 100%-HQ **0.506**. Clean labels did not help.
+- **Why the hypothesis failed:** the 0.70-vs-HQ figure was **train leakage** (evaluated on training clips). The
+  clean held-out HQ-vs-HQ number is ~0.51, same as tiny. **Teacher-label quality was NOT the ceiling.**
+- **What the ceiling actually is:** the tiny student generalizes to **right-SIZED but mis-LOCALIZED masks**
+  (areaErr **1.4%**, Dice 0.62, IoU 0.50). Not fixable by labels or data (both exhausted) — it's a per-frame
+  localization limit → points to a **temporal** student as the real lever.
+- **Reframe for the paper:** pixel-IoU-vs-teacher-masks is a weak metric here (teacher isn't perfect GT). The
+  project needs **area/posture + presence**, and area is accurate to 1.4% — so the model may already be adequate
+  for its downstream ethological use. **Open rigor item: human-verified mask val + downstream-task eval** decide
+  whether ~0.5 IoU actually matters. Good methodology lesson: *always check train/val leakage before trusting a
+  "measure against cleaner labels" signal.*
 
 ### R4 — Negative results / ablations (keep for the paper)
 - **Behavior classifier** (frozen CLIP feats → MLP): 45% val acc, *below* 50% majority baseline. Lesson: static pooled features can't classify behaviour — needs temporal/motion features.

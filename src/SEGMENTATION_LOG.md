@@ -296,7 +296,28 @@ extra data vs tiny — the win is mask QUALITY, not quantity).
   Diagnostic, not disappointing: HQ masks cover just the harvest 740/5,152 = **14% of pairs**; the old-tiny bulk
   (86%) dominates train AND val, so we improved 14% of labels and got a proportional bump. **The old-tiny bulk
   is now the binding constraint.** Model `weights/seg/octo_seg_merged_hq_lraspp.pt`.
-- **Running (definitive fix):** HQ re-label the **1,104 old v1 clips** (uploaded to volume `/old_clips`) →
-  `/data/dataset_seg_old_hq` (A10G, ~11 h). Then a **fully-HQ merged retrain** (old-HQ + harvest-HQ) = the first
-  clean HQ-vs-HQ held-out number. Given the earlier 0.49→0.70 vs-HQ evidence + the +0.014 from 14%-HQ, scaling to
-  100%-HQ labels should move the number substantially. After that: human-verified mask val set for the paper.
+- **HQ re-label of the 1,104 old v1 clips DONE:** 85% acceptance (old close-up footage is easy for GD-base) →
+  **3,991 HQ pairs** → `/data/dataset_seg_old_hq`.
+- **Fully-HQ merged retrain (old-HQ 3,991 + harvest-HQ 740 = 4,731 pairs, 177 videos, ALL clean labels):**
+  **val IoU 0.506** (Dice 0.620, **areaErr 0.0143** — the lowest of any run). Plateaus flat, no overfitting.
+
+### HONEST NEGATIVE RESULT (2026-08-08) — HQ labels did NOT move held-out IoU; the metric is the issue
+Held-out val IoU across teacher quality: tiny **0.494** → 14%-HQ **0.508** → **100%-HQ 0.506**. **Flat.**
+- **My "ceiling is label quality" hypothesis was WRONG.** The "0.49→0.70 vs HQ masks" evidence that motivated the
+  HQ chain was **train leakage** (those frames were in the model's train set). The clean held-out HQ-vs-HQ number
+  is ~0.51, same as tiny. Teacher-label quality is NOT the binding ceiling.
+- **The real ceiling is the tiny student's generalization** on this hard, diverse task: it makes **right-SIZED
+  but imperfectly-LOCALIZED masks** (areaErr only 1.4%, but pixel-IoU 0.50 / Dice 0.62). This is the R3
+  "right-sized blob, wrong place" mode — not fixable by cleaner labels or more data (both tried).
+- **Likely the metric is wrong for the goal.** pixel-IoU-vs-teacher-masks caps ~0.5 (teacher masks aren't perfect
+  GT either), but the PROJECT needs presence + body-AREA (posture) + masked-motion — and **area is accurate to
+  1.4%**. So the model may already be adequate for its actual downstream use.
+- **Models (all local `weights/seg/`):** `octo_seg_hqfull_lraspp.pt` (cleanest labels, likely best qualitative
+  masks), `octo_seg_merged_hq_lraspp.pt`, `octo_seg_merged_lraspp.pt`. Datasets on volume: `dataset_seg_old_hq`,
+  `dataset_seg_harvest_hq`.
+- **Real next levers (NOT more teacher/data — those are exhausted):** (1) a small **human-verified mask val set**
+  to get TRUE quality vs the teacher-proxy; (2) **evaluate on the downstream task** — does the seg area-gate beat
+  the CLIP presence gate on reflections/empties, and is the area/posture signal usable in the behaviour pipeline?
+  (3) if pixel-boundary quality genuinely must rise: a **temporal** student (uses motion — the R3 "needs temporal
+  features" insight), since per-frame localization is the failure mode. Bigger student is off the table (deploy
+  size constraint).
