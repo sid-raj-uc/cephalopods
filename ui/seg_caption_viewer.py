@@ -20,14 +20,16 @@ from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "src"))
-from segment_octopus import OctoSegmenter
+from segment_octopus import OctoSegmenter, _largest_blob
 import local_pipeline as lp
 
-SEG_CKPT = REPO / "weights" / "seg" / "octo_seg_v3_lraspp_BEST.pt"
+SEG_CKPT = REPO / "weights" / "seg" / "octo_seg_merged_hq_lraspp.pt"  # latest best (diversity + HQ teacher)
 JOBS_DIR = REPO / "data" / "seg_caption_jobs"; JOBS_DIR.mkdir(parents=True, exist_ok=True)
 OUT_H = 720                                   # overlay output height (downscaled from 4K)
 MASK_BGR = np.array([120, 235, 0], np.float32)  # green (BGR)
 ALPHA = 0.45
+EMA_ALPHA = 0.45                              # temporal smoothing: lower = smoother (more lag)
+_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
 
 app = FastAPI()
 JOBS = {}
@@ -107,13 +109,21 @@ def render_overlay_stream(video, out_mp4, S, st):
         ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "bgr24",
          "-s", f"{W}x{H}", "-r", f"{fps:.3f}", "-i", "-",
          "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out_mp4)], stdin=subprocess.PIPE)
-    i = 0
+    i = 0; ema = None
     while True:
         ret, frame = cap.read()
         if not ret:
             break
         small = cv2.resize(frame, (W, H), interpolation=cv2.INTER_AREA)
-        mask, area = S.segment(small)
+        # temporal smoothing: EMA the mask probability across frames, then threshold at display res
+        prob = S.prob(small)
+        ema = prob if ema is None else (EMA_ALPHA * prob + (1 - EMA_ALPHA) * ema)
+        prob_disp = cv2.resize(ema, (W, H), interpolation=cv2.INTER_LINEAR)
+        mask = prob_disp > 0.5
+        if mask.any():
+            mask = _largest_blob(mask)
+            mask = cv2.morphologyEx(mask.astype(np.uint8), cv2.MORPH_CLOSE, _KERNEL).astype(bool)
+        area = float(mask.mean())
         ff.stdin.write(_overlay_one(small, mask, area, W, i, fps).tobytes()); i += 1
         if i % 50 == 0:
             st["seg_done"] = i
