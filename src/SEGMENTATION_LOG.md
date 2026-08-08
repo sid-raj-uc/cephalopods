@@ -290,6 +290,13 @@ extra data vs tiny — the win is mask QUALITY, not quantity).
   CAVEAT: those frames are from clips in the merged TRAIN set (split-membership not reconstructed) → optimistic,
   not a clean test. But the direction is unambiguous — measured against cleaner masks the "error" nearly halves,
   i.e. most of the 0.49 gap was tiny-teacher noise. True quality is likely ~0.7.
-- **Running:** full HQ re-label of all 530 harvest clips → `/data/dataset_seg_harvest_hq` (A10G, ~5 h). Next:
-  retrain merged (old + HQ-harvest) for a clean HQ-vs-HQ held-out number, then (if ceiling persists) re-label the
-  old clips HQ too, and build a human-verified mask val set for the definitive number.
+- **HQ harvest re-label DONE:** 530 clips → **185 accepted / 740 pairs** (vs tiny 178/732 — same count, so the
+  win is mask QUALITY not quantity; GD-base full-run acceptance ~35%, the first-15 53% was a lucky sample).
+- **Merged HQ retrain (old-tiny + harvest-HQ):** val IoU **0.508** vs 0.494 (merged tiny) = **only +0.014**.
+  Diagnostic, not disappointing: HQ masks cover just the harvest 740/5,152 = **14% of pairs**; the old-tiny bulk
+  (86%) dominates train AND val, so we improved 14% of labels and got a proportional bump. **The old-tiny bulk
+  is now the binding constraint.** Model `weights/seg/octo_seg_merged_hq_lraspp.pt`.
+- **Running (definitive fix):** HQ re-label the **1,104 old v1 clips** (uploaded to volume `/old_clips`) →
+  `/data/dataset_seg_old_hq` (A10G, ~11 h). Then a **fully-HQ merged retrain** (old-HQ + harvest-HQ) = the first
+  clean HQ-vs-HQ held-out number. Given the earlier 0.49→0.70 vs-HQ evidence + the +0.014 from 14%-HQ, scaling to
+  100%-HQ labels should move the number substantially. After that: human-verified mask val set for the paper.
