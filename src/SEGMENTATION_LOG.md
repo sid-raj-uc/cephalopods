@@ -279,3 +279,17 @@ all **1,769 Nity colour videos** and produced **530 clips from 276 distinct sour
 - **Deployable:** `weights/seg/octo_seg_merged_lraspp.pt` (new best positives mask model). On the volume at
   `/weights/octo_seg_merged_lraspp.pt`. Presence/negatives variant on the merged set: not yet retrained.
 - **Recoverable next data:** the 345 low-conf clips (lower-conf pass) + the ~1,391 IR clips (needs Phase-0 IR fix).
+
+### HQ teacher upgrade (2026-08-07) — the label-quality ceiling, attacked
+Since the merged plateau is teacher-label-quality-bound, upgraded the teacher: **GroundingDINO-base + SAM2-large**
+(`auto_segment.py --gd-model base --sam2-model large`, parametrized). Validated on 15 harvest clips (clean masks
+on diverse new footage; first-15 acceptance 53% but the *full* run settled to ~29%, so GD-base recovers little
+extra data vs tiny — the win is mask QUALITY, not quantity).
+- **Key evidence the ceiling is label noise (not model):** the merged model (trained on TINY-teacher masks,
+  val IoU 0.494 vs tiny masks) scores **IoU 0.697 / median 0.80 vs HQ-teacher masks** on 32 harvest frames.
+  CAVEAT: those frames are from clips in the merged TRAIN set (split-membership not reconstructed) → optimistic,
+  not a clean test. But the direction is unambiguous — measured against cleaner masks the "error" nearly halves,
+  i.e. most of the 0.49 gap was tiny-teacher noise. True quality is likely ~0.7.
+- **Running:** full HQ re-label of all 530 harvest clips → `/data/dataset_seg_harvest_hq` (A10G, ~5 h). Next:
+  retrain merged (old + HQ-harvest) for a clean HQ-vs-HQ held-out number, then (if ceiling persists) re-label the
+  old clips HQ too, and build a human-verified mask val set for the definitive number.
