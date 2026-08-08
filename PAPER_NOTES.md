@@ -56,6 +56,19 @@ stimulus-response). Framed as **arousal / behavioural-state**, not emotion.
   `weights/seg/octo_seg_v3_lraspp.pt` (LR-ASPP, 3.2M params). Full trail: `src/SEGMENTATION_LOG.md`, `results/segmentation/`.
 - IR (Right_Top) unusable as-is (GroundingDINO low-conf on greyscale, SAM2 grabs bright tools) — needs Phase-0 IR fix.
 
+### R3b — Segmentation diversity retrain (Modal, 2026-08-07) — tests the R3 diversity diagnosis
+- The diverse-footage harvest (R5) closed the loop: **530 clips / 276 distinct videos / 149 dates** auto-labeled
+  on Modal (A10G, `src/modal_seg_train.py`, GD+SAM2 teacher, min_seed_conf 0.60) → **178 accepted / 732 pairs**
+  (345 low-conf recoverable via a lower-conf pass). Merged with old v1 and retrained (LR-ASPP, 60 ep, split BY VIDEO).
+- **Head-to-head (best val IoU):** old **62 vid / 4,412 pairs = 0.468** (soft same-week val) → harvest **new-only
+  100 vid / 732 pairs = 0.245** (overfits: 588 frames too few) → **merged 176 vid / 5,144 pairs = 0.494** (best,
+  on a HARDER diverse-date 35-video val). Model `weights/seg/octo_seg_merged_lraspp.pt`.
+- **Interpretation (paper):** diversity helps *robustly but modestly* (+0.026, and on a genuinely harder val);
+  the merged val plateaus flat at ~0.49 with NO overfitting (loss 1.06→0.28) → **the limit has moved from data
+  quantity to TEACHER-LABEL QUALITY.** A distilled student cannot exceed its noisy GD+SAM2 targets. Next lever is
+  a human-verified mask val set (true IoU) + cleaner teacher, NOT more clips. Supersedes the R3 "limit is data"
+  framing: it was data up to ~176 videos, then it's label quality.
+
 ### R4 — Negative results / ablations (keep for the paper)
 - **Behavior classifier** (frozen CLIP feats → MLP): 45% val acc, *below* 50% majority baseline. Lesson: static pooled features can't classify behaviour — needs temporal/motion features.
 - **Segmentation arch/aug ablations:** no gain from ch8→ch32, LR-ASPP, or strong augmentation — confirms the limit is data, not model.

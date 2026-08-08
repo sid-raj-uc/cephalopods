@@ -64,8 +64,35 @@ def autolabel(limit: int = 0, min_seed_conf: float = 0.60,
 @app.function(image=image, gpu=GPU, timeout=86400, volumes={"/data": vol})
 def train(epochs: int = 60, arch: str = "lraspp", base_ch: int = 16,
           ds: str = "/data/dataset_seg_harvest", ver: str = "harvest"):
-    """Train the tiny segmenter on a labeled dataset dir (split BY SOURCE VIDEO). -> /data/weights."""
-    import subprocess, os
+    """Train the tiny segmenter on a labeled dataset dir (split BY SOURCE VIDEO). -> /data/weights.
+
+    `ds` may be a comma-separated list of dataset dirs — they're merged (symlinked images/masks +
+    concatenated manifests) into /data/dataset_seg_<ver> before training. Old/new filenames don't
+    collide (old: Right_Front_s-e_..., new: date_segment_...), and source_video() still groups by
+    date/segment so the train/val split stays leakage-free across the merged set.
+    """
+    import subprocess, os, glob
+    ds_dirs = [d.strip() for d in ds.split(",") if d.strip()]
+    if len(ds_dirs) > 1:
+        merged = f"/data/dataset_seg_{ver}"
+        os.makedirs(f"{merged}/images", exist_ok=True)
+        os.makedirs(f"{merged}/masks", exist_ok=True)
+        n = 0
+        with open(f"{merged}/manifest.jsonl", "w") as out_mf:
+            for d in ds_dirs:
+                for sub, ext in (("images", "*.jpg"), ("masks", "*.png")):
+                    for f in glob.glob(f"{d}/{sub}/{ext}"):
+                        dst = f"{merged}/{sub}/{os.path.basename(f)}"
+                        if not os.path.exists(dst):
+                            os.symlink(f, dst)
+                with open(f"{d}/manifest.jsonl") as mf:
+                    for line in mf:
+                        if line.strip():
+                            out_mf.write(line); n += 1
+        print(f"MERGED {ds_dirs} -> {merged}  ({n} manifest rows)", flush=True)
+        ds = merged
+    else:
+        ds = ds_dirs[0]
     os.makedirs("/data/weights", exist_ok=True)
     out = f"/data/weights/octo_seg_{ver}_{arch}.pt"
     cmd = ["python", "/root/train_segmenter.py", "--ds", ds, "--ver", ver,

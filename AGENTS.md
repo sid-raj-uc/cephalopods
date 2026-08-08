@@ -365,9 +365,19 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
     **0% reflection-FP**. This beats the CLIP gate on the Right_Left/reflection false-positives. Deployable
     model: `weights/seg/octo_seg_v3_lraspp.pt` (LR-ASPP, 3.2M params). New scripts: `src/eval_presence.py`
     (presence AUC eval), `src/build_v3.py` (negatives dataset). `segment_octopus.py` now loads either arch.
-- **Next:** (needs more data) more distinct colour videos + a small human-verified mask val set → raise
-  present-mask IoU + absent-case AUC; implement the Phase-0 IR fix; then wire the `segment_octopus`
-  area-gate (≥~0.01) into `extract_octopus_clips.py` / `local_pipeline.py` and A/B vs the CLIP gate.
+- **Diversity retrain DONE on Modal (2026-08-07).** Attacked the plateau's root cause (only 62 training
+  videos) with the diverse-footage harvest: **530 clips / 276 videos / 149 dates** on the Modal volume →
+  auto-labeled on an A10G (**178 accepted / 732 pairs**, 345 low-conf recoverable) → merged with old v1 and
+  retrained. **old(62 vid)=0.468 → new-only(100 vid, 732 pairs)=0.245 (overfits, too few frames) →
+  merged(176 vid, 5,144 pairs)=0.494** (best, on a HARDER diverse-date val). New app **`src/modal_seg_train.py`**
+  (A10G; `autolabel`+`train`, computes on the volume so no clip transfer; `--ds` accepts a comma-sep list →
+  symlink-merge). Best model: **`weights/seg/octo_seg_merged_lraspp.pt`**. Full trail in SEGMENTATION_LOG.md.
+  **Refined diagnosis: the ceiling is now teacher-label quality, NOT data** — merged val plateaus flat at ~0.49
+  with no overfitting (loss keeps falling), so a student can't beat the noisy GD+SAM2 masks it learns from.
+- **Next:** a small **HUMAN-verified mask val set** (measure TRUE IoU vs the noisy-teacher IoU) + cleaner
+  teacher labels — this, not more clips, is the lever now. Also recoverable: the 345 low-conf clips (lower-conf
+  pass) + Phase-0 IR fix for the ~1,391 IR clips. Retrain the presence/negatives variant on the merged set;
+  then wire the `segment_octopus` area-gate (≥~0.01) into `extract_octopus_clips.py` / `local_pipeline.py`.
 
 ## Diverse-footage harvest — the data-gen fix (in progress, 2026-07-23)
 **Why:** both students are footage-diversity-limited — the whole corpus was **7 dates (one week)**.

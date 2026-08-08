@@ -245,3 +245,37 @@ Goal: raise teacher-label quality (the diagnosed ceiling — see the failure rep
   direction. This sample was fairly clean (no severe box-only tool-bleed case), so the *dataset-level* IoU
   win still needs a full rebuild + retrain. NOTE: the Drive zip is a partial set (mostly Right_Left); a
   full rebuild needs the complete clip set on the GPU box.
+
+### Diversity retrain on Modal (2026-08-07) — the video-diversity fix, measured
+Goal: close the plateau by attacking its diagnosed root cause — only ~62 training videos (one week).
+Used the **diverse-footage harvest** output (see DATA_PLAN.md / `modal_harvest.py`): the harvest processed
+all **1,769 Nity colour videos** and produced **530 clips from 276 distinct source videos across 149 dates**
+(sitting on the Modal volume `octopus-harvest-vol`, `sidraj` profile).
+
+- **New app `src/modal_seg_train.py`** (A10G, computes on the volume so no ~20 GB clip transfer): `autolabel`
+  (GD+SAM2 teacher, HF models cached to the volume) + `train` (accepts a comma-sep `--ds` list → symlink-merges
+  datasets before training). Also fixed `auto_segment.py` filename collisions across resumes (key on
+  date/segment, not the run-local index `i` which resets when done-clips are filtered out first).
+- **Auto-label** (min_seed_conf 0.60): **178 clips accepted → 732 (image,mask) pairs**; 345 rejected `low_conf`
+  (colour clips where GD isn't confident on resting/camouflaged octopus — the 0.60 gate was tuned to kill
+  reflections, moot here since Right_Left was excluded from the harvest). Rejected clips write NO manifest row,
+  so a later lower-conf pass re-processes exactly those (recoverable). ~2 h on the A10G.
+- **Three-way retrain (LR-ASPP, 3.218M params, 60 ep, split BY SOURCE VIDEO):**
+  | dataset | videos | pairs | train frames | **best val IoU** |
+  |---|---|---|---|---|
+  | old v1 (the prior plateau) | 62 | 4,412 | ~3,500 | 0.468 (soft same-week val) |
+  | harvest new-only | 100 | 732 | 588 | **0.245** — overfits (val peaks ep2 then declines as loss falls) |
+  | **old + new merged** | **176** | **5,144** | 4,300 | **0.494** — best, on a HARDER diverse-date val |
+- **Findings:**
+  - **Diversity helped, modestly but robustly.** +0.026 over the old plateau AND it's measured on 35 held-out
+    videos spanning diverse dates (the old 0.468 was soft same-week val). The merged model holds ~0.49 across
+    genuinely varied footage → far more robust even if the headline moved little.
+  - **New-only failed for the opposite reason from the old plateau** — 588 frames is too few, so it *overfits*
+    (val IoU declines while train loss keeps dropping). Diversity without enough frames doesn't help.
+  - **The ceiling is now teacher-label quality, not data.** Merged val plateaus flat at ~0.49 with NO
+    overfitting (loss 1.06→0.28, val stays ~0.49). A student can't exceed the noisy GD+SAM2 masks it learns
+    from. To go higher: a small HUMAN-verified mask val set (to measure TRUE IoU, not IoU-vs-noisy-teacher) +
+    cleaner teacher labels — NOT more clips.
+- **Deployable:** `weights/seg/octo_seg_merged_lraspp.pt` (new best positives mask model). On the volume at
+  `/weights/octo_seg_merged_lraspp.pt`. Presence/negatives variant on the merged set: not yet retrained.
+- **Recoverable next data:** the 345 low-conf clips (lower-conf pass) + the ~1,391 IR clips (needs Phase-0 IR fix).
