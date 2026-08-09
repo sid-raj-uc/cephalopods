@@ -45,7 +45,7 @@ GPU = "A10G"  # GD-tiny + SAM2-tiny are small; A10G (24 GB) is plenty and cheap
 def autolabel(limit: int = 0, min_seed_conf: float = 0.60,
               cameras: str = "Right_Front,Right_Back", out: str = "/data/dataset_seg_harvest",
               clips_root: str = "/data/harvest", gd_model: str = "tiny", sam2_model: str = "tiny",
-              debug_n: int = 0):
+              seed_mode: str = "gd", debug_n: int = 0):
     """Teacher over clips_root -> (image, mask) pairs on the volume. Resumable.
 
     gd_model/sam2_model pick the teacher size: 'base'+'large' = HQ teacher (better seed boxes + sharper
@@ -56,7 +56,7 @@ def autolabel(limit: int = 0, min_seed_conf: float = 0.60,
     cmd = ["python", "/root/auto_segment.py",
            "--clips-root", clips_root, "--out", out,
            "--cameras", *cameras.split(","),
-           "--min-seed-conf", str(min_seed_conf),
+           "--min-seed-conf", str(min_seed_conf), "--seed-mode", seed_mode,
            "--gd-model", gd_model, "--sam2-model", sam2_model]
     if limit:
         cmd += ["--limit", str(limit)]
@@ -110,6 +110,48 @@ def train(epochs: int = 60, arch: str = "lraspp", base_ch: int = 16,
     subprocess.run(cmd, check=True)
     vol.commit()
     print("SAVED:", out, flush=True)
+    return out
+
+
+@app.function(image=image, timeout=1200, volumes={"/data": vol})
+def montage(ds: str = "/data/dataset_seg_harvest_hq", n: int = 30, cols: int = 6,
+            out: str = "/data/gt_montage.jpg", th: int = 240, seed: int = 0):
+    """Tile n (image, teacher-mask) pairs with the mask overlaid green -> a single montage image on the
+    volume, so a human can eyeball whether the auto-labeled 'ground truth' is actually correct."""
+    import glob, cv2, numpy as np
+    imgs = sorted(glob.glob(f"{ds}/images/*.jpg"))
+    if not imgs:
+        print("NO IMAGES in", ds); return None
+    idx = np.linspace(0, len(imgs) - 1, min(n, len(imgs))).astype(int)
+    sel = [imgs[i] for i in idx]
+    tiles, TW = [], int(th * 16 / 9)  # assume ~16:9; letterbox to fixed cell
+    for ip in sel:
+        mp = ip.replace("/images/", "/masks/").rsplit(".", 1)[0] + ".png"
+        im = cv2.imread(ip); m = cv2.imread(mp, 0)
+        if im is None or m is None:
+            continue
+        m = m > 127
+        ov = im.astype(np.float32)
+        ov[m] = 0.5 * ov[m] + 0.5 * np.array([0.0, 235.0, 120.0])  # green (BGR)
+        # red mask contour for precise boundary read
+        cnts, _ = cv2.findContours(m.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        ov = ov.astype(np.uint8); cv2.drawContours(ov, cnts, -1, (0, 0, 255), 2)
+        h, w = ov.shape[:2]; s = min(TW / w, th / h)
+        rw, rh = int(w * s), int(h * s)
+        cell = np.full((th, TW, 3), 30, np.uint8)
+        r = cv2.resize(ov, (rw, rh)); y0 = (th - rh) // 2; x0 = (TW - rw) // 2
+        cell[y0:y0 + rh, x0:x0 + rw] = r
+        tag = "/".join(ip.split("/")[-1].split("_")[:2])  # date_segment-ish
+        cv2.putText(cell, f"{int(m.mean()*1000)/10}%", (6, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0,255,0), 2)
+        tiles.append(cell)
+    rows = (len(tiles) + cols - 1) // cols
+    grid = np.full((rows * th, cols * TW, 3), 20, np.uint8)
+    for k, t in enumerate(tiles):
+        r, c = divmod(k, cols)
+        grid[r*th:(r+1)*th, c*TW:(c+1)*TW] = t
+    cv2.imwrite(out, grid, [cv2.IMWRITE_JPEG_QUALITY, 88])
+    vol.commit()
+    print(f"MONTAGE {len(tiles)} tiles -> {out}  ({grid.shape[1]}x{grid.shape[0]})")
     return out
 
 

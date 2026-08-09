@@ -133,6 +133,39 @@ def save_debug_overlay(img, box, pts, labs, mask, path):
     cv2.imwrite(str(path), im)
 
 
+def motion_seed(imgs, min_area_frac=0.0006, max_blob_frac=0.30, pix_thresh=22):
+    """Locate the octopus by MOTION (it's the mover; static clutter is ignored). Returns
+    (seed_frame_idx, box[x0,y0,x1,y1]) of the largest per-frame motion blob, or None.
+
+    Rejects clips with too little motion (no reliable seed) and blobs that are implausibly LARGE
+    (>max_blob_frac of the frame — usually a person/hand reaching in, not the octopus). Timestamp
+    region is masked so the ticking clock isn't counted."""
+    import cv2
+    g = [cv2.cvtColor(np.asarray(im), cv2.COLOR_RGB2GRAY).astype(np.float32) for im in imgs]
+    H, W = g[0].shape
+    tsy, tsx = int(H * 0.88), int(W * 0.60)
+    best = None  # (blob_area, t, (x,y,w,h))
+    for t in range(1, len(g)):
+        d = np.abs(g[t] - g[t - 1]); d[tsy:, tsx:] = 0
+        thr = (d > pix_thresh).astype(np.uint8)
+        thr = cv2.morphologyEx(thr, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+        thr = cv2.dilate(thr, np.ones((7, 7), np.uint8))
+        n, _, stats, _ = cv2.connectedComponentsWithStats(thr, 8)
+        if n <= 1:
+            continue
+        k = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+        a = int(stats[k, cv2.CC_STAT_AREA])
+        if best is None or a > best[0]:
+            best = (a, t, tuple(int(v) for v in stats[k, :4]))
+    if best is None:
+        return None
+    a, t, (x, y, w, h) = best
+    frac = (w * h) / float(H * W)
+    if a < min_area_frac * H * W or frac > max_blob_frac:
+        return None
+    return t, [float(x), float(y), float(x + w), float(y + h)]
+
+
 def segment_clip(clip, M, cfg=None, debug_path=None):
     """Return list of (PIL frame, bool mask) for a clip, or [] if rejected/failed.
 
@@ -152,23 +185,33 @@ def segment_clip(clip, M, cfg=None, debug_path=None):
         if not files:
             return [], {"reason": "no_frames"}
         imgs = [Image.open(f).convert("RGB") for f in files]
-        # seed = most confident frame
-        boxes = [gd_best_box(im, M) for im in imgs]
-        scores = [s for _, s in boxes]
-        seed = int(np.argmax(scores))
-        if boxes[seed][0] is None or scores[seed] < min_conf:
-            return [], {"reason": "low_conf", "best_conf": round(max(scores), 3)}
+        seed_mode = cfg.get("seed_mode", "gd")
+        if seed_mode == "motion":
+            # seed = the largest MOTION blob (the octopus moves; static clutter is ignored)
+            ms = motion_seed(imgs)
+            if ms is None:
+                return [], {"reason": "low_motion"}
+            seed, seed_box = ms
+            seed_conf = 1.0
+        else:
+            # seed = most confident GroundingDINO frame
+            boxes = [gd_best_box(im, M) for im in imgs]
+            scores = [s for _, s in boxes]
+            seed = int(np.argmax(scores))
+            if boxes[seed][0] is None or scores[seed] < min_conf:
+                return [], {"reason": "low_conf", "best_conf": round(max(scores), 3)}
+            seed_box, seed_conf = boxes[seed][0], scores[seed]
         sam2 = M["sam2"]
         st = sam2.init_state(video_path=fdir)
         # Phase-0 fix: box + positive/negative points (falls back to box-only on any failure)
         pts = labs = None
         if use_points:
             try:
-                pts, labs = build_prompts(imgs[seed], boxes[seed][0])
+                pts, labs = build_prompts(imgs[seed], seed_box)
             except Exception:
                 pts = labs = None
         sam2.add_new_points_or_box(st, frame_idx=seed, obj_id=1,
-                                   box=np.array(boxes[seed][0], np.float32),
+                                   box=np.array(seed_box, np.float32),
                                    points=pts, labels=labs)
         masks = [None] * len(imgs)
         for oi, _, logits in sam2.propagate_in_video(st, start_frame_idx=seed):
@@ -180,16 +223,16 @@ def segment_clip(clip, M, cfg=None, debug_path=None):
         med = np.median(areas[areas > 0]) if (areas > 0).any() else 0.0
         if debug_path is not None:
             dp, dl = (pts, labs) if pts is not None else (np.array([]).reshape(0, 2), np.array([]))
-            save_debug_overlay(imgs[seed], boxes[seed][0], dp, dl, masks[seed], debug_path)
+            save_debug_overlay(imgs[seed], seed_box, dp, dl, masks[seed], debug_path)
         # keep clean frames: area in range, not a >3x jump
         good = [k for k in range(len(imgs))
                 if masks[k] is not None and AREA_MIN <= areas[k] <= AREA_MAX
                 and (med == 0 or areas[k] <= 3 * med)]
         if not good:
-            return [], {"reason": "no_clean_frames", "best_conf": round(scores[seed], 3)}
+            return [], {"reason": "no_clean_frames", "best_conf": round(seed_conf, 3)}
         pick = [good[i] for i in np.linspace(0, len(good) - 1, min(n_per, len(good))).astype(int)]
         return [(imgs[k], masks[k]) for k in sorted(set(pick))], \
-               {"reason": "ok", "best_conf": round(scores[seed], 3), "seed": seed,
+               {"reason": "ok", "best_conf": round(seed_conf, 3), "seed": seed,
                 "area_med": round(float(med), 4), "n_frames": len(imgs), "n_good": len(good)}
 
 
@@ -215,12 +258,16 @@ def main():
                     help="disable the Phase-0 point/negative prompts (box-only, the old recipe) — for A/B")
     ap.add_argument("--debug-dir", default=None, help="write seed-frame prompt/mask overlays here")
     ap.add_argument("--debug-n", type=int, default=0, help="how many clips to emit debug overlays for")
+    ap.add_argument("--seed-mode", default="gd", choices=["gd", "motion"],
+                    help="how to LOCATE the octopus to seed SAM2: 'gd' (GroundingDINO box, fails on "
+                         "camouflage/clutter) or 'motion' (largest motion blob — the octopus is the mover, "
+                         "static clutter is ignored; rejects too-big blobs = people)")
     ap.add_argument("--gd-model", default="tiny", choices=["tiny", "base"],
                     help="GroundingDINO size (base = better seed boxes, fewer mislocations)")
     ap.add_argument("--sam2-model", default="tiny", choices=["tiny", "small", "base-plus", "large"],
                     help="SAM2 size (large = sharper/cleaner masks — raises the teacher-label ceiling)")
     args = ap.parse_args()
-    cfg = {"min_seed_conf": args.min_seed_conf, "fps": args.fps,
+    cfg = {"min_seed_conf": args.min_seed_conf, "fps": args.fps, "seed_mode": args.seed_mode,
            "n_per_clip": args.n_per_clip, "use_points": not args.no_points}
 
     out = Path(args.out); (out / "images").mkdir(parents=True, exist_ok=True)
