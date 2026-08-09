@@ -110,6 +110,17 @@ def source_video(clip):
     p = Path(clip); return f"{p.parent.parent.name}/{p.parent.name}"
 
 
+def _drop_clip_from_manifest(clip):
+    """Remove any existing manifest rows for `clip` (so re-labeling overwrites instead of duplicating)."""
+    if not MANIFEST.exists():
+        return
+    rows = [l for l in open(MANIFEST) if l.strip()]
+    keep = [l for l in rows if json.loads(l).get("clip") != clip]
+    if len(keep) != len(rows):
+        with open(MANIFEST, "w") as f:
+            f.writelines(keep)
+
+
 def _composite_b64(img, mask, points, labels):
     im = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR).copy()
     if mask is not None and mask.any():
@@ -208,8 +219,10 @@ def api_accept(body: dict):
             return JSONResponse({"error": "no clip"}, status_code=400)
         mask = CUR.get("mask")
         if mask is None or not mask.any():
-            return JSONResponse({"error": "empty mask — click the octopus or reject"}, status_code=400)
+            return {"saved": 0, "reason": "empty"}     # nothing to save (skip silently on auto-advance)
         clip = CUR["clip"]; vid = source_video(clip).replace("/", "_"); cam = camera_of(clip)
+        if clip in done_set():                          # already labeled -> overwrite its row's files, dedupe manifest
+            _drop_clip_from_manifest(clip)
         stem = f"{vid}_{Path(clip).stem}_{cam}_0"
         CUR["imgs"][CUR["seed_idx"]].save(OUT / "images" / f"{stem}.jpg", quality=90)
         Image.fromarray((mask * 255).astype(np.uint8)).save(OUT / "masks" / f"{stem}.png")
@@ -226,6 +239,8 @@ def api_accept(body: dict):
 def api_reject(body: dict):
     with _LOCK:
         if CUR:
+            if CUR["clip"] in done_set():
+                _drop_clip_from_manifest(CUR["clip"])
             with open(MANIFEST, "a") as mf:
                 mf.write(json.dumps({"clip": CUR["clip"], "camera": camera_of(CUR["clip"]),
                                      "image": None, "mask": None, "area": 0.0, "source": "reject"}) + "\n")
@@ -254,7 +269,7 @@ HTML = """<!doctype html><html><head><meta charset=utf-8><title>Octopus mask lab
  <span class=k>saved pairs from</span> <span id=done>-</span> <span class=k>clips</span>
  <span id=cam class=k></span> <span>area <span id=area>-</span></span>
  <span id=msg></span>
- <span style="margin-left:auto" class=hint>left-click = octopus · right-click = not-octopus · A accept · R reject · Z reset · ←/→ nav</span>
+ <span style="margin-left:auto" class=hint>left-click = octopus · right-click = exclude · → save&next · R skip&next · Z clear · ← back</span>
 </div>
 <div id=wrap><img id=cv></div>
 <script>
@@ -271,11 +286,12 @@ cv.addEventListener('contextmenu',e=>e.preventDefault());
 cv.addEventListener('mousedown',async e=>{ if(busy)return; e.preventDefault();
   const r=cv.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width*W; const y=(e.clientY-r.top)/r.height*H;
   const label=e.button===2?0:1; busy=true; const d=await post('/api/click',{x,y,label}); busy=false; setImg(d);});
+async function saveAndNext(){ busy=true; const d=await post('/api/accept',{}); busy=false;
+  msg(d.saved? 'saved ✓ ('+idx+1+')':'skipped (empty — click or R)'); if(idx<tot-1) await load(idx+1); else refreshState(); }
 document.addEventListener('keydown',async e=>{ if(busy)return;
-  if(e.key==='a'||e.key==='A'){busy=true;msg('propagating…');const d=await post('/api/accept',{});busy=false;msg('saved '+d.saved+' pairs');await load(Math.min(idx+1,tot-1));}
-  else if(e.key==='r'||e.key==='R'){busy=true;await post('/api/reject',{});busy=false;msg('rejected');await load(Math.min(idx+1,tot-1));}
-  else if(e.key==='z'||e.key==='Z'){busy=true;const d=await post('/api/reset',{});busy=false;setImg(d);msg('reset to motion pre-seed');}
-  else if(e.key==='ArrowRight'){load(Math.min(idx+1,tot-1));}
+  if(e.key==='ArrowRight'||e.key==='a'||e.key==='A'){await saveAndNext();}
+  else if(e.key==='r'||e.key==='R'){busy=true;await post('/api/reject',{});busy=false;msg('skipped');if(idx<tot-1)await load(idx+1);}
+  else if(e.key==='z'||e.key==='Z'){busy=true;const d=await post('/api/reset',{});busy=false;setImg(d);msg('cleared — click the octopus');}
   else if(e.key==='ArrowLeft'){load(Math.max(idx-1,0));}});
 (async()=>{await refreshState();await load(0);})();
 </script></body></html>"""
