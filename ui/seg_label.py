@@ -244,6 +244,21 @@ def api_accept(body: dict):
         return {"saved": 1}
 
 
+@app.get("/api/resume")
+def api_resume():
+    """Index to open on page load: the first UNlabeled clip after the last one you reviewed
+    (so a reload continues where you left off instead of restarting at 0)."""
+    clips = all_clips(); done = done_set()
+    last = -1
+    for i, c in enumerate(clips):
+        if c in done:
+            last = i
+    nxt = last + 1
+    while nxt < len(clips) and clips[nxt] in done:
+        nxt += 1
+    return {"index": min(nxt, len(clips) - 1) if clips else 0, "last_reviewed": last}
+
+
 @app.get("/api/next_new")
 def api_next_new(after: int = -1):
     """Index of the next clip from a source video that has NO saved/rejected rows yet (for diversity —
@@ -327,7 +342,7 @@ document.addEventListener('keydown',async e=>{ if(busy)return;
   else if(e.key==='j'||e.key==='J'){await jumpNew();}
   else if(e.key==='z'||e.key==='Z'){busy=true;const d=await post('/api/reset',{});busy=false;setImg(d);msg('cleared — click the octopus');}
   else if(e.key==='ArrowLeft'){load(Math.max(idx-1,0));}});
-(async()=>{await refreshState();await load(0);})();
+(async()=>{await refreshState(); const r=await (await fetch('/api/resume')).json(); await load(r.index); if(r.last_reviewed>=0) msg('resumed after clip '+(r.last_reviewed+1));})();
 </script></body></html>"""
 
 if __name__ == "__main__":
