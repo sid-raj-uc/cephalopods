@@ -35,23 +35,53 @@ CAMERAS = ["Right_Front", "Right_Back", "Right_Right"]      # colour dens; not R
 OUT = REPO / "data" / "dataset_seg_human"
 (OUT / "images").mkdir(parents=True, exist_ok=True); (OUT / "masks").mkdir(parents=True, exist_ok=True)
 MANIFEST = OUT / "manifest.jsonl"
-FPS = 3; MAXSIDE = 1024; N_PER_CLIP = 4
+FPS = 2; MAXSIDE = 1024; N_PER_CLIP = 4    # fps=2 is enough for the motion pre-seed; faster load
 AREA_MIN, AREA_MAX = 0.0008, 0.6
 
 app = FastAPI()
 _LOCK = threading.Lock()
-_SAM = None
+_SAM = None       # video predictor (slow init_state) — only used on ACCEPT to propagate
+_IMG = None       # image predictor (encodes ONE frame) — used for browse/click, so nav is fast
 CUR = {}   # live per-clip state
 
 
+def _dev():
+    return "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+
+def img_sam():
+    """Fast single-frame predictor for interactive browse/click (no whole-clip encode)."""
+    global _IMG
+    if _IMG is None:
+        from sam2.sam2_image_predictor import SAM2ImagePredictor
+        _IMG = (SAM2ImagePredictor.from_pretrained("facebook/sam2.1-hiera-small", device=_dev()), _dev())
+        print("SAM2 image predictor loaded on", _dev(), flush=True)
+    return _IMG
+
+
 def sam():
+    """Video predictor for propagation on ACCEPT only (init_state encodes the whole clip = slow)."""
     global _SAM
     if _SAM is None:
         from sam2.sam2_video_predictor import SAM2VideoPredictor
-        dev = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        _SAM = (SAM2VideoPredictor.from_pretrained("facebook/sam2.1-hiera-small", device=dev), dev)
-        print("SAM2 loaded on", dev, flush=True)
+        _SAM = (SAM2VideoPredictor.from_pretrained("facebook/sam2.1-hiera-small", device=_dev()), _dev())
+        print("SAM2 video predictor loaded on", _dev(), flush=True)
     return _SAM
+
+
+def _img_mask(box, points, labels):
+    """Predict a single-frame mask on the already-set seed image (fast). CUR['imgs'][seed] must be set()."""
+    ip, _ = img_sam()
+    kw = {}
+    if points:
+        kw["point_coords"] = np.array(points, np.float32); kw["point_labels"] = np.array(labels, np.int32)
+    if box is not None:
+        kw["box"] = np.array(box, np.float32)
+    if not kw:
+        return np.zeros(CUR["imgs"][CUR["seed_idx"]].size[::-1], bool)
+    masks, scores, _ = ip.predict(multimask_output=False, **kw)
+    m = masks[0].astype(bool)
+    return largest_blob(m) if m.any() else m
 
 
 def camera_of(p):
@@ -80,22 +110,6 @@ def source_video(clip):
     p = Path(clip); return f"{p.parent.parent.name}/{p.parent.name}"
 
 
-def _seed_mask(st, predictor, seed_idx, box, points, labels):
-    if box is None and not points:                 # no prompt yet -> empty mask (nothing to segment)
-        return np.zeros(CUR["imgs"][seed_idx].size[::-1], bool)
-    predictor.reset_state(st)
-    predictor.add_new_points_or_box(
-        st, frame_idx=seed_idx, obj_id=1,
-        box=(np.array(box, np.float32) if box is not None else None),
-        points=(np.array(points, np.float32) if points else None),
-        labels=(np.array(labels, np.int32) if labels else None))
-    # the mask for the seed frame comes back on the first propagate step from that frame
-    for oi, _, logits in predictor.propagate_in_video(st, start_frame_idx=seed_idx, max_frame_num_to_track=0):
-        m = (logits[0] > 0).cpu().numpy()[0]
-        return largest_blob(m) if m.any() else m
-    return np.zeros(CUR["imgs"][seed_idx].size[::-1], bool)
-
-
 def _composite_b64(img, mask, points, labels):
     im = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR).copy()
     if mask is not None and mask.any():
@@ -122,15 +136,15 @@ def load_clip(index):
                     f"fps={FPS},scale='min({MAXSIDE},iw)':-2", f"{fdir}/%05d.jpg"], check=False)
     files = sorted(glob.glob(f"{fdir}/*.jpg"))
     imgs = [Image.open(f).convert("RGB") for f in files]
-    predictor, dev = sam()
-    st = predictor.init_state(video_path=fdir)
     ms = motion_seed(imgs) if imgs else None
     seed_idx = ms[0] if ms else (len(imgs) // 2 if imgs else 0)
     box = ms[1] if ms else None
     CUR.clear()
-    CUR.update(dict(clip=clip, index=index, td=td, fdir=fdir, imgs=imgs, st=st,
+    CUR.update(dict(clip=clip, index=index, td=td, fdir=fdir, imgs=imgs,
                     seed_idx=seed_idx, box=box, points=[], labels=[], W=imgs[0].size[0], H=imgs[0].size[1]))
-    mask = _seed_mask(st, predictor, seed_idx, box, [], []) if imgs else None
+    ip, _ = img_sam()
+    ip.set_image(np.asarray(imgs[seed_idx]))          # encode ONE frame (fast) — no whole-clip init
+    mask = _img_mask(box, [], []) if imgs else None
     CUR["mask"] = mask
     return {"index": index, "clip": clip, "camera": camera_of(clip), "W": CUR["W"], "H": CUR["H"],
             "seed_frac": None if ms is None else round((box[2]-box[0])*(box[3]-box[1])/(CUR["W"]*CUR["H"]), 3),
@@ -165,10 +179,9 @@ def api_click(body: dict):
             return JSONResponse({"error": "no clip loaded"}, status_code=400)
         CUR["points"].append([float(body["x"]), float(body["y"])])
         CUR["labels"].append(int(body.get("label", 1)))
-        predictor, _ = sam()
         # clicks REFINE the pre-seed: keep the motion box (if any) and add the points. If the box was
         # wrong (TV/person) the user hits Z first to clear it, then clicks the octopus fresh.
-        mask = _seed_mask(CUR["st"], predictor, CUR["seed_idx"], CUR["box"], CUR["points"], CUR["labels"])
+        mask = _img_mask(CUR["box"], CUR["points"], CUR["labels"])
         CUR["mask"] = mask
         return {"area": round(float(mask.mean()), 4),
                 "img": _composite_b64(CUR["imgs"][CUR["seed_idx"]], mask, CUR["points"], CUR["labels"])}
@@ -187,40 +200,26 @@ def api_reset(body: dict):
 
 @app.post("/api/accept")
 def api_accept(body: dict):
+    """Save the HUMAN-VERIFIED seed frame + mask (instant — no whole-clip propagation, which would
+    only reintroduce drift). One trustworthy pair per clip; run scripts/propagate_accepted.py later
+    if more frames per clip are wanted."""
     with _LOCK:
         if not CUR:
             return JSONResponse({"error": "no clip"}, status_code=400)
-        predictor, _ = sam(); st = CUR["st"]; seed = CUR["seed_idx"]; imgs = CUR["imgs"]
-        # re-seed with the final prompt, then propagate BOTH directions to track the octopus
-        predictor.reset_state(st)
-        predictor.add_new_points_or_box(
-            st, frame_idx=seed, obj_id=1,
-            box=(np.array(CUR["box"], np.float32) if CUR["box"] is not None else None),
-            points=(np.array(CUR["points"], np.float32) if CUR["points"] else None),
-            labels=(np.array(CUR["labels"], np.int32) if CUR["labels"] else None))
-        masks = [None] * len(imgs)
-        for oi, _, lg in predictor.propagate_in_video(st, start_frame_idx=seed):
-            masks[oi] = (lg[0] > 0).cpu().numpy()[0]
-        for oi, _, lg in predictor.propagate_in_video(st, start_frame_idx=seed, reverse=True):
-            masks[oi] = (lg[0] > 0).cpu().numpy()[0]
-        masks = [largest_blob(m) if (m is not None and m.any()) else None for m in masks]
-        areas = np.array([m.mean() if m is not None else 0.0 for m in masks])
-        med = np.median(areas[areas > 0]) if (areas > 0).any() else 0.0
-        good = [k for k in range(len(imgs)) if masks[k] is not None and AREA_MIN <= areas[k] <= AREA_MAX
-                and (med == 0 or areas[k] <= 3 * med)]
-        pick = sorted(set(good[i] for i in np.linspace(0, len(good) - 1, min(N_PER_CLIP, len(good))).astype(int))) if good else []
+        mask = CUR.get("mask")
+        if mask is None or not mask.any():
+            return JSONResponse({"error": "empty mask — click the octopus or reject"}, status_code=400)
         clip = CUR["clip"]; vid = source_video(clip).replace("/", "_"); cam = camera_of(clip)
-        n = 0
+        stem = f"{vid}_{Path(clip).stem}_{cam}_0"
+        CUR["imgs"][CUR["seed_idx"]].save(OUT / "images" / f"{stem}.jpg", quality=90)
+        Image.fromarray((mask * 255).astype(np.uint8)).save(OUT / "masks" / f"{stem}.png")
         with open(MANIFEST, "a") as mf:
-            for j, k in enumerate(pick):
-                stem = f"{vid}_{Path(clip).stem}_{cam}_{j}"
-                imgs[k].save(OUT / "images" / f"{stem}.jpg", quality=90)
-                Image.fromarray((masks[k] * 255).astype(np.uint8)).save(OUT / "masks" / f"{stem}.png")
-                mf.write(json.dumps({"clip": clip, "camera": cam, "image": f"images/{stem}.jpg",
-                                     "mask": f"masks/{stem}.png", "area": round(float(areas[k]), 4),
-                                     "source": "human"}) + "\n")
-                n += 1
-        return {"saved": n}
+            mf.write(json.dumps({"clip": clip, "camera": cam, "image": f"images/{stem}.jpg",
+                                 "mask": f"masks/{stem}.png", "area": round(float(mask.mean()), 4),
+                                 "seed_frame": CUR["seed_idx"], "n_frames": len(CUR["imgs"]),
+                                 "points": CUR["points"], "labels": CUR["labels"], "box": CUR["box"],
+                                 "source": "human"}) + "\n")
+        return {"saved": 1}
 
 
 @app.post("/api/reject")
