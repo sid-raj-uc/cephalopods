@@ -280,6 +280,37 @@ all **1,769 Nity colour videos** and produced **530 clips from 276 distinct sour
   `/weights/octo_seg_merged_lraspp.pt`. Presence/negatives variant on the merged set: not yet retrained.
 - **Recoverable next data:** the 345 low-conf clips (lower-conf pass) + the ~1,391 IR clips (needs Phase-0 IR fix).
 
+### Human-verified GT + the real levers (2026-08-09) — resolution & loss, measured leak-free
+Auto-labeling was shown unreliable on this footage (GroundingDINO grabs cloth/pipes, CLIP says octopus
+everywhere, motion catches TVs/people — every automatic localizer has a distractor; montages in
+`results/segmentation/`). So built a **human click-to-SAM2 labeler** (`ui/seg_label.py`, port 8015): motion
+pre-seed → SAM2 image-predictor mask → click to refine → save verified frame. Produced **412 positive +
+87 negative** human pairs over **~35 videos** → `data/dataset_seg_human/`.
+- **Clean human-only model = val IoU 0.454** (its own by-video split) — NOT better than noisy-teacher.
+  Confirmed label quality was never the ceiling.
+- **Eval-review UI** (`ui/seg_eval_review.py`, port 8016): step through held-out val frames, pred (green) vs
+  GT (red), per-frame IoU, sort worst-first, flag bad GT.
+- **Found the REAL levers by looking at failures** (pred vs GT): (1) **input resolution** — every model trained
+  at 256², where the median octopus (2.5% of frame) is ~40×40px and tentacles are 1–2px = unrepresentable;
+  (2) **loss** — symmetric Dice+BCE doesn't punish the under-segmentation (missed tentacles/small octopus =
+  false negatives). Added **512² training** + **Focal-Tversky loss** (β>α penalizes FN) to `train_segmenter.py`
+  (`--in-size --loss focal_tversky`).
+- **LEAKAGE CAUGHT:** first human-val comparison was contaminated — `old_hq` (HQ re-label) shares the same
+  2026-02 source videos as the human labels, so every hqfull model had trained on the val videos (0.71 was
+  train-on-test). Added `--holdout-videos` to force test videos out of ALL training sources.
+- **CLEAN leak-free result** (5 human test videos excluded from all training, eval on human masks):
+  | model | mean IoU | median | misses | areaErr |
+  |---|---|---|---|---|
+  | human-only (256, Dice+BCE) | 0.466 | 0.517 | 9/122 | 1.11% |
+  | **clean 512 + Focal-Tversky (+human+HQ auto)** | **0.608** | **0.666** | **6/122** | **1.07%** |
+  → **+0.14 mean (+30% rel), leak-free.** The 512-res + Tversky levers are REAL (clean 0.608 ≥ leaked 0.596).
+  Best model: **`weights/seg/octo_seg_clean512tv_lraspp.pt`** (LR-ASPP 3.2M, in_size 512, focal_tversky).
+- **Honest ceiling read:** ~0.61 mean / 0.67 median on a genuinely hard small-camouflaged-object task with a
+  3.2M student. areaErr ~1% = size is accurate; residual IoU gap is thin-tentacle boundary + ~6 hard misses
+  (small/resting octopus). For the project's needs (presence + area/posture) this is usable. Further IoU would
+  need a bigger student (breaks deploy-size constraint) or 768² (diminishing). Next: presence-gate AUC eval
+  (using the 87 negatives) head-to-head vs the CLIP gate.
+
 ### HQ teacher upgrade (2026-08-07) — the label-quality ceiling, attacked
 Since the merged plateau is teacher-label-quality-bound, upgraded the teacher: **GroundingDINO-base + SAM2-large**
 (`auto_segment.py --gd-model base --sam2-model large`, parametrized). Validated on 15 harvest clips (clean masks
