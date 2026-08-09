@@ -166,17 +166,20 @@ def load_clip(index):
 @app.get("/api/state")
 def api_state():
     clips = all_clips()
-    saved = vids = 0; vset = set()
+    pos = neg = 0; vset = set()
     if MANIFEST.exists():
         for l in open(MANIFEST):
             try:
                 r = json.loads(l)
-                if r.get("image"):
-                    saved += 1
+                if r.get("source") == "human":
+                    pos += 1
+                elif r.get("source") == "negative":
+                    neg += 1
                 vset.add(source_video(r["clip"]))
             except Exception:
                 pass
-    return {"total": len(clips), "saved": saved, "videos": len(vset), "clips_root": str(CLIPS_ROOT)}
+    return {"total": len(clips), "saved": pos + neg, "pos": pos, "neg": neg,
+            "videos": len(vset), "clips_root": str(CLIPS_ROOT)}
 
 
 @app.post("/api/load")
@@ -280,6 +283,26 @@ def api_next_new(after: int = -1):
     return {"index": min(after + 1, len(clips) - 1), "all_done": True}
 
 
+@app.post("/api/negative")
+def api_negative(body: dict):
+    """Save the current frame as a NO-OCTOPUS negative (frame + all-empty mask). These train the
+    presence gate ('no octopus -> empty mask'); earlier this took presence AUC 0.50 -> 0.86."""
+    with _LOCK:
+        if not CUR:
+            return JSONResponse({"error": "no clip"}, status_code=400)
+        clip = CUR["clip"]; vid = source_video(clip).replace("/", "_"); cam = camera_of(clip)
+        if clip in done_set():
+            _drop_clip_from_manifest(clip)
+        stem = f"{vid}_{Path(clip).stem}_{cam}_neg"
+        CUR["imgs"][CUR["seed_idx"]].save(OUT / "images" / f"{stem}.jpg", quality=90)
+        Image.fromarray(np.zeros((CUR["H"], CUR["W"]), np.uint8)).save(OUT / "masks" / f"{stem}.png")
+        with open(MANIFEST, "a") as mf:
+            mf.write(json.dumps({"clip": clip, "camera": cam, "image": f"images/{stem}.jpg",
+                                 "mask": f"masks/{stem}.png", "area": 0.0,
+                                 "seed_frame": CUR["seed_idx"], "source": "negative"}) + "\n")
+        return {"saved": 1}
+
+
 @app.post("/api/reject")
 def api_reject(body: dict):
     with _LOCK:
@@ -311,10 +334,10 @@ HTML = """<!doctype html><html><head><meta charset=utf-8><title>Octopus mask lab
 <div id=bar>
  <b>Octopus mask labeler</b>
  <span>clip <span id=idx>-</span>/<span id=tot>-</span></span>
- <span class=k>saved</span> <b id=done>-</b> <span class=k>pairs from</span> <b id=vids>-</b> <span class=k>videos</span>
+ <span class=k>saved</span> <b id=done>-</b> <span class=k>(</span><span id=pos>-</span> <span class=k>octopus +</span> <span id=neg>-</span> <span class=k>empty) from</span> <b id=vids>-</b> <span class=k>videos</span>
  <span id=cam class=k></span> <span>area <span id=area>-</span></span>
  <span id=msg></span>
- <span style="margin-left:auto" class=hint>left-click = octopus · right-click = exclude · → save&next · R skip&next · <b>J = jump to a NEW video</b> · Z clear · ← back</span>
+ <span style="margin-left:auto" class=hint>left-click octopus · right-click exclude · → save&next · <b>N = no-octopus (save negative)</b> · R skip · J jump-new-video · Z clear · ← back</span>
 </div>
 <div id=wrap><img id=cv></div>
 <script>
@@ -322,7 +345,7 @@ let idx=0, tot=0, W=1, H=1, busy=false;
 const cv=document.getElementById('cv');
 async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});return r.json();}
 function setImg(d){ if(d.img) cv.src=d.img; if(d.area!==undefined) document.getElementById('area').textContent=(d.area*100).toFixed(1)+'%'; }
-async function refreshState(){const s=await (await fetch('/api/state')).json(); tot=s.total; document.getElementById('tot').textContent=tot; document.getElementById('done').textContent=s.saved; document.getElementById('vids').textContent=s.videos;}
+async function refreshState(){const s=await (await fetch('/api/state')).json(); tot=s.total; document.getElementById('tot').textContent=tot; document.getElementById('done').textContent=s.saved; document.getElementById('vids').textContent=s.videos; document.getElementById('pos').textContent=s.pos; document.getElementById('neg').textContent=s.neg;}
 async function load(i){ busy=true; msg('loading…'); const d=await post('/api/load',{index:i}); busy=false;
   if(d.error){msg(d.error);return;} idx=d.index; W=d.W; H=d.H; document.getElementById('idx').textContent=idx+1;
   document.getElementById('cam').textContent=d.camera+(d.is_done?' ✓done':''); setImg(d); msg(d.is_done?'already labeled (re-doing overwrites)':''); refreshState();}
@@ -338,7 +361,8 @@ async function jumpNew(){ busy=true; const r=await (await fetch('/api/next_new?a
   if(r.all_done){msg('all videos have at least one label 🎉');} await load(r.index); msg('jumped to a new video'); }
 document.addEventListener('keydown',async e=>{ if(busy)return;
   if(e.key==='ArrowRight'||e.key==='a'||e.key==='A'){await saveAndNext();}
-  else if(e.key==='r'||e.key==='R'){busy=true;await post('/api/reject',{});busy=false;msg('skipped');await refreshState();if(idx<tot-1)await load(idx+1);}
+  else if(e.key==='n'||e.key==='N'){busy=true;const d=await post('/api/negative',{});busy=false;msg('saved NO-octopus negative ✓');await refreshState();if(idx<tot-1)await load(idx+1);}
+  else if(e.key==='r'||e.key==='R'){busy=true;await post('/api/reject',{});busy=false;msg('skipped (not saved)');await refreshState();if(idx<tot-1)await load(idx+1);}
   else if(e.key==='j'||e.key==='J'){await jumpNew();}
   else if(e.key==='z'||e.key==='Z'){busy=true;const d=await post('/api/reset',{});busy=false;setImg(d);msg('cleared — click the octopus');}
   else if(e.key==='ArrowLeft'){load(Math.max(idx-1,0));}});
