@@ -310,6 +310,16 @@ pre-seed → SAM2 image-predictor mask → click to refine → save verified fra
   (small/resting octopus). For the project's needs (presence + area/posture) this is usable. Further IoU would
   need a bigger student (breaks deploy-size constraint) or 768² (diminishing). Next: presence-gate AUC eval
   (using the 87 negatives) head-to-head vs the CLIP gate.
+- **Human-only vs blend (same clean held-out test, 2026-08-09):** volume beats purity.
+  | model | train data | mean IoU | median | misses |
+  |---|---|---|---|---|
+  | human-only 256/Dice | 290 clean frames | 0.466 | 0.517 | 9/122 |
+  | human-only 512/Tversky | 290 clean frames | 0.505 | 0.577 | 9/122 |
+  | **BLEND 512/Tversky** | **3450 frm (8% human + 92% HQ auto)** | **0.608** | **0.666** | **6/122** |
+  Config fixes (512+Tversky) generalize (+0.04 on human-only too), but 290 clean frames overfit — the blend's
+  12× volume wins. Making human-only competitive would need ~150+ human videos. **Deployable best = the blend
+  `octo_seg_clean512tv_lraspp.pt`.** All levers now tested: labels(volume wins) / diversity(helped) /
+  resolution 256→512(helped) / loss Dice→Tversky(helped) / leakage(caught via --holdout-videos).
 
 ### HQ teacher upgrade (2026-08-07) — the label-quality ceiling, attacked
 Since the merged plateau is teacher-label-quality-bound, upgraded the teacher: **GroundingDINO-base + SAM2-large**
