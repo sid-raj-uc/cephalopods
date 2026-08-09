@@ -172,6 +172,23 @@ def dice_bce_loss(logits, target, eps=1.0):
     return bce + dice.mean()
 
 
+def focal_tversky_loss(logits, target, alpha=0.3, beta=0.7, gamma=1.3333, eps=1.0):
+    """Tversky (Dice generalized: penalize FN vs FP asymmetrically) + focal focus on hard examples.
+
+    Our failure mode is UNDER-segmentation (missing thin tentacles + small/resting octopus = false
+    negatives), so beta>alpha makes false negatives cost more -> the model reaches further into the
+    faint/thin parts. gamma>1 focuses gradient on the low-overlap (hard) images. Add a light BCE term
+    for stable pixel gradients. alpha=beta=0.5,gamma=1 recovers plain Dice."""
+    p = torch.sigmoid(logits)
+    tp = (p * target).sum((1, 2, 3))
+    fp = (p * (1 - target)).sum((1, 2, 3))
+    fn = ((1 - p) * target).sum((1, 2, 3))
+    tversky = (tp + eps) / (tp + alpha * fp + beta * fn + eps)
+    ft = ((1 - tversky) ** gamma).mean()
+    bce = F.binary_cross_entropy_with_logits(logits, target)
+    return ft + 0.5 * bce
+
+
 @torch.no_grad()
 def evaluate(model, loader, device):
     model.eval()
@@ -197,6 +214,12 @@ def main():
     ap.add_argument("--arch", default="unet", choices=["unet", "lraspp"])
     ap.add_argument("--base-ch", type=int, default=16)
     ap.add_argument("--in-size", type=int, default=256)
+    ap.add_argument("--loss", default="dice_bce", choices=["dice_bce", "focal_tversky"],
+                    help="focal_tversky penalizes false negatives more (beta>alpha) — targets the "
+                         "under-segmentation failure mode (missing tentacles / small octopus)")
+    ap.add_argument("--tversky-alpha", type=float, default=0.3, help="FP weight (lower = more permissive)")
+    ap.add_argument("--tversky-beta", type=float, default=0.7, help="FN weight (higher = reach further)")
+    ap.add_argument("--tversky-gamma", type=float, default=1.3333, help="focal power on hard examples")
     ap.add_argument("--aug", default="strong", choices=["strong", "basic", "none"])
     ap.add_argument("--epochs", type=int, default=40)
     ap.add_argument("--batch", type=int, default=32)
@@ -251,7 +274,9 @@ def main():
             x, y = x.to(device), y.to(device)
             opt.zero_grad()
             with torch.autocast(device_type="cuda", enabled=(device == "cuda")):
-                loss = dice_bce_loss(model(x), y)
+                loss = (focal_tversky_loss(model(x), y, args.tversky_alpha, args.tversky_beta,
+                                           args.tversky_gamma) if args.loss == "focal_tversky"
+                        else dice_bce_loss(model(x), y))
             scaler.scale(loss).backward(); scaler.step(opt); scaler.update()
             losses.append(loss.item())
         sched.step()
@@ -267,7 +292,7 @@ def main():
     out = Path(args.out) if args.out else (REPO / "weights" / f"octo_seg_{args.ver}_{suffix}.pt")
     out.parent.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": best_state, "arch": args.arch, "base_ch": args.base_ch,
-                "in_size": args.in_size, "aug": args.aug, "epochs": args.epochs,
+                "in_size": args.in_size, "aug": args.aug, "epochs": args.epochs, "loss": args.loss,
                 "val": best_metrics, "n_params": n_params, "ds": str(ds_root)}, out)
     bar = "PASS" if best_iou >= 0.85 else "below 0.85 bar"
     print(f"\nBEST val IoU {best_iou:.4f} ({bar})  |  {n_params/1e6:.3f}M params  ->  {out}", flush=True)
