@@ -203,6 +203,8 @@ def main():
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--val-frac", type=float, default=0.2, help="fraction of SOURCE VIDEOS held out")
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--sources", default="", help="comma-list of manifest 'source' values to keep "
+                    "(e.g. 'human' = positives only for a clean mask-IoU eval; '' = all)")
     ap.add_argument("--out", default=None, help="checkpoint path (default weights/octo_seg_<ver>_ch<base>.pt)")
     args = ap.parse_args()
 
@@ -211,6 +213,10 @@ def main():
 
     ds_root = Path(args.ds)
     rows = [json.loads(l) for l in open(ds_root / "manifest.jsonl") if l.strip()]
+    rows = [r for r in rows if r.get("image") and r.get("mask")]     # drop reject rows (no files)
+    if args.sources:                                                  # e.g. "human" = positives only (mask IoU)
+        keep = set(args.sources.split(","))
+        rows = [r for r in rows if r.get("source", "human") in keep]
     if not rows:
         raise SystemExit(f"no rows in {ds_root}/manifest.jsonl — run auto_segment.py first")
 
