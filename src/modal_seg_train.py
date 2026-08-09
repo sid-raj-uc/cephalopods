@@ -73,7 +73,7 @@ def autolabel(limit: int = 0, min_seed_conf: float = 0.60,
 @app.function(image=image, gpu=GPU, timeout=86400, volumes={"/data": vol})
 def train(epochs: int = 60, arch: str = "lraspp", base_ch: int = 16,
           ds: str = "/data/dataset_seg_harvest", ver: str = "harvest", sources: str = "",
-          in_size: int = 256, loss: str = "dice_bce"):
+          in_size: int = 256, loss: str = "dice_bce", holdout: str = ""):
     """Train the tiny segmenter on a labeled dataset dir (split BY SOURCE VIDEO). -> /data/weights.
 
     `ds` may be a comma-separated list of dataset dirs — they're merged (symlinked images/masks +
@@ -110,6 +110,8 @@ def train(epochs: int = 60, arch: str = "lraspp", base_ch: int = 16,
            "--in-size", str(in_size), "--loss", loss]
     if sources:
         cmd += ["--sources", sources]
+    if holdout:
+        cmd += ["--holdout-videos", holdout]
     print("RUN:", " ".join(cmd), flush=True)
     subprocess.run(cmd, check=True)
     vol.commit()

@@ -220,6 +220,8 @@ def main():
     ap.add_argument("--tversky-alpha", type=float, default=0.3, help="FP weight (lower = more permissive)")
     ap.add_argument("--tversky-beta", type=float, default=0.7, help="FN weight (higher = reach further)")
     ap.add_argument("--tversky-gamma", type=float, default=1.3333, help="focal power on hard examples")
+    ap.add_argument("--holdout-videos", default="", help="file of source_video keys (date/segment) to "
+                    "force TEST-only — excluded from training across ALL datasets (prevents leakage)")
     ap.add_argument("--aug", default="strong", choices=["strong", "basic", "none"])
     ap.add_argument("--epochs", type=int, default=40)
     ap.add_argument("--batch", type=int, default=32)
@@ -248,6 +250,10 @@ def main():
     rng.shuffle(vids)
     n_val = max(1, int(len(vids) * args.val_frac))
     val_vids = set(vids[:n_val])
+    if args.holdout_videos:                      # force specific source-videos to be TEST-only (never trained)
+        hv = set(l.strip() for l in open(args.holdout_videos) if l.strip())
+        val_vids |= hv
+        print(f"forced holdout: {len(hv & set(vids))}/{len(hv)} holdout videos present -> excluded from train", flush=True)
     tr = [r for r in rows if source_video(r["clip"]) not in val_vids]
     va = [r for r in rows if source_video(r["clip"]) in val_vids]
     print(f"device={device}  pairs={len(rows)}  videos={len(vids)} "
