@@ -165,9 +165,18 @@ def load_clip(index):
 
 @app.get("/api/state")
 def api_state():
-    clips = all_clips(); done = done_set()
-    return {"total": len(clips), "done": sum(1 for c in clips if c in done),
-            "clips_root": str(CLIPS_ROOT)}
+    clips = all_clips()
+    saved = vids = 0; vset = set()
+    if MANIFEST.exists():
+        for l in open(MANIFEST):
+            try:
+                r = json.loads(l)
+                if r.get("image"):
+                    saved += 1
+                vset.add(source_video(r["clip"]))
+            except Exception:
+                pass
+    return {"total": len(clips), "saved": saved, "videos": len(vset), "clips_root": str(CLIPS_ROOT)}
 
 
 @app.post("/api/load")
@@ -235,6 +244,27 @@ def api_accept(body: dict):
         return {"saved": 1}
 
 
+@app.get("/api/next_new")
+def api_next_new(after: int = -1):
+    """Index of the next clip from a source video that has NO saved/rejected rows yet (for diversity —
+    avoids labeling many near-duplicate clips of the same recording)."""
+    clips = all_clips()
+    labeled_vids = set()
+    if MANIFEST.exists():
+        for l in open(MANIFEST):
+            try:
+                labeled_vids.add(source_video(json.loads(l)["clip"]))
+            except Exception:
+                pass
+    for i in range(max(0, after + 1), len(clips)):
+        if source_video(clips[i]) not in labeled_vids:
+            return {"index": i}
+    for i in range(0, len(clips)):     # wrap
+        if source_video(clips[i]) not in labeled_vids:
+            return {"index": i}
+    return {"index": min(after + 1, len(clips) - 1), "all_done": True}
+
+
 @app.post("/api/reject")
 def api_reject(body: dict):
     with _LOCK:
@@ -266,10 +296,10 @@ HTML = """<!doctype html><html><head><meta charset=utf-8><title>Octopus mask lab
 <div id=bar>
  <b>Octopus mask labeler</b>
  <span>clip <span id=idx>-</span>/<span id=tot>-</span></span>
- <span class=k>saved pairs from</span> <span id=done>-</span> <span class=k>clips</span>
+ <span class=k>saved</span> <b id=done>-</b> <span class=k>pairs from</span> <b id=vids>-</b> <span class=k>videos</span>
  <span id=cam class=k></span> <span>area <span id=area>-</span></span>
  <span id=msg></span>
- <span style="margin-left:auto" class=hint>left-click = octopus · right-click = exclude · → save&next · R skip&next · Z clear · ← back</span>
+ <span style="margin-left:auto" class=hint>left-click = octopus · right-click = exclude · → save&next · R skip&next · <b>J = jump to a NEW video</b> · Z clear · ← back</span>
 </div>
 <div id=wrap><img id=cv></div>
 <script>
@@ -277,7 +307,7 @@ let idx=0, tot=0, W=1, H=1, busy=false;
 const cv=document.getElementById('cv');
 async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});return r.json();}
 function setImg(d){ if(d.img) cv.src=d.img; if(d.area!==undefined) document.getElementById('area').textContent=(d.area*100).toFixed(1)+'%'; }
-async function refreshState(){const s=await (await fetch('/api/state')).json(); tot=s.total; document.getElementById('tot').textContent=tot; document.getElementById('done').textContent=s.done;}
+async function refreshState(){const s=await (await fetch('/api/state')).json(); tot=s.total; document.getElementById('tot').textContent=tot; document.getElementById('done').textContent=s.saved; document.getElementById('vids').textContent=s.videos;}
 async function load(i){ busy=true; msg('loading…'); const d=await post('/api/load',{index:i}); busy=false;
   if(d.error){msg(d.error);return;} idx=d.index; W=d.W; H=d.H; document.getElementById('idx').textContent=idx+1;
   document.getElementById('cam').textContent=d.camera+(d.is_done?' ✓done':''); setImg(d); msg(d.is_done?'already labeled (re-doing overwrites)':''); refreshState();}
@@ -287,10 +317,14 @@ cv.addEventListener('mousedown',async e=>{ if(busy)return; e.preventDefault();
   const r=cv.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width*W; const y=(e.clientY-r.top)/r.height*H;
   const label=e.button===2?0:1; busy=true; const d=await post('/api/click',{x,y,label}); busy=false; setImg(d);});
 async function saveAndNext(){ busy=true; const d=await post('/api/accept',{}); busy=false;
-  msg(d.saved? 'saved ✓ ('+idx+1+')':'skipped (empty — click or R)'); if(idx<tot-1) await load(idx+1); else refreshState(); }
+  if(!d.saved){ msg('⚠ empty mask — CLICK the octopus, or R to skip (nothing saved)'); return; }  // don't advance -> no silent loss
+  msg('saved ✓'); await refreshState(); if(idx<tot-1) await load(idx+1); }
+async function jumpNew(){ busy=true; const r=await (await fetch('/api/next_new?after='+idx)).json(); busy=false;
+  if(r.all_done){msg('all videos have at least one label 🎉');} await load(r.index); msg('jumped to a new video'); }
 document.addEventListener('keydown',async e=>{ if(busy)return;
   if(e.key==='ArrowRight'||e.key==='a'||e.key==='A'){await saveAndNext();}
-  else if(e.key==='r'||e.key==='R'){busy=true;await post('/api/reject',{});busy=false;msg('skipped');if(idx<tot-1)await load(idx+1);}
+  else if(e.key==='r'||e.key==='R'){busy=true;await post('/api/reject',{});busy=false;msg('skipped');await refreshState();if(idx<tot-1)await load(idx+1);}
+  else if(e.key==='j'||e.key==='J'){await jumpNew();}
   else if(e.key==='z'||e.key==='Z'){busy=true;const d=await post('/api/reset',{});busy=false;setImg(d);msg('cleared — click the octopus');}
   else if(e.key==='ArrowLeft'){load(Math.max(idx-1,0));}});
 (async()=>{await refreshState();await load(0);})();
