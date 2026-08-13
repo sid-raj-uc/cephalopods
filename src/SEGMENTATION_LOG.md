@@ -362,3 +362,26 @@ Held-out val IoU across teacher quality: tiny **0.494** → 14%-HQ **0.508** →
   (3) if pixel-boundary quality genuinely must rise: a **temporal** student (uses motion — the R3 "needs temporal
   features" insight), since per-frame localization is the failure mode. Bigger student is off the table (deploy
   size constraint).
+
+## Skeleton tracking v2 (2026-08-13) — measured on a fixed 10-clip eval set
+Downstream of segmentation: the anatomical skeleton pipeline (`src/skeleton/`) turns masks into
+mantle/head/arm graphs + per-arm kinematics. Skeletonization phases 1-3 (mask-prep tuning +0.17 arms;
+best-frame seeding +3.67 median arms) were followed by **tracking v2** — all changes measured
+before/after on a FIXED 10-clip eval set (`src/skel_eval_tracking.py`, all 6 behaviours, metrics in
+`src/skeleton/track_metrics.py`: teleport rate / fragmentation / coverage / in-mask / arm-count std).
+
+| run | teleport | arms | verdict |
+|---|---|---|---|
+| baseline (chain, centroid prior) | 14.85% | 5.1 | — |
+| flow (DIS per-node prior, unchanged gates) | 15.71% | 4.9 | ❌ better prior + same gates admits MORE noise |
+| **flow2 (flow + tightened gates when prior validates)** | **14.27%** | 4.9 | ✅ adopted (default) |
+| global tracklet association (2 tunings) | 15.07 / 14.35% | 4.2–4.3 | ❌ negative: wins big on easy clips, breaks on hard, drops arms; kept opt-in `method='global'` |
+
+**Phase 3 (adopted): occlusion-honest states.** Every node: `detected | fitted | occluded`;
+`compute_motion` emits rows only from evidence-backed samples. Key finding: **occluded_frac = 41.7%**
+— nearly half of arm samples were evidence-free holds; the tracker's smoothness was largely inertia
+(teleport_confident 16.5% > overall 14.3% because held nodes' fake stillness flattered the average).
+Kinematics (`batch_skeleton_motion.py`) now gate on states and report `occluded_frac` per clip.
+Chain: seg mask (EMA) -> fixed union bbox -> per-frame detect -> best-seed bidirectional chain with
+flow prior -> global-consistent-ish IDs -> state-gated smoothed motion -> `kinematics` in
+behaviour_records.json. UIs: 8017 (3-way viewer + trails), 8018 (phase results).
