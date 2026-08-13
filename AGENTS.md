@@ -379,6 +379,36 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
   pass) + Phase-0 IR fix for the ~1,391 IR clips. Retrain the presence/negatives variant on the merged set;
   then wire the `segment_octopus` area-gate (≥~0.01) into `extract_octopus_clips.py` / `local_pipeline.py`.
 
+## Skeleton / pose pipeline — mask → anatomical graph → kinematics (2026-08-13)
+Downstream of segmentation: **`src/skeleton/`** (adapted from the external Skeleton repo; critical
+`Skeleton_best` NameError + head-edge mask-constraint + degenerate-head bugs fixed) turns a binary
+octopus silhouette into a **mantle/head/8-arm graph** (Zhang–Suen thinning → Dijkstra arm paths →
+mask-constrained splines). Fast thinning needs `opencv-contrib-python` (installed; replaces
+opencv-python — same 4.13 version, superset).
+- **`src/segment_to_skeleton.py`** — clip → seg masks (EMA-smoothed) → FIXED union-bbox crops →
+  skeleton. `segment_masks(..., keep_small=W)` also returns small colour frames; `grey_crops()` builds
+  the aligned grey crops the flow prior needs.
+- **`src/skeleton/multi_frame.py` — the tracker.** `tracked_sequence(crops, greys=..., seed="best",
+  method="chain")`: per-frame detect once → seed at the best-resolved frame → bidirectional chain via
+  `temporal_fit` with a **per-node optical-flow prior** (DIS + fwd-bwd check; when the prior validates
+  the acceptance gates TIGHTEN 0.6× — a better prior with unchanged gates measurably admitted MORE
+  noise). Every node carries **`state: detected|fitted|occluded`**; `compute_motion` only emits rows
+  from evidence-backed samples (occluded holds never become motion) + per-node median+gaussian
+  trajectory smoothing. `method="global"` (tracklet linking) exists but measured WORSE — see log.
+- **Skeletonization phases (measured):** thin-preserving mask-prep (+0.17 arms), **best-frame seeding
+  +3.67 median arms (2.17→5.83, the big lever)**. Tracking v2 on a fixed 10-clip eval
+  (`src/skel_eval_tracking.py`, metrics `src/skeleton/track_metrics.py`): baseline teleport 14.85% →
+  flow2 14.27% (adopted); **occluded_frac 41.7%** = ~half of arm samples were evidence-free holds,
+  now excluded from kinematics. Full trail in `SEGMENTATION_LOG.md`.
+- **`src/batch_skeleton_motion.py`** — batch: clips → per-clip kinematics summary (tip/mantle speed,
+  activity, arm-spread, occluded_frac) → `data/skeleton_motion.json` + `--merge` writes a `kinematics`
+  block into `behaviour_records.json`. IR (Right_Top) clips auto-skip (colour-trained seg model).
+- **`src/seg_skeleton_pipeline.py` + `ui/seg_skeleton_viewer.py` (8017)** — one video → 3 synced
+  overlay mp4s (raw seg / smoothed seg / skeleton+trails). **`ui/skel_diag_viewer.py` (8018)** —
+  phase-results browser (reads `data/skel_diag/summary.json` + chart, meta-driven).
+- **Caveat:** speeds are px/s in crop space (no px→cm calibration); arms are silhouette-limited
+  (mask quality costs ~1.7 arms/frame vs human GT — `src/skel_diagnostic.py`).
+
 ## Diverse-footage harvest — the data-gen fix (in progress, 2026-07-23)
 **Why:** both students are footage-diversity-limited — the whole corpus was **7 dates (one week)**.
 Plan: `src/DATA_PLAN.md`. Running results ledger: `PAPER_NOTES.md`.
