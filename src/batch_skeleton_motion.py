@@ -80,9 +80,12 @@ def clip_to_motion(clip, S, fps=3.0, present=0.004, min_arms=3, max_arms=8,
         if c and tips:
             spreads.append(float(np.mean([math.hypot(n["x"] - c["x"], n["y"] - c["y"]) for n in tips])))
     arm_counts = [fr["metrics"]["arm_count"] for fr in processed]
+    occ = [1 if n.get("state") == "occluded" else 0
+           for fr in processed for n in fr["nodes"] if n["branch_id"] > 0]
     return {
         "n_frames_tracked": len(processed),
         "fps": round(eff_fps, 3),
+        "occluded_frac": round(float(np.mean(occ)), 3) if occ else 0.0,
         "median_arm_count": int(np.median(arm_counts)) if arm_counts else 0,
         "tip_speed_px_s": _stat(tip_speeds),
         "mantle_speed_px_s": _stat(speeds.get("MantleCenter", [])),

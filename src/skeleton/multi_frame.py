@@ -147,7 +147,7 @@ def _sig_mean(sigs: List[Dict]) -> Dict:
 
 
 def _global_arm_ids(det, crops, greys, max_arms, link_gap=8,
-                    strict=0.35, link_thresh=0.55):
+                    strict=0.30, link_thresh=0.75):
     """Tracking v2 Phase 2: global arm identity via tracklets.
 
     1. Confident frame-to-frame Hungarian matches -> pure tracklets.
@@ -279,6 +279,8 @@ def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, 
             if dn is None:
                 continue
             nodes, edges = dn, de
+            for n in nodes:                      # seed frame comes straight from the detector
+                n["state"] = "detected"
         else:
             if dn is not None and method != "global":
                 relabel(dn, de, match_arms(prev_sig or {}, arm_signatures(dn, de), math.hypot(*cm.shape)))
@@ -511,11 +513,15 @@ def temporal_fit(prev_nodes: List[Dict], prev_mask: np.ndarray,
 
         # Center and head should always survive; for arm nodes, an excessive
         # mask snap means the local branch has disappeared/occluded.
+        # Phase 3: every node carries a state — "detected" (evidence-backed), "fitted" (blend of
+        # weaker evidence) or "occluded" (held with NO reliable evidence this frame). Kinematics
+        # only trust detected/fitted samples; occluded holds are never turned into motion.
         if current is None:
             if old["branch_id"] > 0 and previous_gap > allowed_gap:
                 omitted.append(key)
                 continue
             chosen = previous_snap
+            n["state"] = "occluded"
         else:
             current_xy = np.array([current["x"], current["y"]], float)
             jump = float(np.linalg.norm(current_xy - previous_guess))
@@ -527,18 +533,22 @@ def temporal_fit(prev_nodes: List[Dict], prev_mask: np.ndarray,
             if jump <= sj:
                 chosen = (0.60 * current_xy + 0.40 * previous_guess) if flow_ok \
                     else (0.72 * current_xy + 0.28 * previous_guess)
+                n["state"] = "detected"
             elif jump <= hj:
                 chosen = (0.25 * current_xy + 0.75 * previous_guess) if flow_ok \
                     else (0.35 * current_xy + 0.65 * previous_guess)
+                n["state"] = "fitted"
             elif previous_gap <= allowed_gap:
                 # Do not let one bad detector node pull the whole arm away.
                 chosen = previous_snap
+                n["state"] = "occluded"          # detection rejected -> no reliable evidence
                 LOG.info(f"    repaired outlier node {key} from previous frame")
             elif old["branch_id"] > 0:
                 omitted.append(key)
                 continue
             else:
                 chosen = current_xy
+                n["state"] = "fitted"
             chosen, _ = _snap_with_distance(chosen, tree, fg_xy)
 
         n["x"], n["y"] = float(chosen[0]), float(chosen[1])
@@ -614,13 +624,18 @@ def _smooth_trajectories(frames: List[Dict], med: int = 3, sigma: float = 1.0
     return out
 
 
-def compute_motion(frames: List[Dict], stride: int, fps: float, smooth: bool = True) -> List[Dict]:
+def compute_motion(frames: List[Dict], stride: int, fps: float, smooth: bool = True,
+                   gate_states: Tuple[str, ...] = ("detected", "fitted")) -> List[Dict]:
     """Distance / speed / acceleration using original source-frame indices.
 
     When an unreadable frame cannot be recovered, motion never pretends that
     adjacent processed records were adjacent source frames: the actual index
     gap determines dt and is exported unchanged. `smooth` runs a per-node
     trajectory median+gaussian filter first to suppress tracking-jump spikes.
+
+    Phase 3: rows are emitted only when BOTH endpoints' node state is in `gate_states` —
+    an occluded (held, evidence-free) node never produces motion. Pass gate_states=None
+    to disable gating (legacy behaviour).
     """
     sm = _smooth_trajectories(frames) if smooth else None
     rows: List[Dict] = []
@@ -640,9 +655,14 @@ def compute_motion(frames: List[Dict], stride: int, fps: float, smooth: bool = T
         else:
             pos_c = {node_key(n): np.array([n["x"], n["y"]]) for n in cur["nodes"]}
             pos_p = {node_key(n): np.array([n["x"], n["y"]]) for n in prev["nodes"]}
+        st_c = {node_key(n): n.get("state", "detected") for n in cur["nodes"]}
+        st_p = {node_key(n): n.get("state", "detected") for n in prev["nodes"]}
         for key in sorted(pos_c):
             if key not in pos_p:
                 continue
+            if gate_states is not None and (st_c.get(key) not in gate_states or
+                                            st_p.get(key) not in gate_states):
+                continue                       # occluded/held samples never become motion
             disp = pos_c[key] - pos_p[key]
             dist = float(np.linalg.norm(disp))
             speed = dist / dt
@@ -662,6 +682,7 @@ def compute_motion(frames: List[Dict], stride: int, fps: float, smooth: bool = T
                 "distance_px": round(dist, 3),
                 "speed_px_per_s": round(speed, 3),
                 "acceleration_px_per_s2": round(accel, 3) if accel != "" else "",
+                "state": st_c.get(key, "detected"),
             })
     return rows
 
@@ -671,7 +692,7 @@ def export_motion(rows: List[Dict], out: Path) -> None:
         LOG.warning("No motion rows (need more frames than the stride)")
         return
     fields = ["frame", "prev_frame", "frame_index", "node", "x", "y",
-              "distance_px", "speed_px_per_s", "acceleration_px_per_s2"]
+              "distance_px", "speed_px_per_s", "acceleration_px_per_s2", "state"]
     with (out / "motion_metadata.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader(); w.writerows(rows)
