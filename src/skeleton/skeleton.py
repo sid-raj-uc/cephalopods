@@ -1170,7 +1170,8 @@ def run(input_path: str, output_dir: str, max_dimension: int = 760,
     start = time.perf_counter()
     mask = load_binary(input_path)
     LOG.info(f"Input: {input_path} ({mask.shape[1]} x {mask.shape[0]})")
-    settings = [(0.75,0.90),(1.00,0.65),(1.25,0.45),(1.45,0.30)][:max(1,iterations)]
+    # thin-preserving smoothing schedule (Phase 2): lower mask-smoothing keeps close/thin arms distinct.
+    settings = [(0.45,0.85),(0.65,0.70),(0.90,0.55),(1.20,0.40)][:max(1,iterations)]
     records, candidates = [], []
     previous = None
     for i,(morph_smooth,spline_smooth) in enumerate(settings,1):

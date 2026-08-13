@@ -57,7 +57,10 @@ def process_frame(mask: np.ndarray, iterations: int, max_dimension: int,
     impossible constraint, then **prefers** candidates that match the
     requested arm count.  If no candidate has exactly that many arms the
     closest one is accepted with a warning instead of raising an error."""
-    settings = [(0.75, 0.90), (1.00, 0.65), (1.25, 0.45), (1.45, 0.30)]
+    # thin-preserving smoothing schedule (Phase 2): lower mask-smoothing keeps close/thin arms from
+    # merging into the body -> more arms recovered from the same (imperfect) mask. Low values first so
+    # a small `iterations` still uses them.
+    settings = [(0.45, 0.85), (0.65, 0.70), (0.90, 0.55), (1.20, 0.40)]
     settings = settings[:max(1, iterations)]
     candidates = []
     for i, (morph_s, spline_s) in enumerate(settings, 1):

@@ -18,7 +18,7 @@ from seg_skeleton_pipeline import _draw_skeleton, DEFAULT_CKPT
 
 OUT = HERE.parent / "data" / "skel_diag"
 DS = HERE.parent / "data" / "dataset_seg_human"
-MAXDIM = 900
+MAXDIM = 1024
 
 
 def skel(mask_bool):

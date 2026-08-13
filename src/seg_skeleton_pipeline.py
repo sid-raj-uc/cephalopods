@@ -157,7 +157,7 @@ def process_video_3way(video, out_dir, S=None, fps=5.0, work_w=960, present=0.00
         cm = (crop(smooths[k]).astype(np.uint8)) * 255
         nodes = edges = None
         try:
-            dn, de, met, _ = process_frame(cm, 2, 760, min_arms, max_arms, None)
+            dn, de, met, _ = process_frame(cm, 2, 1024, min_arms, max_arms, None)
         except Exception:
             dn = de = None
         if not processed:

@@ -21,14 +21,19 @@ app = FastAPI()
 @app.get("/api/summary")
 def summary():
     if not (DIAG / "summary.json").exists():
-        return {"rows": [], "stats": {}}
-    rows = json.load(open(DIAG / "summary.json"))
-    ga = [r["gt_arms"] for r in rows]; ma = [r["model_arms"] for r in rows]
+        return {"rows": [], "stats": {}, "meta": {}}
+    d = json.load(open(DIAG / "summary.json"))
+    # normalize both formats: phase 1 was a bare list with gt_arms/model_arms
+    if isinstance(d, list):
+        rows = [{"file": r["file"], "left_arms": r["gt_arms"], "right_arms": r["model_arms"]} for r in d]
+        meta = {"title": "Phase 1 — GT vs MODEL mask", "left": "GT mask", "right": "MODEL mask"}
+    else:
+        rows = d["rows"]; meta = d.get("meta", {})
     n = max(1, len(rows))
-    stats = {"n": len(rows),
-             "gt_mean": round(sum(ga)/n, 2), "model_mean": round(sum(ma)/n, 2),
-             "gt_ge6": sum(x >= 6 for x in ga), "model_ge6": sum(x >= 6 for x in ma)}
-    return {"rows": rows, "stats": stats}
+    la = [r["left_arms"] for r in rows]; ra = [r["right_arms"] for r in rows]
+    stats = {"n": len(rows), "left_mean": round(sum(la)/n, 2), "right_mean": round(sum(ra)/n, 2),
+             "left_ge6": sum(x >= 6 for x in la), "right_ge6": sum(x >= 6 for x in ra)}
+    return {"rows": rows, "stats": stats, "meta": meta}
 
 
 @app.get("/img/{name}")
@@ -39,7 +44,10 @@ def img(name: str):
 
 @app.get("/chart")
 def chart():
-    return FileResponse(str(CHART)) if CHART.exists() else JSONResponse({"error": "no"}, status_code=404)
+    p = DIAG / "chart.png"                       # current-phase chart (each phase writes it here)
+    if not p.exists():
+        p = CHART
+    return FileResponse(str(p)) if p.exists() else JSONResponse({"error": "no"}, status_code=404)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -58,13 +66,13 @@ HTML = """<!doctype html><html><head><meta charset=utf-8><title>Skeleton diagnos
  h3{margin:6px 0;color:#bbb;font-size:13px}
 </style></head><body>
 <div id=bar>
- <b>Phase 1 — mask vs skeletonizer</b>
- <span class=k>GT mask</span> <b id=gtm>-</b> <span class=k>arms · MODEL mask</span> <b id=mm>-</b> <span class=k>arms</span>
- <span class=k>| ≥6 arms:</span> GT <span id=gt6>-</span> · MODEL <span id=m6>-</span>
+ <b id=title>Skeleton phase results</b>
+ <span class=k id=llab>left</span> <b id=gtm>-</b> <span class=k>arms ·</span> <span class=k id=rlab>right</span> <b id=mm>-</b> <span class=k>arms</span>
+ <span class=k>| ≥6 arms:</span> <span id=gt6>-</span> · <span id=m6>-</span>
  <span style="margin-left:12px">frame <span id=pos>-</span>/<span id=tot>-</span> <span id=lbl class=k></span></span>
- <select id=sort><option value=gap>sort: biggest GT-model gap</option><option value=order>order</option></select>
+ <select id=sort><option value=gap>sort: biggest gap</option><option value=order>order</option></select>
  <button onclick="nav(-1)">◀</button><button onclick="nav(1)">▶</button>
- <span class=k style="margin-left:auto">left = GT mask skeleton · right = MODEL mask skeleton</span>
+ <span class=k style="margin-left:auto" id=hint>left vs right skeleton</span>
 </div>
 <div id=wrap>
  <div id=left><img id=cmp></div>
@@ -73,17 +81,21 @@ HTML = """<!doctype html><html><head><meta charset=utf-8><title>Skeleton diagnos
 <script>
 let rows=[], order=[], pos=0;
 async function load(){const d=await (await fetch('/api/summary')).json();
- rows=d.rows; const s=d.stats;
- gtm.textContent=s.gt_mean; mm.textContent=s.model_mean; gt6.textContent=s.gt_ge6+'/'+s.n; m6.textContent=s.model_ge6+'/'+s.n;
+ rows=d.rows; const s=d.stats, m=d.meta||{};
+ document.getElementById('title').textContent=m.title||'Skeleton phase results';
+ document.getElementById('llab').textContent=m.left||'left'; document.getElementById('rlab').textContent=m.right||'right';
+ document.getElementById('hint').textContent='left = '+(m.left||'left')+' · right = '+(m.right||'right');
+ document.getElementById('chart').src='/chart?t='+Date.now();
+ gtm.textContent=s.left_mean; mm.textContent=s.right_mean; gt6.textContent=s.left_ge6+'/'+s.n; m6.textContent=s.right_ge6+'/'+s.n;
  document.getElementById('tot').textContent=rows.length; sortit(); show();}
 function sortit(){const by=document.getElementById('sort').value;
  order=rows.map((r,i)=>i);
- if(by==='gap') order.sort((a,b)=>(rows[b].gt_arms-rows[b].model_arms)-(rows[a].gt_arms-rows[a].model_arms));
+ if(by==='gap') order.sort((a,b)=>Math.abs(rows[b].left_arms-rows[b].right_arms)-Math.abs(rows[a].left_arms-rows[a].right_arms));
  pos=0;}
 function show(){const r=rows[order[pos]]; if(!r)return;
  document.getElementById('cmp').src='/img/'+r.file+'?t='+Date.now();
  document.getElementById('pos').textContent=pos+1;
- document.getElementById('lbl').textContent=`(GT ${r.gt_arms} vs MODEL ${r.model_arms})`;}
+ document.getElementById('lbl').textContent=`(${r.left_arms} vs ${r.right_arms})`;}
 function nav(d){pos=Math.max(0,Math.min(order.length-1,pos+d));show();}
 document.getElementById('sort').onchange=()=>{sortit();show();};
 document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')nav(1);else if(e.key==='ArrowLeft')nav(-1);});

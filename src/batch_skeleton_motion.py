@@ -37,7 +37,7 @@ def _stat(a):
 
 
 def clip_to_motion(clip, S, fps=3.0, present=0.004, min_arms=3, max_arms=8,
-                   iterations=2, max_dim=760):
+                   iterations=2, max_dim=1024):
     """segment -> masks -> temporal skeleton -> smoothed motion summary (no figures). None if unusable."""
     masks, src_fps, step = segment_masks(clip, S, fps, present)
     pm = [(k, m) for k, m in enumerate(masks) if m is not None]
