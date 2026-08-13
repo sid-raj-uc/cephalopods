@@ -20,7 +20,7 @@ REPO = HERE.parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "skeleton"))
 from segment_octopus import OctoSegmenter
-from segment_to_skeleton import segment_masks, union_bbox, DEFAULT_CKPT
+from segment_to_skeleton import segment_masks, union_bbox, grey_crops, DEFAULT_CKPT
 from multi_frame import tracked_sequence, compute_motion
 
 CLIPS_ROOT = REPO / "src" / "octopus_clips_verified"
@@ -38,14 +38,16 @@ def _stat(a):
 def clip_to_motion(clip, S, fps=3.0, present=0.004, min_arms=3, max_arms=8,
                    iterations=2, max_dim=1024):
     """segment -> masks -> temporal skeleton -> smoothed motion summary (no figures). None if unusable."""
-    masks, src_fps, step = segment_masks(clip, S, fps, present)
+    masks, src_fps, step, smalls = segment_masks(clip, S, fps, present, keep_small=720)
     pm = [(k, m) for k, m in enumerate(masks) if m is not None]
     if len(pm) < 4:
         return None
-    y0, y1, x0, x1 = union_bbox([m for _, m in pm])
+    bbox = union_bbox([m for _, m in pm])
+    y0, y1, x0, x1 = bbox
     eff_fps = src_fps / step
     crops = [(m[y0:y1, x0:x1].astype(np.uint8)) * 255 for _, m in pm]
-    graphs = tracked_sequence(crops, min_arms, max_arms, iterations, max_dim, seed="best")
+    greys = grey_crops(smalls, pm[0][1].shape, bbox, [k for k, _ in pm])
+    graphs = tracked_sequence(crops, min_arms, max_arms, iterations, max_dim, seed="best", greys=greys)
     processed = []
     for ci in sorted(graphs):                                 # emit in temporal order for motion
         nodes, edges = graphs[ci]

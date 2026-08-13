@@ -73,7 +73,7 @@ def trail_image(graphs, shape, path):
     cv2.imwrite(str(path), canvas, [cv2.IMWRITE_JPEG_QUALITY, 88])
 
 
-def run_tracker(clip_path, S, fps=3.0, use_flow=True):
+def run_tracker(clip_path, S, fps=3.0, use_flow=True, method="chain"):
     masks, src_fps, step, smalls = segment_masks(str(clip_path), S, fps, 0.004, keep_small=720)
     pm = [(k, m) for k, m in enumerate(masks) if m is not None]
     if len(pm) < 4:
@@ -82,7 +82,7 @@ def run_tracker(clip_path, S, fps=3.0, use_flow=True):
     y0, y1, x0, x1 = bbox
     crops = [(m[y0:y1, x0:x1].astype(np.uint8)) * 255 for _, m in pm]
     greys = grey_crops(smalls, pm[0][1].shape, bbox, [k for k, _ in pm]) if use_flow else None
-    graphs = MF.tracked_sequence(crops, 3, 8, 2, 1024, seed="best", greys=greys)
+    graphs = MF.tracked_sequence(crops, 3, 8, 2, 1024, seed="best", greys=greys, method=method)
     return graphs, crops
 
 
@@ -92,6 +92,8 @@ def main():
     ap.add_argument("--baseline", default="", help="tag to compare against")
     ap.add_argument("--fps", type=float, default=3.0)
     ap.add_argument("--no-flow", action="store_true", help="disable the optical-flow motion prior")
+    ap.add_argument("--method", default="chain", choices=["chain", "global"],
+                    help="arm-identity method: chain (greedy per-frame) or global (tracklet linking)")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
 
@@ -100,7 +102,7 @@ def main():
     t0 = time.perf_counter()
     for i, rel in enumerate(EVAL_CLIPS):
         p = HERE.parent / "src" / rel
-        graphs, crops = run_tracker(p, S, args.fps, use_flow=not args.no_flow)
+        graphs, crops = run_tracker(p, S, args.fps, use_flow=not args.no_flow, method=args.method)
         if not graphs:
             print(f"  [{i+1}/10] {rel[-40:]}  SKIP", flush=True)
             continue

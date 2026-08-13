@@ -110,13 +110,133 @@ def process_frame(mask: np.ndarray, iterations: int, max_dimension: int,
 # Temporal arm identity (Hungarian matching against the previous frame)
 # ---------------------------------------------------------------------------
 
-def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, seed="best"):
-    """Phase 3: track the skeleton across a list of temporally-ordered crop masks (uint8*255).
+def _arm_grey(edges: List[Dict], arm_id: int, grey: np.ndarray) -> float:
+    """Mean grey intensity sampled along an arm's polylines — a cheap appearance signature."""
+    pts = [np.asarray(e["polyline"], float) for e in edges
+           if e["branch_id"] == arm_id and e.get("polyline")]
+    if not pts:
+        return 0.0
+    p = np.vstack(pts)
+    h, w = grey.shape[:2]
+    xi = np.clip(np.rint(p[:, 0]).astype(int), 0, w - 1)
+    yi = np.clip(np.rint(p[:, 1]).astype(int), 0, h - 1)
+    return float(np.mean(grey[yi, xi]))
+
+
+def _pair_cost(sa: Dict, sb: Dict, diag: float, ga: Optional[float] = None,
+               gb: Optional[float] = None) -> float:
+    """Arm-to-arm association cost (same geometry terms as match_arms + appearance)."""
+    c = (0.45 * np.linalg.norm(sa["tip"] - sb["tip"]) +
+         0.30 * np.linalg.norm(sa["mid"] - sb["mid"]) +
+         0.25 * np.linalg.norm(sa["base"] - sb["base"])) / diag
+    c += 0.35 * _ang_diff(sa["angle"], sb["angle"])
+    c += 0.15 * abs(sa["length"] - sb["length"]) / diag
+    if ga is not None and gb is not None:
+        c += 0.30 * abs(ga - gb) / 64.0
+    return float(c)
+
+
+def _sig_mean(sigs: List[Dict]) -> Dict:
+    """Mean signature over a few frames (circular mean for the angle)."""
+    out = {k: np.mean([s[k] for s in sigs], axis=0) for k in ("base", "mid", "tip")}
+    out["length"] = float(np.mean([s["length"] for s in sigs]))
+    ang = [s["angle"] for s in sigs]
+    out["angle"] = math.atan2(np.mean([math.sin(a) for a in ang]),
+                              np.mean([math.cos(a) for a in ang]))
+    return out
+
+
+def _global_arm_ids(det, crops, greys, max_arms, link_gap=8,
+                    strict=0.35, link_thresh=0.55):
+    """Tracking v2 Phase 2: global arm identity via tracklets.
+
+    1. Confident frame-to-frame Hungarian matches -> pure tracklets.
+    2. Link tracklets across gaps (<= link_gap frames) on mean-signature + appearance cost.
+    3. Longest tracks get persistent IDs 1..max_arms; leftovers are spurious and dropped.
+    Returns {frame_idx: {local_arm_id: persistent_id}} (arms absent from the map are dropped).
+    """
+    diag = math.hypot(*crops[0].shape[:2])
+    frames = [k for k in range(len(det)) if det[k][1] is not None]
+    per = {}
+    for k in frames:
+        _, dn, de = det[k]
+        sig = arm_signatures(dn, de)
+        g = {a: _arm_grey(de, a, greys[k]) for a in sig} if greys is not None else {}
+        per[k] = (sig, g)
+
+    # --- 1. tracklets from confident adjacent matches ---
+    tracks = []                                    # each: {"frames":[k..], "arms":{k:a}, "sigs":[..], "gs":[..]}
+    open_by_arm = {}                               # local arm id in previous frame -> track ref
+    prev_k = None
+    for k in frames:
+        sig, g = per[k]
+        new_open = {}
+        if prev_k is not None and (k - prev_k) <= 2 and open_by_arm:
+            psig, pg = per[prev_k]
+            pa = sorted(open_by_arm); ca = sorted(sig)
+            if pa and ca:
+                C = np.zeros((len(ca), len(pa)))
+                for i, a in enumerate(ca):
+                    for j, b in enumerate(pa):
+                        C[i, j] = _pair_cost(sig[a], psig[b], diag, g.get(a), pg.get(b))
+                ri, cj = linear_sum_assignment(C)
+                for i, j in zip(ri, cj):
+                    if C[i, j] < strict:
+                        t = open_by_arm[pa[j]]
+                        t["frames"].append(k); t["arms"][k] = ca[i]
+                        t["sigs"].append(sig[ca[i]]); t["gs"].append(g.get(ca[i], 0.0))
+                        new_open[ca[i]] = t
+        for a in sig:
+            if a not in new_open:                  # unmatched -> new tracklet
+                t = {"frames": [k], "arms": {k: a}, "sigs": [sig[a]], "gs": [g.get(a, 0.0)]}
+                tracks.append(t); new_open[a] = t
+        open_by_arm = new_open; prev_k = k
+
+    # --- 2. link tracklets across gaps ---
+    def end_sig(t): return _sig_mean(t["sigs"][-3:])
+    def start_sig(t): return _sig_mean(t["sigs"][:3])
+    merged = True
+    while merged:
+        merged = False
+        best = None
+        for A in tracks:
+            for B in tracks:
+                if A is B:
+                    continue
+                gap = B["frames"][0] - A["frames"][-1]
+                if 1 <= gap <= link_gap:
+                    c = _pair_cost(end_sig(A), start_sig(B), diag,
+                                   float(np.mean(A["gs"][-3:])), float(np.mean(B["gs"][:3])))
+                    c += 0.02 * gap
+                    if c < link_thresh and (best is None or c < best[0]):
+                        best = (c, A, B)
+        if best:
+            _, A, B = best
+            A["frames"] += B["frames"]; A["arms"].update(B["arms"])
+            A["sigs"] += B["sigs"]; A["gs"] += B["gs"]
+            tracks.remove(B); merged = True
+
+    # --- 3. persistent IDs to the longest tracks ---
+    tracks.sort(key=lambda t: -len(t["frames"]))
+    mapping = {}
+    for pid, t in enumerate(tracks[:max_arms], 1):
+        for k, a in t["arms"].items():
+            mapping.setdefault(k, {})[a] = pid
+    return mapping
+
+
+def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, seed="best",
+                     greys=None, method="chain"):
+    """Track the skeleton across a list of temporally-ordered crop masks (uint8*255).
 
     Detects every frame once, then seeds the temporal chain from the BEST-resolved frame (most
     detected arms) and propagates BOTH directions -- so the sequence keeps the richest arm template
     instead of being capped by a poor opening frame. Returns {frame_index: (nodes, edges)}.
     `seed='first'` reproduces the old first-frame-forward behaviour.
+
+    `greys` (optional): grey images aligned with `crops` (same shape). When given, dense optical
+    flow between adjacent sampled frames supplies a PER-NODE motion prior to temporal_fit
+    (Tracking v2 Phase 1) instead of the coarse global centroid shift.
     """
     det = []
     for cm in crops:
@@ -128,12 +248,31 @@ def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, 
     present = [k for k in range(len(crops)) if det[k][1] is not None]
     if not present:
         return {}
+    if method == "global":
+        # Phase 2: assign globally-consistent arm IDs first (tracklets + gap linking), then the
+        # chain below only stabilizes positions — identity no longer depends on greedy per-frame
+        # matching, so one ambiguous frame can't poison the rest of the clip.
+        gmap = _global_arm_ids(det, crops, greys, max_arms)
+        new_det = []
+        for k, (ac, dn, de) in enumerate(det):
+            mp = gmap.get(k, {})
+            if dn is None or not mp:
+                new_det.append((0, None, None) if dn is None else (0, dn, de))
+                if dn is not None:                     # keep center/head, drop unassigned arms
+                    dn[:] = [n for n in dn if n["branch_id"] == 0]
+                    de[:] = [e for e in de if e["branch_id"] == 0]
+                continue
+            dn[:] = [n for n in dn if n["branch_id"] == 0 or n["branch_id"] in mp]
+            de[:] = [e for e in de if e["branch_id"] == 0 or e["branch_id"] in mp]
+            relabel(dn, de, mp)
+            new_det.append((len(mp), dn, de))
+        det = new_det
     if seed == "best":
         s = max(present, key=lambda k: det[k][0])
         order = [k for k in present if k >= s] + [k for k in present if k < s][::-1]
     else:
         order = present
-    out, prev_nodes, prev_mask, prev_sig = {}, None, None, None
+    out, prev_nodes, prev_mask, prev_sig, prev_k = {}, None, None, None, None
     for k in order:
         cm = crops[k]; _, dn, de = det[k]
         if prev_nodes is None:
@@ -141,13 +280,20 @@ def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, 
                 continue
             nodes, edges = dn, de
         else:
-            if dn is not None:
+            if dn is not None and method != "global":
                 relabel(dn, de, match_arms(prev_sig or {}, arm_signatures(dn, de), math.hypot(*cm.shape)))
+            fp = None
+            if greys is not None and prev_k is not None and abs(k - prev_k) == 1:
+                try:
+                    fp = compute_flow_pair(greys[prev_k], greys[k])
+                except Exception:
+                    fp = None
             try:
-                nodes, edges, _, _ = temporal_fit(prev_nodes, prev_mask, dn, cm)
+                nodes, edges, _, _ = temporal_fit(prev_nodes, prev_mask, dn, cm, flow_pair=fp)
             except Exception:
                 continue
-        prev_nodes, prev_mask = nodes, cm.copy(); prev_sig = arm_signatures(nodes, edges)
+        prev_nodes, prev_mask, prev_k = nodes, cm.copy(), k
+        prev_sig = arm_signatures(nodes, edges)
         out[k] = (nodes, edges)
     return out
 
@@ -233,6 +379,51 @@ def relabel(nodes: List[Dict], edges: List[Dict],
 # Mask-aware temporal fitting (previous graph -> current mask/current graph)
 # ---------------------------------------------------------------------------
 
+def compute_flow_pair(grey0: np.ndarray, grey1: np.ndarray, max_side: int = 448):
+    """Dense optical flow between two grey frames (Phase 1 tracking prior).
+
+    Returns {fwd, bwd, scale} where fwd maps grey0 -> grey1 in DOWNSCALED pixels (scale = small/full).
+    DIS flow (fast, dense); Farneback fallback. Both directions so callers can run a
+    forward-backward consistency check per sampled point."""
+    h, w = grey0.shape[:2]
+    s = min(1.0, max_side / max(h, w))
+    if s < 1.0:
+        g0 = cv2.resize(grey0, (int(w * s), int(h * s)))
+        g1 = cv2.resize(grey1, (int(w * s), int(h * s)))
+    else:
+        g0, g1 = grey0, grey1
+    try:
+        dis = cv2.DISOpticalFlow_create(cv2.DISOPTICAL_FLOW_PRESET_MEDIUM)
+        fwd = dis.calc(g0, g1, None)
+        bwd = dis.calc(g1, g0, None)
+    except Exception:
+        fwd = cv2.calcOpticalFlowFarneback(g0, g1, None, 0.5, 3, 21, 3, 5, 1.2, 0)
+        bwd = cv2.calcOpticalFlowFarneback(g1, g0, None, 0.5, 3, 21, 3, 5, 1.2, 0)
+    return {"fwd": fwd, "bwd": bwd, "scale": s}
+
+
+def flow_prior(points_xy: np.ndarray, fp: Dict) -> Tuple[np.ndarray, np.ndarray]:
+    """Warp full-res points by the flow pair -> (warped_points, valid_mask).
+
+    valid = forward-backward consistency holds at that point (|fwd + bwd(fwd-target)| small);
+    where it fails (low texture, big motion, occlusion) the caller falls back to the old
+    global centroid-shift prior."""
+    fwd, bwd, s = fp["fwd"], fp["bwd"], fp["scale"]
+    hs, ws = fwd.shape[:2]
+    p = np.asarray(points_xy, np.float32) * s
+    xi = np.clip(np.rint(p[:, 0]).astype(int), 0, ws - 1)
+    yi = np.clip(np.rint(p[:, 1]).astype(int), 0, hs - 1)
+    v = fwd[yi, xi]                                     # (N,2) small-px vectors
+    q = p + v
+    xj = np.clip(np.rint(q[:, 0]).astype(int), 0, ws - 1)
+    yj = np.clip(np.rint(q[:, 1]).astype(int), 0, hs - 1)
+    vb = bwd[yj, xj]
+    err = np.linalg.norm(v + vb, axis=1)
+    valid = err < (1.5 + 0.05 * np.linalg.norm(v, axis=1))
+    warped = np.asarray(points_xy, np.float32) + v / max(s, 1e-6)
+    return warped, valid
+
+
 def mask_centroid(mask: np.ndarray) -> np.ndarray:
     """Return the foreground centroid in x/y order."""
     m = cv2.moments((mask > 0).astype(np.uint8))
@@ -273,7 +464,7 @@ def _edge_mask_coverage(edges: List[Dict], branch_id: int,
 def temporal_fit(prev_nodes: List[Dict], prev_mask: np.ndarray,
                  detected_nodes: Optional[List[Dict]], mask: np.ndarray,
                  max_node_jump: float = 0.16, max_mask_gap: float = 0.08,
-                 min_branch_coverage: float = 0.90
+                 min_branch_coverage: float = 0.90, flow_pair: Optional[Dict] = None
                  ) -> Tuple[List[Dict], List[Dict], Dict, List[Branch]]:
     """Fit the previous graph to ``mask``, using the new detection as evidence.
 
@@ -293,12 +484,27 @@ def temporal_fit(prev_nodes: List[Dict], prev_mask: np.ndarray,
     detected_by_key = ({node_key(n): n for n in detected_nodes}
                        if detected_nodes else {})
 
+    # Phase 1: per-node motion prior from dense optical flow. A deformable octopus's tip moves very
+    # differently from its base, so the old single global centroid shift was wrong almost everywhere.
+    # Flow gives each node its own predicted position; nodes failing the fwd-bwd consistency check
+    # fall back to the centroid shift.
+    flow_guess = None
+    if flow_pair is not None and prev_nodes:
+        pts = np.array([[n["x"], n["y"]] for n in prev_nodes], np.float32)
+        warped, valid = flow_prior(pts, flow_pair)
+        flow_guess = {node_key(n): (warped[i], bool(valid[i])) for i, n in enumerate(prev_nodes)}
+
     fitted: List[Dict] = []
     omitted: List[str] = []
     for old in prev_nodes:
         n = copy.deepcopy(old)
         key = node_key(old)
         previous_guess = np.array([old["x"], old["y"]], float) + shift
+        flow_ok = False
+        if flow_guess is not None:
+            w, ok = flow_guess[key]
+            if ok:
+                previous_guess = np.asarray(w, float); flow_ok = True
         previous_snap, previous_gap = _snap_with_distance(
             previous_guess, tree, fg_xy)
         current = detected_by_key.get(key)
@@ -313,10 +519,17 @@ def temporal_fit(prev_nodes: List[Dict], prev_mask: np.ndarray,
         else:
             current_xy = np.array([current["x"], current["y"]], float)
             jump = float(np.linalg.norm(current_xy - previous_guess))
-            if jump <= soft_jump:
-                chosen = 0.72 * current_xy + 0.28 * previous_guess
-            elif jump <= hard_jump:
-                chosen = 0.35 * current_xy + 0.65 * previous_guess
+            # A validated flow prior is far more trustworthy than the centroid shift, so when it
+            # holds we TIGHTEN the acceptance gates and lean harder on the prior — otherwise a good
+            # prior perversely lets more noisy detections through the (unchanged) gates.
+            sj = soft_jump * (0.6 if flow_ok else 1.0)
+            hj = hard_jump * (0.6 if flow_ok else 1.0)
+            if jump <= sj:
+                chosen = (0.60 * current_xy + 0.40 * previous_guess) if flow_ok \
+                    else (0.72 * current_xy + 0.28 * previous_guess)
+            elif jump <= hj:
+                chosen = (0.25 * current_xy + 0.75 * previous_guess) if flow_ok \
+                    else (0.35 * current_xy + 0.65 * previous_guess)
             elif previous_gap <= allowed_gap:
                 # Do not let one bad detector node pull the whole arm away.
                 chosen = previous_snap

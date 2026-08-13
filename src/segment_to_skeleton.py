@@ -25,12 +25,16 @@ EMA_ALPHA = 0.45
 _KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
 
 
-def segment_masks(clip, S, fps, present_frac):
-    """Return (kept_masks[HxW bool at native res], src_fps, sample_step). EMA-smoothed, largest-blob."""
+def segment_masks(clip, S, fps, present_frac, keep_small=0):
+    """Return (kept_masks[HxW bool at native res], src_fps, sample_step). EMA-smoothed, largest-blob.
+
+    keep_small > 0: ALSO return a 4th element — downscaled colour frames (width=keep_small) aligned
+    with the masks, used to build grey crops for the optical-flow tracking prior (native 4K greys
+    for a whole clip would be ~1GB; small colour is ~1MB/frame)."""
     cap = cv2.VideoCapture(str(clip))
     src_fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
     step = max(1, int(round(src_fps / fps)))
-    masks, i, ema = [], 0, None
+    masks, smalls, i, ema = [], [], 0, None
     while True:
         ok, frame = cap.read()
         if not ok:
@@ -44,9 +48,28 @@ def segment_masks(clip, S, fps, present_frac):
                 m = _largest_blob(m)
                 m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_CLOSE, _KERNEL).astype(bool)
             masks.append(m if m.mean() >= present_frac else None)
+            if keep_small:
+                smalls.append(cv2.resize(frame, (keep_small, int(round(H * keep_small / W))),
+                                         interpolation=cv2.INTER_AREA))
         i += 1
     cap.release()
+    if keep_small:
+        return masks, src_fps, step, smalls
     return masks, src_fps, step
+
+
+def grey_crops(smalls, masks_shape, bbox, indices):
+    """Grey crop (resized to the mask-crop's shape) for each index, from the small colour frames."""
+    H, W = masks_shape
+    y0, y1, x0, x1 = bbox
+    out = []
+    for k in indices:
+        sm = smalls[k]
+        s = sm.shape[1] / float(W)
+        g = cv2.cvtColor(sm, cv2.COLOR_BGR2GRAY)
+        gc = g[int(y0 * s):max(int(y1 * s), int(y0 * s) + 1), int(x0 * s):max(int(x1 * s), int(x0 * s) + 1)]
+        out.append(cv2.resize(gc, (x1 - x0, y1 - y0), interpolation=cv2.INTER_LINEAR))
+    return out
 
 
 def union_bbox(masks, pad_frac=0.12):
