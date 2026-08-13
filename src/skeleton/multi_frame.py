@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import copy
 import csv
+from collections import defaultdict
 import json
 import logging
 import math
@@ -329,26 +330,58 @@ def node_key(n: Dict) -> str:
     return f"Arm{n['branch_id']}_{part.replace(' ', '')}"
 
 
-def compute_motion(frames: List[Dict], stride: int, fps: float) -> List[Dict]:
+def _smooth_trajectories(frames: List[Dict], med: int = 3, sigma: float = 1.0
+                         ) -> Dict[Tuple[int, str], np.ndarray]:
+    """Per-node (x,y) trajectory smoothing across processed frames -> {(pos, key): xy}.
+
+    Raw node positions jump when an arm re-associates or the mask flickers, producing spurious
+    speed spikes. A small median (spike rejection) + gaussian (residual jitter) filter along each
+    node's own time series removes that noise at the source, before speed/accel are derived."""
+    from scipy.ndimage import median_filter, gaussian_filter1d
+    series: Dict[str, List[Tuple[int, float, float]]] = defaultdict(list)
+    for pos, fr in enumerate(frames):
+        for n in fr["nodes"]:
+            series[node_key(n)].append((pos, float(n["x"]), float(n["y"])))
+    out: Dict[Tuple[int, str], np.ndarray] = {}
+    for key, seq in series.items():
+        seq.sort()
+        poss = [s[0] for s in seq]
+        xy = np.array([[s[1], s[2]] for s in seq], float)
+        if len(xy) >= max(3, med):
+            for d in range(2):
+                xy[:, d] = median_filter(xy[:, d], size=med, mode="nearest")
+                xy[:, d] = gaussian_filter1d(xy[:, d], sigma, mode="nearest")
+        for i, p in enumerate(poss):
+            out[(p, key)] = xy[i]
+    return out
+
+
+def compute_motion(frames: List[Dict], stride: int, fps: float, smooth: bool = True) -> List[Dict]:
     """Distance / speed / acceleration using original source-frame indices.
 
     When an unreadable frame cannot be recovered, motion never pretends that
     adjacent processed records were adjacent source frames: the actual index
-    gap determines dt and is exported unchanged.
+    gap determines dt and is exported unchanged. `smooth` runs a per-node
+    trajectory median+gaussian filter first to suppress tracking-jump spikes.
     """
+    sm = _smooth_trajectories(frames) if smooth else None
     rows: List[Dict] = []
     speeds_prev: Dict[str, Tuple[int, float, np.ndarray]] = {}
     for pos in range(1, len(frames)):
         cur = frames[pos]
         target = cur["index"] - stride
-        eligible = [p for p in frames[:pos] if p["index"] <= target]
+        eligible = [(pp, p) for pp, p in enumerate(frames[:pos]) if p["index"] <= target]
         if not eligible:
             continue
-        prev = eligible[-1]
+        prev_pos, prev = eligible[-1]
         frame_gap = cur["index"] - prev["index"]
         dt = frame_gap / fps
-        pos_c = {node_key(n): np.array([n["x"], n["y"]]) for n in cur["nodes"]}
-        pos_p = {node_key(n): np.array([n["x"], n["y"]]) for n in prev["nodes"]}
+        if sm is not None:
+            pos_c = {node_key(n): sm[(pos, node_key(n))] for n in cur["nodes"]}
+            pos_p = {node_key(n): sm[(prev_pos, node_key(n))] for n in prev["nodes"]}
+        else:
+            pos_c = {node_key(n): np.array([n["x"], n["y"]]) for n in cur["nodes"]}
+            pos_p = {node_key(n): np.array([n["x"], n["y"]]) for n in prev["nodes"]}
         for key in sorted(pos_c):
             if key not in pos_p:
                 continue
