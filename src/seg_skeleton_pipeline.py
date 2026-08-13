@@ -58,6 +58,20 @@ def _draw_skeleton(canvas, nodes, edges, thick=2):
     return canvas
 
 
+def _draw_trails(canvas, trails, maxlen=12):
+    """Recent tip positions per arm id, fading, ID-consistent colours — identity jumps become
+    visible as a colour's trail teleporting."""
+    for a, pts in trails.items():
+        col = tuple(int(v) for v in branch_color(a)[::-1])
+        seg = pts[-maxlen:]
+        for i in range(1, len(seg)):
+            f = 0.3 + 0.7 * i / len(seg)
+            c = tuple(int(v * f) for v in col)
+            cv2.line(canvas, (int(seg[i - 1][0]), int(seg[i - 1][1])),
+                     (int(seg[i][0]), int(seg[i][1])), c, 2, cv2.LINE_AA)
+    return canvas
+
+
 def _label(img, text, color=(0, 255, 255)):
     cv2.rectangle(img, (0, 0), (img.shape[1], 30), (0, 0, 0), -1)
     cv2.putText(img, text, (8, 21), cv2.FONT_HERSHEY_SIMPLEX, 0.62, color, 2)
@@ -151,14 +165,20 @@ def process_video_3way(video, out_dir, S=None, fps=5.0, work_w=960, present=0.00
     # ---- pass 2b: skeleton tracked over the smoothed-mask crop sequence (best-frame seeded) ----
     stage("extracting skeleton")
     crops = [(crop(smooths[k]).astype(np.uint8)) * 255 for k in present_idx]
-    graphs = tracked_sequence(crops, min_arms, max_arms, 2, 1024, seed="best")
+    greys = [cv2.cvtColor(crop(frames[k]), cv2.COLOR_BGR2GRAY) for k in present_idx]
+    graphs = tracked_sequence(crops, min_arms, max_arms, 2, 1024, seed="best", greys=greys)
     n_tracked = len(graphs)
     skel_frames = []
+    trails = {}
     for pos, k in enumerate(present_idx):
         fc = crop(frames[k]).copy()
         if pos in graphs:
             nodes, edges = graphs[pos]
+            for n in nodes:
+                if n.get("is_tip"):
+                    trails.setdefault(n["branch_id"], []).append((n["x"], n["y"]))
             arms = len({n["branch_id"] for n in nodes if n["branch_id"] > 0})
+            _draw_trails(fc, trails)
             skel_frames.append(_label(_draw_skeleton(fc, nodes, edges), f"3) SKELETON - {arms} arms", (0, 215, 255)))
         else:
             base = _overlay(fc, crop(smooths[k]), outline=True)
