@@ -110,6 +110,48 @@ def process_frame(mask: np.ndarray, iterations: int, max_dimension: int,
 # Temporal arm identity (Hungarian matching against the previous frame)
 # ---------------------------------------------------------------------------
 
+def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, seed="best"):
+    """Phase 3: track the skeleton across a list of temporally-ordered crop masks (uint8*255).
+
+    Detects every frame once, then seeds the temporal chain from the BEST-resolved frame (most
+    detected arms) and propagates BOTH directions -- so the sequence keeps the richest arm template
+    instead of being capped by a poor opening frame. Returns {frame_index: (nodes, edges)}.
+    `seed='first'` reproduces the old first-frame-forward behaviour.
+    """
+    det = []
+    for cm in crops:
+        try:
+            n, e, m, _ = process_frame(cm, iterations, max_dim, 1, max_arms, None)
+            det.append((int(m["arm_count"]), n, e))
+        except Exception:
+            det.append((0, None, None))
+    present = [k for k in range(len(crops)) if det[k][1] is not None]
+    if not present:
+        return {}
+    if seed == "best":
+        s = max(present, key=lambda k: det[k][0])
+        order = [k for k in present if k >= s] + [k for k in present if k < s][::-1]
+    else:
+        order = present
+    out, prev_nodes, prev_mask, prev_sig = {}, None, None, None
+    for k in order:
+        cm = crops[k]; _, dn, de = det[k]
+        if prev_nodes is None:
+            if dn is None:
+                continue
+            nodes, edges = dn, de
+        else:
+            if dn is not None:
+                relabel(dn, de, match_arms(prev_sig or {}, arm_signatures(dn, de), math.hypot(*cm.shape)))
+            try:
+                nodes, edges, _, _ = temporal_fit(prev_nodes, prev_mask, dn, cm)
+            except Exception:
+                continue
+        prev_nodes, prev_mask = nodes, cm.copy(); prev_sig = arm_signatures(nodes, edges)
+        out[k] = (nodes, edges)
+    return out
+
+
 def arm_signatures(nodes: List[Dict], edges: List[Dict]) -> Dict[int, Dict]:
     """Per-arm feature vector: base/mid/tip positions relative to the mantle
     center, launch angle, and total arm length."""

@@ -16,7 +16,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "skeleton"))
 from segment_octopus import OctoSegmenter, _largest_blob
 from skeleton import branch_color
-from multi_frame import process_frame, arm_signatures, match_arms, relabel, temporal_fit
+from multi_frame import tracked_sequence
 import math
 
 DEFAULT_CKPT = HERE.parent / "weights" / "seg" / "octo_seg_clean512tv_lraspp.pt"
@@ -148,35 +148,19 @@ def process_video_3way(video, out_dir, S=None, fps=5.0, work_w=960, present=0.00
         raw_frames.append(_label(_overlay(fc, crop(raws[k])), "1) RAW segmentation"))
         smooth_frames.append(_label(_overlay(fc, crop(smooths[k])), "2) SMOOTHED segmentation", (120, 255, 120)))
 
-    # ---- pass 2b: skeleton tracked over the smoothed-mask crop sequence ----
+    # ---- pass 2b: skeleton tracked over the smoothed-mask crop sequence (best-frame seeded) ----
     stage("extracting skeleton")
+    crops = [(crop(smooths[k]).astype(np.uint8)) * 255 for k in present_idx]
+    graphs = tracked_sequence(crops, min_arms, max_arms, 2, 1024, seed="best")
+    n_tracked = len(graphs)
     skel_frames = []
-    processed, prev_sig, prev_mask = [], None, None
-    for k in present_idx:
+    for pos, k in enumerate(present_idx):
         fc = crop(frames[k]).copy()
-        cm = (crop(smooths[k]).astype(np.uint8)) * 255
-        nodes = edges = None
-        try:
-            dn, de, met, _ = process_frame(cm, 2, 1024, min_arms, max_arms, None)
-        except Exception:
-            dn = de = None
-        if not processed:
-            if dn is not None:
-                nodes, edges = dn, de
-        else:
-            if dn is not None:
-                relabel(dn, de, match_arms(prev_sig or {}, arm_signatures(dn, de), math.hypot(*cm.shape)))
-            try:
-                nodes, edges, met, _ = temporal_fit(processed[-1]["nodes"], prev_mask, dn, cm)
-            except Exception:
-                nodes = edges = None
-        if nodes is not None:
-            prev_sig = arm_signatures(nodes, edges); prev_mask = cm.copy()
-            processed.append({"nodes": nodes, "edges": edges})
+        if pos in graphs:
+            nodes, edges = graphs[pos]
             arms = len({n["branch_id"] for n in nodes if n["branch_id"] > 0})
             skel_frames.append(_label(_draw_skeleton(fc, nodes, edges), f"3) SKELETON - {arms} arms", (0, 215, 255)))
         else:
-            # present but no skeleton yet: show frame + mask outline
             base = _overlay(fc, crop(smooths[k]), outline=True)
             skel_frames.append(_label(base, "3) SKELETON - tracking", (0, 165, 255)))
 
@@ -186,7 +170,7 @@ def process_video_3way(video, out_dir, S=None, fps=5.0, work_w=960, present=0.00
     _write_mp4(smooth_frames, sm_p, eff_fps)
     _write_mp4(skel_frames, sk_p, eff_fps)
     return {"raw": str(raw_p), "smooth": str(sm_p), "skeleton": str(sk_p),
-            "n_present": len(present_idx), "n_tracked": len(processed),
+            "n_present": len(present_idx), "n_tracked": n_tracked,
             "fps": round(eff_fps, 2), "crop": [int(x0), int(y0), int(x1), int(y1)]}
 
 

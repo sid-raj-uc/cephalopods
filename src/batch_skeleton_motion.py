@@ -21,8 +21,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "skeleton"))
 from segment_octopus import OctoSegmenter
 from segment_to_skeleton import segment_masks, union_bbox, DEFAULT_CKPT
-from multi_frame import (process_frame, arm_signatures, match_arms, relabel,
-                         temporal_fit, compute_motion)
+from multi_frame import tracked_sequence, compute_motion
 
 CLIPS_ROOT = REPO / "src" / "octopus_clips_verified"
 REL_PREFIX = "octopus_clips_verified"       # how behaviour_records.json keys clips
@@ -45,30 +44,14 @@ def clip_to_motion(clip, S, fps=3.0, present=0.004, min_arms=3, max_arms=8,
         return None
     y0, y1, x0, x1 = union_bbox([m for _, m in pm])
     eff_fps = src_fps / step
-    processed, prev_sig, prev_mask = [], None, None
-    for k, m in pm:
-        cm = (m[y0:y1, x0:x1].astype(np.uint8)) * 255
-        try:
-            dn, de, met, _ = process_frame(cm, iterations, max_dim, min_arms, max_arms, None)
-        except Exception:
-            dn = de = None
-        if not processed:
-            if dn is None:
-                continue
-            nodes, edges = dn, de
-        else:
-            if dn is not None:
-                relabel(dn, de, match_arms(prev_sig or {}, arm_signatures(dn, de), math.hypot(*cm.shape)))
-            try:
-                nodes, edges, met, _ = temporal_fit(processed[-1]["nodes"], prev_mask, dn, cm)
-            except Exception:
-                try:
-                    nodes, edges, met, _ = temporal_fit(processed[-1]["nodes"], prev_mask, None, cm,
-                                                        max_mask_gap=0.14, min_branch_coverage=0.82)
-                except Exception:
-                    continue
-        prev_sig = arm_signatures(nodes, edges); prev_mask = cm.copy()
-        processed.append({"name": f"{k:05d}", "index": k, "nodes": nodes, "edges": edges, "metrics": met})
+    crops = [(m[y0:y1, x0:x1].astype(np.uint8)) * 255 for _, m in pm]
+    graphs = tracked_sequence(crops, min_arms, max_arms, iterations, max_dim, seed="best")
+    processed = []
+    for ci in sorted(graphs):                                 # emit in temporal order for motion
+        nodes, edges = graphs[ci]
+        arms = len({n["branch_id"] for n in nodes if n["branch_id"] > 0})
+        processed.append({"name": f"{pm[ci][0]:05d}", "index": pm[ci][0], "nodes": nodes,
+                          "edges": edges, "metrics": {"arm_count": arms}})
     if len(processed) < 3:
         return None
 
