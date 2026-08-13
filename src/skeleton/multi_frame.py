@@ -29,7 +29,7 @@ from scipy.spatial import cKDTree
 
 import skeleton
 from skeleton import (Branch, cumulative_arc, interpolate_arc, curve_curvature,
-                 fit_mask_constrained_spline, snap_points_to_mask,
+                 fit_mask_constrained_spline, snap_points_to_mask, mask_constrain_polyline,
                  graph_metrics, quality_score, validate_requirements,
                  export_all, save_graph_figure, save_overlay,
                  save_skeleton_png, load_binary, dense_iteration,
@@ -477,6 +477,7 @@ def rebuild_graph_from_nodes(nodes: List[Dict], mask: np.ndarray
         hx, hy = head["x"], head["y"]
         n_s = max(6, int(math.hypot(hx - root[0], hy - root[1]) / 3))
         pl = np.linspace(root, [hx, hy], num=n_s)
+        pl = mask_constrain_polyline(pl, mask); pl[0] = root   # keep the head edge inside the body
         pl_arc = cumulative_arc(pl)
         sx = np.clip(np.rint(pl[:, 0]).astype(int), 0, w - 1)
         sy = np.clip(np.rint(pl[:, 1]).astype(int), 0, h - 1)
@@ -695,7 +696,11 @@ def run_sequence(frames_dir: str, output_dir: str, stride: int = 3,
         if not processed:
             if (detection_error is not None or detected_nodes is None or
                     detected_edges is None):
-                raise SystemExit(f"First frame failed: {detection_error}")
+                # A poor opening frame (small/curled/occluded pose) must not kill the whole
+                # sequence -- skip leading un-seedable frames until one succeeds as the seed.
+                LOG.warning(f"  cannot seed sequence from this frame ({detection_error}); "
+                            "skipping to the next")
+                continue
             nodes, edges = detected_nodes, detected_edges
         else:
             # Relabel the fresh detector output first so anatomical node keys

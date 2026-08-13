@@ -564,6 +564,24 @@ def snap_points_to_mask(xy: np.ndarray, mask: np.ndarray,
     return xy
 
 
+def mask_constrain_polyline(poly: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """Snap any point of `poly` that lies outside `mask` onto the nearest foreground pixel.
+
+    Used for the Head edge: the mantle->head connector is a straight line, which on a curved body
+    can leave the silhouette (and inside_fraction only checks the arm curves, so it wouldn't even be
+    flagged). Projecting keeps the whole graph inside the mask."""
+    h, w = mask.shape
+    xi = np.clip(np.rint(poly[:, 0]).astype(int), 0, w - 1)
+    yi = np.clip(np.rint(poly[:, 1]).astype(int), 0, h - 1)
+    bad = mask[yi, xi] == 0
+    if np.any(bad):
+        fg_yx = np.argwhere(mask > 0)
+        fg_xy = np.column_stack([fg_yx[:, 1], fg_yx[:, 0]]).astype(float)
+        _, near = cKDTree(fg_xy).query(poly[bad])
+        poly = poly.copy(); poly[bad] = fg_xy[near]
+    return poly
+
+
 def build_branches(model: DenseModel, full_mask: np.ndarray,
                    spline_smoothness: float) -> List[Branch]:
     full_dt = cv2.distanceTransform(full_mask, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
@@ -655,7 +673,18 @@ def find_mantle_and_head(mask: np.ndarray, dt: np.ndarray
         if len(peaks) >= 2:
             return peaks[0], peaks[1]
     if peaks:
-        return peaks[0], peaks[0]
+        # Only one distinct blob (near-spherical body). Returning peaks[0] twice would place the
+        # Head on the Mantle Center -> a duplicate/degenerate node that fails validation. Instead
+        # derive a DISTINCT head: nudge from the mantle toward the foreground centroid by the mantle
+        # radius (stays interior, still "head-like", never coincident with the center).
+        mx, my, mr = peaks[0]
+        cen = np.argwhere(mask > 0).mean(axis=0)          # (y, x)
+        v = np.array([cen[1] - mx, cen[0] - my], float)
+        nv = float(np.linalg.norm(v))
+        off = (v / nv) * max(mr, 3.0) if nv > 1e-6 else np.array([max(mr, 3.0), 0.0])
+        hx = float(np.clip(mx + off[0], 0, mask.shape[1] - 1))
+        hy = float(np.clip(my + off[1], 0, mask.shape[0] - 1))
+        return peaks[0], (hx, hy, float(dt[int(round(hy)), int(round(hx))]))
     raise RuntimeError("Could not locate two spatially distinct mantle/head blobs")
 
 
@@ -723,6 +752,8 @@ def construct_graph(branches: List[Branch], full_mask: np.ndarray
     })
     n_head_samples = max(6, int(math.hypot(hx - root[0], hy - root[1]) / 3))
     head_polyline = np.linspace(root, [hx, hy], num=n_head_samples)
+    head_polyline = mask_constrain_polyline(head_polyline, full_mask)  # keep the head edge inside the body
+    head_polyline[0] = root                                            # anchor the mantle end exactly
     head_arc = cumulative_arc(head_polyline)
     hsx = np.clip(np.rint(head_polyline[:, 0]).astype(int), 0, w-1)
     hsy = np.clip(np.rint(head_polyline[:, 1]).astype(int), 0, h-1)
