@@ -98,8 +98,8 @@ def load_binary(path: str) -> np.ndarray:
     return mask
 
 
-def prepare_mask(mask: np.ndarray, max_dimension: int, smooth_factor: float
-                 ) -> Tuple[np.ndarray, float, float]:
+def prepare_mask(mask: np.ndarray, max_dimension: int, smooth_factor: float,
+                 bin_thresh: int = 96) -> Tuple[np.ndarray, float, float]:
     h, w = mask.shape
     scale = min(1.0, float(max_dimension) / max(h, w))
     sw, sh = max(32, int(round(w * scale))), max(32, int(round(h * scale)))
@@ -108,7 +108,7 @@ def prepare_mask(mask: np.ndarray, max_dimension: int, smooth_factor: float
     # thin arms. Gaussian thresholding is less destructive than opening.
     sigma = max(0.65, smooth_factor * max(sw, sh) / 650.0)
     blurred = cv2.GaussianBlur(small, (0, 0), sigmaX=sigma, sigmaY=sigma)
-    binary = (blurred >= 112).astype(np.uint8)
+    binary = (blurred >= bin_thresh).astype(np.uint8)
     # Fill only pinholes, never anatomical holes inside curled arms.
     kernel = np.ones((3, 3), np.uint8)
     binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel, iterations=1)
@@ -165,7 +165,8 @@ def _zhang_suen_thinning_numpy(binary: np.ndarray, max_iterations: int = 1000) -
     return im[1:-1, 1:-1]
 
 
-def remove_tiny_spurs(skel: np.ndarray, distance: np.ndarray, passes: int = 2) -> np.ndarray:
+def remove_tiny_spurs(skel: np.ndarray, distance: np.ndarray, passes: int = 2,
+                      width_factor: float = 0.35) -> np.ndarray:
     """Remove only terminal chains shorter than local width; preserve long thin arms."""
     out = skel.copy().astype(np.uint8)
     for _ in range(passes):
@@ -189,7 +190,7 @@ def remove_tiny_spurs(skel: np.ndarray, distance: np.ndarray, passes: int = 2) -
                     break
             y, x = pts[cur]
             width = 2.0 * float(distance[y, x])
-            if len(adj[cur]) >= 3 and length < max(2.5, 0.55 * width):
+            if len(adj[cur]) >= 3 and length < max(2.5, width_factor * width):
                 delete.update(path[:-1])
         if not delete:
             break
