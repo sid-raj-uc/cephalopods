@@ -63,6 +63,33 @@ def finger_count(mask255, min_prominence=1.8, min_len_frac=0.06):
     return len(peaks)
 
 
+def finger_tips(mask255, min_prominence=1.8, min_len_frac=0.06):
+    """Like finger_count but returns the tip coordinates [(x, y), ...] of each protrusion."""
+    m = (mask255 > 0).astype(np.uint8)
+    cnts, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if not cnts:
+        return []
+    c = max(cnts, key=cv2.contourArea).reshape(-1, 2).astype(np.float32)
+    if len(c) < 40:
+        return []
+    dt = cv2.distanceTransform(m, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
+    cy, cx = np.unravel_index(np.argmax(dt), dt.shape)
+    body_r = float(dt[cy, cx])
+    d = np.hypot(c[:, 0] - cx, c[:, 1] - cy)
+    k = max(5, int(len(c) * 0.02) | 1)
+    ker = np.ones(k) / k
+    ds = np.convolve(np.r_[d[-k:], d, d[:k]], ker, mode="same")[k:-k]
+    n = len(ds)
+    peaks = []
+    min_sep = int(n * min_len_frac)
+    for i in np.argsort(ds)[::-1]:
+        if ds[i] < min_prominence * body_r:
+            break
+        if all(min(abs(i - j), n - abs(i - j)) >= min_sep for j in peaks):
+            peaks.append(int(i))
+    return [(float(c[i, 0]), float(c[i, 1])) for i in peaks]
+
+
 def stage_counts(mask255):
     """(endpoints_raw, selected_arms, nodes, edges) for one mask via the pipeline's own stages."""
     best = None

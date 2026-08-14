@@ -340,7 +340,11 @@ def common_prefix_fraction(a: np.ndarray, b: np.ndarray) -> float:
 def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]],
                      root: int, parent: np.ndarray, geodesic: np.ndarray,
                      distance: np.ndarray, min_arms: int = 5,
-                     max_arms: int = 8) -> List[np.ndarray]:
+                     max_arms: int = 8, floor_scale: float = 2.5,
+                     floor_med: float = 0.3, prefix_max: float = 0.70) -> List[np.ndarray]:
+    # Defaults set by the Phase-B grid (40 human-GT masks): (2.5, 0.3, 0.70) recovers +0.85 arms
+    # (4.85 -> 5.70; model masks 2.85 -> 3.65) at -0.014 tip-match — the old (4.0, 0.4, 0.58) floors
+    # discarded real curled/short arms that thinning had already found.
     degree = np.array([len(a) for a in adjacency])
     candidates = list(map(int, np.flatnonzero((degree == 1) & np.isfinite(geodesic))))
     all_paths: List[Tuple[float, np.ndarray, int]] = []
@@ -356,7 +360,7 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
     # a real tip plus a local spur on the same arm, so retain only the longer.
     selected: List[Tuple[float, np.ndarray, int]] = []
     for item in all_paths:
-        if all(common_prefix_fraction(item[1], s[1]) < 0.58 for s in selected):
+        if all(common_prefix_fraction(item[1], s[1]) < prefix_max for s in selected):
             selected.append(item)
 
     # A real arm reaches well clear of the arm-confluence hub; a stub that
@@ -366,10 +370,10 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
     # arms the un-padded pass above already found (a padded candidate should
     # not be dramatically shorter than the arms that were found without help).
     root_radius = float(distance[tuple(points[root])])
-    length_floor = 4.0 * max(root_radius, 1.0)
+    length_floor = floor_scale * max(root_radius, 1.0)
     if selected:
         genuine_lengths = np.array([s[0] for s in selected], float)
-        length_floor = max(length_floor, 0.4 * float(np.median(genuine_lengths)))
+        length_floor = max(length_floor, floor_med * float(np.median(genuine_lengths)))
 
     # If skeleton endpoints are lost through a touching/occluded silhouette,
     # add geodesic local maxima. This is deterministic and still follows the
@@ -389,7 +393,7 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
             arc_len = path_arc(points, p)
             if arc_len < length_floor:
                 continue
-            if all(common_prefix_fraction(p, s[1]) < 0.58 for s in selected):
+            if all(common_prefix_fraction(p, s[1]) < prefix_max for s in selected):
                 selected.append((arc_len, p, int(tip)))
             if len(selected) >= max_arms + 2:
                 break
