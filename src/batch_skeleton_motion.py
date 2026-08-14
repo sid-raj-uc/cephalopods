@@ -102,7 +102,12 @@ def main():
     ap.add_argument("--ckpt", default=str(DEFAULT_CKPT))
     ap.add_argument("--out", default=str(REPO / "data" / "skeleton_motion.json"))
     ap.add_argument("--merge", action="store_true", help="also add `kinematics` into behaviour_records.json")
+    ap.add_argument("--cameras", default="Right_Front,Right_Back,Right_Right,Right_Top",
+                    help="cameras to process (Right_Left excluded by default: reflections — the "
+                         "project convention everywhere else — and ~10min/clip on huge merged crops)")
+    ap.add_argument("--redo", action="store_true", help="reprocess clips already in the output json")
     args = ap.parse_args()
+    cams = tuple(c.strip() for c in args.cameras.split(",") if c.strip())
 
     # clip list: prefer clips already in behaviour_records (so the merge lands), that exist locally
     br_path = REPO / "data" / "behaviour_records.json"
@@ -110,6 +115,8 @@ def main():
     clips = []
     for rel in keys:
         if args.date and f"/{args.date}/" not in "/" + rel:
+            continue
+        if not any(c in rel for c in cams):
             continue
         p = REPO / "src" / rel
         if p.exists():
@@ -126,6 +133,10 @@ def main():
     out = json.load(open(args.out)) if Path(args.out).exists() else {}
     t0 = time.perf_counter(); ok = 0
     for i, (rel, p) in enumerate(clips, 1):
+        if not args.redo and "occluded_frac" in (out.get(rel) or {}):   # v2 summaries only; v1 lacks states
+            print(f"  [{i}/{len(clips)}] {rel}  already done (skip)", flush=True)
+            ok += 1
+            continue
         try:
             summ = clip_to_motion(str(p), S, fps=args.fps)
         except Exception as exc:
