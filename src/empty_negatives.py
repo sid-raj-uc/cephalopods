@@ -85,13 +85,23 @@ def parse_url(url):
     return (m.group(1), m.group(2), m.group(3)) if m else (None, None, None)
 
 
-def grab(url, t, dst):
-    """One full frame at time t via fast input-seek (small ranged download), scaled to <=MAXSIDE."""
+def grab(url, t, dst, timeout=90):
+    """One full frame at time t via fast input-seek (small ranged download), scaled to <=MAXSIDE.
+
+    Never raises: the footage server stalls intermittently (it throttles hard under sustained load), and
+    an uncaught TimeoutExpired killed a whole sampling run at frame 28. A slow video is skipped, not
+    fatal.
+    """
     auth = "Basic " + __import__("base64").b64encode(f"{USER}:{PASS}".encode()).decode()
     cmd = ["ffmpeg", "-loglevel", "error", "-ss", str(t),
            "-headers", f"Authorization: {auth}\r\n", "-i", url, "-frames:v", "1",
            "-vf", f"scale='min({MAXSIDE},iw)':-2", "-y", str(dst)]
-    subprocess.run(cmd, capture_output=True, timeout=180)
+    try:
+        subprocess.run(cmd, capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return False
+    except Exception:
+        return False
     return dst.exists() and cv2.imread(str(dst)) is not None
 
 
@@ -112,6 +122,13 @@ def sample(n_videos=60, per_video=2, seed=23):
     rng.shuffle(plan)
     OUTDIR.mkdir(parents=True, exist_ok=True)
     rows, used_sessions, skipped = [], set(), collections.Counter()
+    if INDEX.exists():                                   # resumable: a stalled server should not cost a rerun
+        prev = json.load(open(INDEX))
+        rows = prev.get("rows", [])
+        for r in rows:
+            d, s = r["video"].split("/")
+            used_sessions.add(hhmm(d, s))
+        print(f"resuming: {len(rows)} frames / {len(used_sessions)} videos already staged")
     # Cap videos taken per (camera, date) listing. Without this the first listing alone supplies every
     # recording asked for: a first run drew all 40 frames from 20 recordings on ONE date and ONE camera
     # — reproducing precisely the single-video concentration this benchmark exists to fix. Spread across
