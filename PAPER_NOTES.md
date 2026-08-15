@@ -219,3 +219,16 @@ detector-scored, disjoint frame set selected correctly), but every API call retu
 `venv/bin/python3 src/vlm_reliability.py --run` (~$0.17, 250 clips, resumable).
 This is the highest-value open rigor item: every headline behavioural result is grouped by labels
 this extractor produced, and their reliability is still unmeasured.
+
+## R7b — Segmentation training configuration (for the paper's reproducibility section)
+Deployed model `octo_seg_thin768_lraspp.pt`, trained on Modal (A10G) via `src/modal_seg_train.py`:
+- **Architecture** LR-ASPP / MobileNetV3-Large head, `base_ch=16`, **3.218 M parameters**
+- **Input** 768×768 (`--in-size 768`); **batch** 8; **optimiser** Adam, **lr** 3e-4 with cosine schedule
+- **Epochs** 60; **augmentation** "strong" (h-flip, affine rotate/translate/scale applied to image and
+  mask in lock-step, brightness/contrast jitter ±25%, mild sensor noise)
+- **Loss** focal Tversky (α=0.2, β=0.8 — β>α penalises false negatives, i.e. missed thin arms)
+  + 0.5·BCE for stable pixel gradients
+- **Data** 5,143 pairs / 183 source videos = human-verified masks + GD+SAM2 teacher labels
+  (old-HQ 3,991 + harvest-HQ 740); **split BY SOURCE VIDEO**, with 5 test videos forced out of *all*
+  training sources via `--holdout-videos` (leakage guard added after the incident in R3c)
+- **Selection** best epoch by validation IoU
