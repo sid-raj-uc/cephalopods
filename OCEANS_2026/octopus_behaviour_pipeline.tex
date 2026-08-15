@@ -314,6 +314,14 @@ $4{,}412$ (image, mask) pairs, from which we distilled students across a size
 sweep (a compact U-Net at several widths, an LR-ASPP head); we retain the
 smallest clearing our quality bar, an LR-ASPP student of $3.2$\,M parameters.
 
+\textbf{Training configuration.} $768^2$ input, $60$ epochs, batch $8$, Adam at
+$3\!\times\!10^{-4}$ (cosine), best-validation-IoU checkpoint; loss $=$ focal
+Tversky ($\alpha{=}0.2,\beta{=}0.8$, so false negatives---missed thin
+arms---dominate) $+\,0.5\,$BCE; strong augmentation applied to image and mask in
+lock-step (flip, affine, $\pm25\%$ brightness--contrast, sensor noise); $5{,}143$
+pairs from $183$ source videos, split by source video. Code, frozen benchmark
+definitions and evaluation scripts will be released with the paper.
+
 Used as a \emph{presence} signal, the mask area attacks the pipeline's dominant
 false-positive source---tank-glass reflections, on which the visibility probe
 fires confidently---and works only because the student sees empty-mask
