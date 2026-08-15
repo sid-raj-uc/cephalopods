@@ -342,10 +342,20 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
                      root: int, parent: np.ndarray, geodesic: np.ndarray,
                      distance: np.ndarray, min_arms: int = 5,
                      max_arms: int = 8, floor_scale: float = 2.5,
-                     floor_med: float = 0.3, prefix_max: float = 0.70) -> List[np.ndarray]:
+                     floor_med: float = 0.3, prefix_max: float = 0.70,
+                     min_unique_scale: float = 2.0, min_unique_frac: float = 0.30,
+                     tip_ratio: float = 0.55) -> List[np.ndarray]:
     # Defaults set by the Phase-B grid (40 human-GT masks): (2.5, 0.3, 0.70) recovers +0.85 arms
     # (4.85 -> 5.70; model masks 2.85 -> 3.65) at -0.014 tip-match — the old (4.0, 0.4, 0.58) floors
     # discarded real curled/short arms that thinning had already found.
+    #
+    # QUALITY GATES (anti-mess, 2026-08-15): the loosened floors chased 8 arms and admitted
+    # (a) near-duplicate arms that share most of their route and fork late, and (b) stubby interior
+    # branches ending in the fat body. Two anatomical constraints kill both without losing real arms:
+    #   unique-suffix: a candidate's UNSHARED portion vs every already-selected arm must be
+    #     >= max(min_unique_scale * root_radius, min_unique_frac * its own length);
+    #   tip-thinness: a real arm tip sits at a thin extremity, so the tip's clearance must be
+    #     <= tip_ratio * root_radius (interior stubs end fat and fail this).
     degree = np.array([len(a) for a in adjacency])
     candidates = list(map(int, np.flatnonzero((degree == 1) & np.isfinite(geodesic))))
     all_paths: List[Tuple[float, np.ndarray, int]] = []
@@ -357,11 +367,34 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
     if not all_paths:
         raise RuntimeError("No terminal skeleton paths were found")
 
+    root_radius = float(distance[tuple(points[root])])
+
+    def _common_len(a: np.ndarray, b: np.ndarray) -> int:
+        n = min(len(a), len(b)); k = 0
+        while k < n and a[k] == b[k]:
+            k += 1
+        return k
+
+    def quality_ok(arc_len: float, p: np.ndarray, sel) -> bool:
+        # tip-thinness
+        ty, tx = points[p[-1]]
+        if float(distance[ty, tx]) > tip_ratio * max(root_radius, 1.0):
+            return False
+        # unique suffix vs the most-overlapping already-selected arm
+        if sel:
+            k = max(_common_len(p, s[1]) for s in sel)
+            unique = path_arc(points, p[max(k - 1, 0):])
+            if unique < max(min_unique_scale * max(root_radius, 1.0),
+                            min_unique_frac * arc_len):
+                return False
+        return True
+
     # Greedy branch persistence: two candidates sharing most of their route are
     # a real tip plus a local spur on the same arm, so retain only the longer.
     selected: List[Tuple[float, np.ndarray, int]] = []
     for item in all_paths:
-        if all(common_prefix_fraction(item[1], s[1]) < prefix_max for s in selected):
+        if all(common_prefix_fraction(item[1], s[1]) < prefix_max for s in selected) \
+                and quality_ok(item[0], item[1], selected):
             selected.append(item)
 
     # A real arm reaches well clear of the arm-confluence hub; a stub that
@@ -370,7 +403,6 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
     # scales with the animal's size, and additionally to whatever genuine
     # arms the un-padded pass above already found (a padded candidate should
     # not be dramatically shorter than the arms that were found without help).
-    root_radius = float(distance[tuple(points[root])])
     length_floor = floor_scale * max(root_radius, 1.0)
     if selected:
         genuine_lengths = np.array([s[0] for s in selected], float)
@@ -394,7 +426,8 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
             arc_len = path_arc(points, p)
             if arc_len < length_floor:
                 continue
-            if all(common_prefix_fraction(p, s[1]) < prefix_max for s in selected):
+            if all(common_prefix_fraction(p, s[1]) < prefix_max for s in selected) \
+                    and quality_ok(arc_len, p, selected):
                 selected.append((arc_len, p, int(tip)))
             if len(selected) >= max_arms + 2:
                 break
@@ -407,7 +440,8 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
             if item[0] < length_floor:
                 continue
             if not any(np.array_equal(item[1], s[1]) for s in selected):
-                if all(common_prefix_fraction(item[1], s[1]) < 0.82 for s in selected):
+                if all(common_prefix_fraction(item[1], s[1]) < 0.82 for s in selected) \
+                        and quality_ok(item[0], item[1], selected):
                     selected.append(item)
             if len(selected) >= max_arms:
                 break
