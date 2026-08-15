@@ -472,3 +472,51 @@ stage consumes these masks and a thinner mask at t=0.8 may cost arms.
 **4. The presence gain survives best-vs-best** (0.8192 → 0.9763, +0.157) **but is measured on the
 19 empty-tank frames = 2 source videos**, so it inherits the one-video problem and carries no CI.
 Re-testing it on EMPTY-V2 is the pending deliverable.
+
+## R12 — Kinematics × behaviour cross-validation, recomputed with video-level statistics (2026-08-15)
+The paper's headline cross-validation (skeleton kinematics agree with the VLM's behaviour labels) rested
+on **n=40 clips with crawling at n=2**, pooled at clip level — pseudo-replication, since several clips
+come from one recording. Recomputed properly.
+
+**Sample.** `src/kinematics_sample.py` drew a video-spread stratified sample: **146 clips / 66 distinct
+source videos**, ~25 per behaviour class, ≤2 clips per video. Run as 2 shards
+(`batch_skeleton_motion.py --shard i/n`, isolated outputs), merged by `src/merge_shards.py`, which
+refuses to pool mixed configs — all 147 records carry one stamp:
+`{ckpt: octo_seg_thin768_lraspp.pt, fps: 3.0, refine: false, sha: f456768}`.
+**Statistics** (`src/kinematics_stats.py`): aggregated to one value per (video, class) before testing,
+Kruskal–Wallis + ε², Holm-corrected Mann–Whitney for resting-vs-each, cluster-bootstrap CIs by video.
+The two signals are independent: the skeleton pipeline never sees the behaviour label.
+
+### RAW arm-tip speed (px/s), median [CI95 by video]
+| behaviour | median | CI95 | videos |
+|---|---|---|---|
+| Resting / stationary | 53.05 | [31.6, 62.9] | 24 |
+| Human / enrichment interaction | 90.22 | [69.0, 134.8] | 24 |
+| Crawling | 91.11 | [79.4, 114.8] | 19 |
+| Swimming / jetting | 107.29 | [92.2, 124.4] | 15 |
+| Exploration / manipulation | 112.40 | [90.6, 132.0] | 25 |
+| Reaching out of water | 141.05 | [127.8, 166.9] | 25 |
+
+**Kruskal–Wallis H=33.18, p=3.5e-06, ε²=0.224** (N=132 video-class units, k=6). All five
+resting-vs-X contrasts significant after Holm correction (p_holm 0.0086 → 5e-05).
+
+### SCALE-INVARIANT speed (body-lengths/s = speed ÷ arm-spread)
+Resting 0.17 [0.1,0.2] · Human 0.26 [0.2,0.5] · Reaching 0.31 [0.2,0.3] · Exploration 0.36 [0.3,0.5] ·
+Crawling 0.36 [0.3,0.4] · Swimming 0.37 [0.3,0.4].
+**H=21.40, p=6.8e-04, ε²=0.130**; all five contrasts still significant after Holm.
+
+**PRE-REGISTERED KILL CRITERION (p>0.05 or ε²<0.06) NOT MET — the result stands** and is now
+properly powered. It also survives in scale-invariant units, which matters because raw px/s is
+confounded by apparent size (distance from camera); normalising by arm-spread removes that.
+
+**Nuance worth reporting: `reaching out of water` is the FASTEST in raw px/s but only 3rd in
+body-lengths/s.** Reaching is performed with an extended body, so a large part of its raw tip speed is
+extended posture rather than faster motion. Reporting only raw px/s would have overstated it. Swimming
+and crawling, by contrast, rise in the normalised ranking.
+
+Versus the old n=40 figure (resting 63 → reaching 159 px/s): same direction, more conservative
+magnitudes (53 → 141) — the small-sample version was mildly optimistic, not wrong.
+
+CAVEAT: behaviour labels come from the VLM structured extractor, whose reliability study (VLM-250) is
+still BLOCKED on a revoked OpenRouter key. This validates that kinematics track the labels, not that
+the labels are correct. Speeds are px/s in crop space (no px→cm calibration).
