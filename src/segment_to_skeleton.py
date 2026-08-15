@@ -25,7 +25,7 @@ EMA_ALPHA = 0.45
 _KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
 
 
-def segment_masks(clip, S, fps, present_frac, keep_small=0):
+def segment_masks(clip, S, fps, present_frac, keep_small=0, refine=""):
     """Return (kept_masks[HxW bool at native res], src_fps, sample_step). EMA-smoothed, largest-blob.
 
     keep_small > 0: ALSO return a 4th element — downscaled colour frames (width=keep_small) aligned
@@ -47,6 +47,9 @@ def segment_masks(clip, S, fps, present_frac, keep_small=0):
             if m.any():
                 m = _largest_blob(m)
                 m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_CLOSE, _KERNEL).astype(bool)
+            if refine == "sam2" and m.any() and m.mean() >= present_frac:
+                from mask_refine import sam2_refine   # offline: +0.44 arms, better tips (bench50)
+                m = sam2_refine(frame, m, largest_blob=_largest_blob)
             masks.append(m if m.mean() >= present_frac else None)
             if keep_small:
                 smalls.append(cv2.resize(frame, (keep_small, int(round(H * keep_small / W))),
@@ -97,12 +100,15 @@ def main():
                     "poses in 2D often show fewer than 8 tips; 3 is realistic for our masks)")
     ap.add_argument("--max-arms", type=int, default=8)
     ap.add_argument("--single", action="store_true", help="skeleton only the single best (largest-mask) frame")
+    ap.add_argument("--refine", default="", choices=["", "sam2"],
+                    help="offline mask refinement: 'sam2' = student locates, SAM2 sharpens "
+                         "(+0.44 arms & better tips on bench50; ~1-2s/frame)")
     args = ap.parse_args()
 
     out = Path(args.out); (out / "masks").mkdir(parents=True, exist_ok=True)
     print(f"segmenting {args.clip} with {Path(args.ckpt).name} …", flush=True)
     S = OctoSegmenter(args.ckpt)
-    masks, src_fps, step = segment_masks(args.clip, S, args.fps, args.present)
+    masks, src_fps, step = segment_masks(args.clip, S, args.fps, args.present, refine=args.refine)
     present = [(k, m) for k, m in enumerate(masks) if m is not None]
     print(f"  {len(masks)} sampled frames, {len(present)} octopus-present", flush=True)
     if not present:
