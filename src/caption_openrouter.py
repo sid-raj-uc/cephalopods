@@ -49,6 +49,12 @@ def load_env(p: Path):
                 k, v = line.split("=", 1)
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
+# Precedence: real environment > repo-root .env > src/.env.
+# `load_env` uses setdefault, so whatever is loaded FIRST wins. The repo root is the canonical
+# location for credentials (AGENTS.md); src/.env exists only so a bare copy of src/ runs standalone.
+# Loading src/.env first was a silent trap: a stale key there shadowed a freshly-updated root .env
+# and every API call failed with 401 "User not found" while the new key tested fine by hand.
+load_env(HERE.parent / ".env")
 load_env(HERE / ".env")
 API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 

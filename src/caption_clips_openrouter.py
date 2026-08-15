@@ -46,6 +46,9 @@ def _load_env(p: Path):
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
                 os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+# repo-root .env first — it is canonical; src/.env is the standalone-package fallback (see
+# caption_openrouter.py for the 401 trap this ordering prevents)
+_load_env(HERE.parent / ".env")
 _load_env(HERE / ".env")
 API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
