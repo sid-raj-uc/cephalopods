@@ -443,6 +443,29 @@ Plan: `src/DATA_PLAN.md`. Running results ledger: `PAPER_NOTES.md`.
   Projected ~6–12 h (probe-first cut it from ~37 h; now bounded by probe-seek latency + the ~5 MB/s cap).
 - **`src/colab_speedtest.py`** — the server bandwidth / stream-scan / parallel-speedup probe.
 
+## Benchmarks — the frozen suite (READ `BENCHMARKS.md` BEFORE CLAIMING ANY IMPROVEMENT)
+Every improvement claim, and every number in the OCEANS 2026 paper, is measured by **`src/benchmarks.py`**
+on frozen sets; results append to `data/benchmarks.json` keyed by `--tag`, and `--latex` regenerates
+the paper's table. Suites: **SEG-TEST** (122 human-mask frames / 5 held-out videos + 19 empty-tank
+negatives), **SKEL-50** (50 frozen frames / 20 videos, headline = arm-tip F1), **TRACK-10** (10 clips),
+**REFL-24** (reflection rejection, `src/eval_reflection_presence.py`). Rules: frozen sets are never
+regenerated to suit a result; splits are **by source video, never by frame**; holdout videos are excluded
+from *every* training source; negatives of different kinds are **never pooled**; report negatives.
+- **`src/temporal_fusion.py`** — test-time fusion of the segmenter probability map, modes
+  `none|ema|flow|median` (`median` = the unwarped control for `flow`). NOTE the alignment trap:
+  `seed_frame` indexes the labeller's `ffmpeg fps=2, scale=min(1024,iw)` list, NOT raw video frames, so
+  neighbours are regenerated with that identical extraction and asserted to match before use.
+- **`src/fusion_threshold_sweep.py`** — caches one probability map per frame per mode, then sweeps the
+  binarisation threshold, so arms are compared at their OWN best operating point (a fused median map is
+  not calibrated like a single-frame map; comparing at a fixed 0.5 would fake a result either way).
+- **`src/reflection_negatives.py`** — samples + stages Right_Left frames for review. **Right_Left is not
+  a pure-reflection camera: ~10–20% of its frames contain the real animal**, so frames must be reviewed
+  before being scored as negatives, and ambiguous ones excluded rather than assumed empty.
+- Measured so far: temporal fusion **hurts mask IoU** (0.642 → 0.547 ema / 0.511 flow) but **helps
+  presence AUC a lot** (0.794 → 0.969 ema / 0.950 flow); plain EMA beats optical flow on both, so motion
+  compensation is not the mechanism. thin768 rejects reflections (AUC 0.917) *better* than it rejects the
+  empty tank (0.794) — the assumed failure mode is backwards. Full trail in `PAPER_NOTES.md` R8/R9.
+
 ## Distillation students
 - **Behavior classifier** (`train_behavior_student.py`, local): frozen CLIP feats (mean+max pooled) → MLP,
   copies the v2 labels. **Failed** — 45% val acc, *below* the 50% majority-class baseline; per-class F1≈0

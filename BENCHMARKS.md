@@ -30,6 +30,27 @@ Results append to `data/benchmarks.json` (keyed by tag); `--latex` writes
 Holdout videos: `2026-02-21/150002`, `2026-02-21/183003`, `2026-02-22/153002`,
 `2026-02-22/190003`, `2026-02-23/170003`.
 
+## REFL-24 — reflection rejection (presence, leak-free by construction)
+| | |
+|---|---|
+| Data | `data/reflection_negatives/` — Right_Left frames, **≤2 per clip, one per source video** |
+| Current set | 24 confident negatives / 24 distinct source videos (from a 30-frame pilot) |
+| Why leak-free | `thin768` trained on `/dataset_seg_thin768` = 4,965 images, **0 Right_Left** (asserted file-by-file, not assumed). The camera is excluded by construction in `auto_segment.py` and absent from the human label set |
+| Metrics | **FP rate at fixed present-recall (0.90/0.80)** and at the deployed gate (`area ≥ 0.01`) — headline; **AUC** secondary, with CI **cluster-bootstrapped by source video** |
+| Runner | `src/eval_reflection_presence.py` (sampler: `src/reflection_negatives.py`) |
+
+> **Never pool negative types.** Empty-tank negatives (same cameras as the positives) and reflection
+> negatives measure different failure modes and are always reported as separate rows. Pooling them
+> silently redefines the metric.
+
+> **Reflection frames are NOT automatically negatives.** Review of 30 frames found **10% unmistakably
+> contain the octopus** (up to 20% including ambiguous cases) — the animal spreads on the glass beside
+> its own mirror image. Every frame must be reviewed before it is scored, and ambiguous frames are
+> excluded rather than counted as empty. This is the same trap as the 2026-06 hard-negative mining,
+> where 166 of 232 assumed-negative frames contained the animal.
+> *Provenance caveat:* the current pilot labels were produced by an AI vision model, not a human, and
+> are staged for human confirmation.
+
 ## SKEL-50 — per-frame skeleton quality
 | | |
 |---|---|
