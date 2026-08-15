@@ -73,7 +73,8 @@ def autolabel(limit: int = 0, min_seed_conf: float = 0.60,
 @app.function(image=image, gpu=GPU, timeout=86400, volumes={"/data": vol})
 def train(epochs: int = 60, arch: str = "lraspp", base_ch: int = 16,
           ds: str = "/data/dataset_seg_harvest", ver: str = "harvest", sources: str = "",
-          in_size: int = 256, loss: str = "dice_bce", holdout: str = ""):
+          in_size: int = 256, loss: str = "dice_bce", holdout: str = "",
+          batch: int = 32, tversky_beta: float = 0.7):
     """Train the tiny segmenter on a labeled dataset dir (split BY SOURCE VIDEO). -> /data/weights.
 
     `ds` may be a comma-separated list of dataset dirs — they're merged (symlinked images/masks +
@@ -107,7 +108,8 @@ def train(epochs: int = 60, arch: str = "lraspp", base_ch: int = 16,
     out = f"/data/weights/octo_seg_{ver}_{arch}.pt"
     cmd = ["python", "/root/train_segmenter.py", "--ds", ds, "--ver", ver,
            "--arch", arch, "--base-ch", str(base_ch), "--epochs", str(epochs), "--out", out,
-           "--in-size", str(in_size), "--loss", loss]
+           "--in-size", str(in_size), "--loss", loss, "--batch", str(batch),
+           "--tversky-beta", str(tversky_beta), "--tversky-alpha", str(round(1 - tversky_beta, 2))]
     if sources:
         cmd += ["--sources", sources]
     if holdout:

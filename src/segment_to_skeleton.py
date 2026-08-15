@@ -20,7 +20,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "skeleton"))
 from segment_octopus import OctoSegmenter, _largest_blob
 
-DEFAULT_CKPT = HERE.parent / "weights" / "seg" / "octo_seg_clean512tv_lraspp.pt"
+DEFAULT_CKPT = HERE.parent / "weights" / "seg" / "octo_seg_thin768_lraspp.pt"
 EMA_ALPHA = 0.45
 _KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
 

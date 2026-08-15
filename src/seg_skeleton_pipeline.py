@@ -19,7 +19,7 @@ from skeleton import branch_color
 from multi_frame import tracked_sequence
 import math
 
-DEFAULT_CKPT = HERE.parent / "weights" / "seg" / "octo_seg_clean512tv_lraspp.pt"
+DEFAULT_CKPT = HERE.parent / "weights" / "seg" / "octo_seg_thin768_lraspp.pt"
 EMA_ALPHA = 0.45
 MASK_BGR = np.array([120, 235, 0], np.float32)
 ALPHA = 0.5

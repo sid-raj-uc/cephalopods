@@ -385,3 +385,19 @@ Kinematics (`batch_skeleton_motion.py`) now gate on states and report `occluded_
 Chain: seg mask (EMA) -> fixed union bbox -> per-frame detect -> best-seed bidirectional chain with
 flow prior -> global-consistent-ish IDs -> state-gated smoothed motion -> `kinematics` in
 behaviour_records.json. UIs: 8017 (3-way viewer + trails), 8018 (phase results).
+
+## Skeleton-extraction accuracy phases (2026-08-14) — frozen 50-frame benchmark
+All measured on `data/skel_bench50/frames.json` (50 fixed frames, human-GT + model masks), metric =
+arms/frame with a tip-correctness guard (selected tips must land near true silhouette protrusions).
+| phase | change | model-mask arms | note |
+|---|---|---|---|
+| baseline | — | 2.82 | tip-match 0.876 |
+| B | selection floors 2.5x/0.30, prefix 0.70 | 3.65 | old floors discarded real curled arms |
+| C | prep: bin_thresh 96, spur width_factor 0.35 | 4.16 | blur@112 erased thin arms; spur rule ate short ones |
+| head fix | anatomical head = neck on mantle->crown line | — | head plausible 9% -> 96% |
+| hysteresis | prob-field masks (weak-thr grid) | 4.24 | NULL (+0.08, noise): model truly blind to tentacles |
+| **D** | **seg retrain thin768: 768^2 + Tversky beta 0.8** | **4.64** | internal val IoU 0.584 (best seg model); tip-match -0.027 (in tolerance) |
+Ceilings: clean-GT-mask extraction 6.15, 2D silhouette ~7, biology 8. thin768 is now the skeleton
+pipeline's default mask model (`octo_seg_thin768_lraspp.pt`); clean512tv remains for presence/area uses.
+Remaining levers: more thin-structure seg gains (bigger backbone / distill), or learned RGB keypoints
+(the only way past the silhouette ceiling).
