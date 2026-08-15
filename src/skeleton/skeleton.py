@@ -343,8 +343,8 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
                      distance: np.ndarray, min_arms: int = 5,
                      max_arms: int = 8, floor_scale: float = 2.5,
                      floor_med: float = 0.3, prefix_max: float = 0.70,
-                     min_unique_scale: float = 2.0, min_unique_frac: float = 0.30,
-                     tip_ratio: float = 0.55) -> List[np.ndarray]:
+                     min_unique_scale: float = 1.5, min_unique_frac: float = 0.20,
+                     tip_ratio: float = 1.00) -> List[np.ndarray]:
     # Defaults set by the Phase-B grid (40 human-GT masks): (2.5, 0.3, 0.70) recovers +0.85 arms
     # (4.85 -> 5.70; model masks 2.85 -> 3.65) at -0.014 tip-match — the old (4.0, 0.4, 0.58) floors
     # discarded real curled/short arms that thinning had already found.
@@ -356,6 +356,13 @@ def select_arm_paths(points: np.ndarray, adjacency: List[List[Tuple[int, float]]
     #     >= max(min_unique_scale * root_radius, min_unique_frac * its own length);
     #   tip-thinness: a real arm tip sits at a thin extremity, so the tip's clearance must be
     #     <= tip_ratio * root_radius (interior stubs end fat and fail this).
+    # Operating point chosen on the SKEL-50 frontier (src/skel_gate_grid.py, tip-F1 vs human-mask
+    # protrusions). Strictness trades precision for recall monotonically:
+    #   gates off (0,0,inf)      P .615 R .418 F1 .459  arms 4.64   <- max F1, but the tangle returns
+    #   (1.5,0.20,1.00) SHIPPED  P .685 R .380 F1 .441  arms 3.68   <- dominates the first attempt
+    #   (2.0,0.30,0.55) 1st try  P .712 R .353 F1 .419  arms 3.24   <- over-strict, dropped real arms
+    # F1 spans only .419-.459 across the whole range, so the choice is a precision/recall preference:
+    # we keep precision high (clean output was the explicit requirement) while recovering recall.
     degree = np.array([len(a) for a in adjacency])
     candidates = list(map(int, np.flatnonzero((degree == 1) & np.isfinite(geodesic))))
     all_paths: List[Tuple[float, np.ndarray, int]] = []

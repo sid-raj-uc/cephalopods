@@ -24,6 +24,7 @@ from segment_to_skeleton import segment_masks, union_bbox, grey_crops, DEFAULT_C
 from multi_frame import tracked_sequence, compute_motion
 
 CLIPS_ROOT = REPO / "src" / "octopus_clips_verified"
+CFG_STAMP = {}
 REL_PREFIX = "octopus_clips_verified"       # how behaviour_records.json keys clips
 
 
@@ -36,9 +37,10 @@ def _stat(a):
 
 
 def clip_to_motion(clip, S, fps=3.0, present=0.004, min_arms=3, max_arms=8,
-                   iterations=2, max_dim=1024):
+                   iterations=2, max_dim=1024, refine=False):
     """segment -> masks -> temporal skeleton -> smoothed motion summary (no figures). None if unusable."""
-    masks, src_fps, step, smalls = segment_masks(clip, S, fps, present, keep_small=720)
+    masks, src_fps, step, smalls = segment_masks(clip, S, fps, present, keep_small=720,
+                                                refine='sam2' if refine else '')
     pm = [(k, m) for k, m in enumerate(masks) if m is not None]
     if len(pm) < 4:
         return None
@@ -106,12 +108,18 @@ def main():
                     help="cameras to process (Right_Left excluded by default: reflections — the "
                          "project convention everywhere else — and ~10min/clip on huge merged crops)")
     ap.add_argument("--redo", action="store_true", help="reprocess clips already in the output json")
+    ap.add_argument("--clip-list", default="", help="JSON with {'clips': [rel,...]} (from "
+                    "kinematics_sample.py) — overrides the behaviour-records scan")
+    ap.add_argument("--shard", default="", help="i/n — process only shard i of n (1-indexed)")
+    ap.add_argument("--refine", action="store_true", help="SAM2-refine masks (offline, slower)")
     args = ap.parse_args()
     cams = tuple(c.strip() for c in args.cameras.split(",") if c.strip())
 
     # clip list: prefer clips already in behaviour_records (so the merge lands), that exist locally
     br_path = REPO / "data" / "behaviour_records.json"
     keys = list(json.load(open(br_path)).keys()) if br_path.exists() else []
+    if args.clip_list:                       # frozen, reproducible sample (kinematics study)
+        keys = json.load(open(args.clip_list))["clips"]
     clips = []
     for rel in keys:
         if args.date and f"/{args.date}/" not in "/" + rel:
@@ -126,8 +134,30 @@ def main():
             rel = str(p.relative_to(REPO / "src"))
             if not args.date or f"/{args.date}/" in "/" + rel:
                 clips.append((rel, p))
-    clips = clips[:args.limit]
-    print(f"processing {len(clips)} clips with {Path(args.ckpt).name}", flush=True)
+    if args.limit:
+        clips = clips[:args.limit]
+    if args.shard:
+        i, n = (int(x) for x in args.shard.split("/"))
+        clips = [c for k, c in enumerate(clips) if k % n == (i - 1)]
+        # separate output per shard — concurrent shards writing one JSON would clobber each other
+        args.out = str(Path(args.out).with_suffix(f".shard{i}of{n}.json"))
+        if args.merge:
+            print("  (--merge ignored for a shard; merge after combining shards)", flush=True)
+            args.merge = False
+    print(f"processing {len(clips)} clips with {Path(args.ckpt).name}"
+          f"{' shard ' + args.shard if args.shard else ''}"
+          f"{' +refine' if args.refine else ''}", flush=True)
+
+    import subprocess as _sp
+    try:
+        _sha = _sp.run(["git", "rev-parse", "--short", "HEAD"], cwd=str(REPO),
+                       capture_output=True, text=True).stdout.strip()
+    except Exception:
+        _sha = "?"
+    global CFG_STAMP
+    CFG_STAMP = {"sha": _sha, "ckpt": Path(args.ckpt).name, "refine": bool(args.refine),
+                 "fps": args.fps}
+    print("config stamp:", CFG_STAMP, flush=True)
 
     S = OctoSegmenter(args.ckpt)
     out = json.load(open(args.out)) if Path(args.out).exists() else {}
@@ -138,12 +168,13 @@ def main():
             ok += 1
             continue
         try:
-            summ = clip_to_motion(str(p), S, fps=args.fps)
+            summ = clip_to_motion(str(p), S, fps=args.fps, refine=args.refine)
         except Exception as exc:
             summ = None; print(f"  [{i}/{len(clips)}] {rel}  ERROR {exc}", flush=True)
         if summ is None:
             print(f"  [{i}/{len(clips)}] {rel}  skipped (too few tracked frames)", flush=True)
             continue
+        summ["_cfg"] = CFG_STAMP
         out[rel] = summ; ok += 1
         act = summ["activity_px_s"]["mean"] if summ["activity_px_s"] else 0
         print(f"  [{i}/{len(clips)}] {rel}  {summ['n_frames_tracked']}f "
