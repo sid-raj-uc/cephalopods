@@ -23,7 +23,7 @@ import skeleton as SK
 from segment_octopus import OctoSegmenter, _largest_blob
 from skel_phaseA_loss import finger_tips
 from seg_skeleton_pipeline import DEFAULT_CKPT
-from benchmarks import _match, MATCH_FRAC, MAX_GT_TIPS
+from benchmarks import _match, MATCH_FRAC, MAX_GT_TIPS, GT_MIN_PROMINENCE, GT_MIN_LEN_FRAC
 
 DS = REPO / "data" / "dataset_seg_human"
 BENCH50 = REPO / "data" / "skel_bench50" / "frames.json"
@@ -85,7 +85,8 @@ def main():
             from mask_refine import sam2_refine
             mm = sam2_refine(img, mm, largest_blob=_largest_blob)
         cache.append({"m255": (mm.astype(np.uint8)) * 255,
-                      "gt": finger_tips(gtm)[:MAX_GT_TIPS],
+                      "gt": finger_tips(gtm, min_prominence=GT_MIN_PROMINENCE,
+                                        min_len_frac=GT_MIN_LEN_FRAC)[:MAX_GT_TIPS],
                       "r": MATCH_FRAC * math.hypot(*gtm.shape)})
 
     results = []

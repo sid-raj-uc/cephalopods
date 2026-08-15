@@ -41,7 +41,14 @@ HEAD_GT = REPO / "data" / "skel_bench50" / "head_gt.json"
 HOLDOUT_VIDEOS = {"2026-02-21/150002", "2026-02-21/183003", "2026-02-22/153002",
                   "2026-02-22/190003", "2026-02-23/170003"}
 MATCH_FRAC = 0.05          # tip match radius as a fraction of the image diagonal
-MAX_GT_TIPS = 8            # an octopus has 8 arms; keep the 8 strongest protrusions as GT
+MAX_GT_TIPS = 8            # safety cap; with GT_MIN_LEN_FRAC below it never binds (max observed = 8)
+# GT protrusion detector params. VALIDATED on the 50 human masks: the library default
+# (min_len_frac=0.06) counted contour bumps as arms -> mean 9.7, max 14 protrusions, and the 8-cap
+# bound in 80% of frames, so recall was measured against a padded, partly-fictional 8 tips.
+# Requiring peaks to be >=10% of the contour apart (two closer peaks are the SAME arm) gives
+# mean 5.7 / median 6 / max 8 — biologically sane for a 2-D silhouette.
+GT_MIN_PROMINENCE = 1.8
+GT_MIN_LEN_FRAC = 0.10
 
 
 def _source_video(clip):
@@ -117,7 +124,8 @@ def run_skel(ckpt, refine=False):
     for f in frames:
         img = cv2.imread(str(DS / f["image"]))
         gtm = (cv2.imread(str(DS / f["mask"]), 0) > 127).astype(np.uint8) * 255
-        gt_tips = finger_tips(gtm)[:MAX_GT_TIPS]
+        gt_tips = finger_tips(gtm, min_prominence=GT_MIN_PROMINENCE,
+                              min_len_frac=GT_MIN_LEN_FRAC)[:MAX_GT_TIPS]
         mm, _ = S.segment(img)
         if refine and mm.any():
             from mask_refine import sam2_refine
