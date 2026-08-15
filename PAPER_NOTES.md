@@ -168,11 +168,32 @@ videos + 19 negatives), **SKEL-50**, **TRACK-10**.
   |---|---|---|---|---|
   | clean512tv (paper's current headline) | 0.6075 | 0.6661 | 1.07% | 0.718 |
   | **thin768** | **0.6415** | **0.7193** | 1.05% | **0.794** |
-  → thin768 wins on every metric; the paper should promote it and quote 0.642/0.719. This also fixes
+  → thin768 wins on every metric; **promoted to the paper's headline seg model 2026-08-15**
+  (abstract/contributions/Sec. V now quote 0.642/0.719 + AUC 0.794 from this one model). This also fixes
   a rigor defect the paper review found: the abstract currently pairs clean512tv's IoU with a
   presence AUC measured on a *different* model (v3 aug-LR-ASPP), reading as one system.
 - **SKEL-50 first run (thin768, no refine, post-gate):** tip-F1 **0.419** (precision 0.712,
   **recall 0.353**), arms/frame 3.24 → the gates are over-strict; gate grid in progress.
+- **Gate frontier (2026-08-15, `src/skel_gate_grid.py`, corrected GT, 50 frames, no refine;
+  artifact `data/skel_diag/gate_grid_result.json`)** — this is what the paper's Table II reports:
+  | gates (uniq-scale, uniq-frac, tip-ratio) | P | R | F1 | dup | arms |
+  |---|---|---|---|---|---|
+  | off (0, 0, ∞) | 0.659 | 0.562 | 0.565 | 0.076 | 4.64 |
+  | (1.0, 0.15, 0.85) | 0.673 | 0.535 | 0.550 | 0.038 | 4.28 |
+  | **(1.5, 0.20, 1.00) SHIPPED** | 0.722 | 0.502 | 0.539 | 0.000 | 3.68 |
+  | (2.0, 0.30, 0.55) 1st attempt | 0.760 | 0.468 | 0.520 | 0.000 | 3.24 |
+  ⚠️ The **dup rate is defined by the same unique-suffix criterion the gates enforce**, so strictly
+  gated rows are 0 by construction — informative mainly for the gates-off row. Gates-off maxes F1
+  but restores the visible tangle; we ship the F1-suboptimal point because downstream tracking needs
+  arm identities. **NOT claimed:** that the GT fix *changed the ranking* of configurations — for the
+  only pair measured under both GTs the order held (old GT: shipped 0.441 > 1st attempt 0.419; new
+  GT: 0.539 > 0.520). What is claimed is that pre-fix recall/F1 are incomparable with post-fix ones,
+  so any old ranking had to be re-measured.
+- **Kinematics n (recomputed 2026-08-15 from `behaviour_records.json`, same filter as
+  `make_figures.py` Fig. 4):** 41 clips carry state-gated kinematics; **40** after dropping
+  `behavior="uncertain"` — resting 4 · crawling 2 · human 13 · exploration 17 · reaching 4.
+  The paper quotes n=40 (the plotted set). A 149-clip / 66-video recompute with video-level
+  statistics is pending and will supersede these medians.
 
 ## Open rigor items (must close before paper claims)
 - **No shared human-verified held-out test sets yet.** Segmentation has none; captioning has partial
