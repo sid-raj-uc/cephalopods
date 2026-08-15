@@ -45,7 +45,8 @@ Holdout videos: `2026-02-21/150002`, `2026-02-21/183003`, `2026-02-22/153002`,
 | | |
 |---|---|
 | Data | `data/reflection_negatives/` — Right_Left frames, **≤2 per clip, one per source video** |
-| Current set | 24 confident negatives / 24 distinct source videos (from a 30-frame pilot) |
+| Current set | **REFL-34** — 34 confident negatives / 27 source videos (segmenter-only arms) |
+| Head-to-head set | **REFL-28** — 28 frames / 22 videos: REFL-34 minus the 5 recording **sessions** present in the CLIP detector's training manifest (2026-02-20 at 0954/1724/1754/1824/1854). Required whenever the detector is one of the arms, and applied to **every** arm so the sets stay identical |
 | Why leak-free | `thin768` trained on `/dataset_seg_thin768` = 4,965 images, **0 Right_Left** (asserted file-by-file, not assumed). The camera is excluded by construction in `auto_segment.py` and absent from the human label set |
 | Metrics | **FP rate at fixed present-recall (0.90/0.80)** and at the deployed gate (`area ≥ 0.01`) — headline; **AUC** secondary, with CI **cluster-bootstrapped by source video** |
 | Runner | `src/eval_reflection_presence.py` (sampler: `src/reflection_negatives.py`) |
@@ -53,6 +54,19 @@ Holdout videos: `2026-02-21/150002`, `2026-02-21/183003`, `2026-02-22/153002`,
 > **Never pool negative types.** Empty-tank negatives (same cameras as the positives) and reflection
 > negatives measure different failure modes and are always reported as separate rows. Pooling them
 > silently redefines the metric.
+
+> **The leakage unit is the recording SESSION (`date/segment`), not the camera.** Two cameras in one
+> session record the same scene, lighting and animal state at the same instant. Excluding only the
+> *Right_Left* sessions from the detector's training manifest leaves 4 further sessions it had already
+> seen through another camera — we made that mistake once (33 frames instead of 28) before correcting.
+> Sessions are matched on `(date, HHMM)` because the manifest mixes two filename conventions; that
+> normalisation over-excludes if two recordings start in the same minute, which is the safe direction.
+
+> **SEG-TEST's 19 empty-tank negatives come from only 2 source videos — 18 of them from
+> `2026-02-21/183003` alone.** Any presence number computed against them is effectively a single-video
+> estimate: report it descriptively, never with an AUC or a CI, and never order it against a
+> many-video estimate. Fixing this (negatives drawn from many videos) is the highest-value repair
+> available to the presence benchmark. Count n in **videos** at every stage, negatives included.
 
 > **Reflection frames are NOT automatically negatives.** Review of 30 frames found **10% unmistakably
 > contain the octopus** (up to 20% including ambiguous cases) — the animal spreads on the glass beside
