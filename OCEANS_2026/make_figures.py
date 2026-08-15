@@ -126,38 +126,67 @@ fig3.savefig(OUT / "pipeline_behaviour.pdf", bbox_inches="tight"); plt.close(fig
 print("wrote pipeline_behaviour.pdf")
 print("\nassets now:", sorted(p.name for p in OUT.glob("*.pdf")))
 
-# ── Fig 4: kinematics by behaviour (print-clean; single measure across categories → one hue,
-#           identity carried by axis labels, medians direct-labeled) ────────────────────────
-import collections
-br = json.load(open(REPO / "data" / "behaviour_records.json"))
-by = collections.defaultdict(list)
-for rel, rec in br.items():
-    k = rec.get("kinematics") or {}
-    if "occluded_frac" not in k or not k.get("activity_px_s") or "Right_Left" in rel:
-        continue
-    by[(rec.get("struct") or {}).get("behavior", "?")].append(k["activity_px_s"]["mean"])
-by.pop("uncertain", None)
-order = sorted(by, key=lambda b: np.median(by[b]))
-fig4, ax4 = plt.subplots(figsize=(3.45, 2.2))
-data = [by[b] for b in order]
-bp = ax4.boxplot(data, vert=False, patch_artist=True, widths=0.55,
-                 medianprops=dict(color=INK, lw=1.1),
-                 boxprops=dict(facecolor=HUE, alpha=0.55, edgecolor=HUE, lw=0.8),
-                 whiskerprops=dict(color=MUTE, lw=0.8), capprops=dict(color=MUTE, lw=0.8),
-                 flierprops=dict(marker="o", ms=2.5, mfc=MUTE, mec=MUTE))
-ax4.set_yticks(range(1, len(order) + 1))
-ax4.set_yticklabels([f"{b.split(' / ')[0].split(' out')[0]} (n={len(by[b])})" for b in order],
-                    fontsize=6.4)
-for i, b in enumerate(order, 1):
-    med = float(np.median(by[b]))
-    ax4.text(med, i + 0.34, f"{med:.0f}", ha="center", fontsize=6, color=INK)
-ax4.set_xlabel("state-gated arm-tip speed (px s$^{-1}$)", fontsize=7)
-ax4.grid(True, axis="x", color=GRID, lw=0.5); ax4.set_axisbelow(True)
-for sp in ("top", "right"): ax4.spines[sp].set_visible(False)
-ax4.tick_params(length=0)
-fig4.tight_layout(pad=0.4)
+# ── Fig 4: kinematics by behaviour — R12 recompute (2026-08-15) ─────────────────────────────
+# Source of truth: data/skeleton_motion_study.json (146 clips / 66 videos, one pipeline-config
+# stamp) read through src/kinematics_stats.collect, the SAME loader that wrote
+# data/kinematics_stats.json — so the plotted medians are the published medians by construction.
+# Unit of observation is the SOURCE VIDEO (clip-level pooling would be pseudo-replication):
+# clips are reduced to one median per (video, class) before plotting, exactly as before testing.
+# Two panels share one class order (the raw-speed order) so the rank change under
+# scale normalisation is directly readable. One hue: a single magnitude across categories.
+import collections, sys
+sys.path.insert(0, str(REPO / "src"))
+from kinematics_stats import collect as _kin_collect          # noqa: E402
+
+_STATS = json.load(open(REPO / "data" / "kinematics_stats.json"))
+_rows = _kin_collect(REPO / "data" / "skeleton_motion_study.json")
+
+
+def _per_video(key):
+    pv = collections.defaultdict(lambda: collections.defaultdict(list))
+    for r in _rows:
+        if r[key] is not None:
+            pv[r["behavior"]][r["video"]].append(r[key])
+    return {b: [float(np.median(v)) for v in vids.values()] for b, vids in pv.items()
+            if len(vids) >= 3}
+
+
+raw_by, norm_by = _per_video("raw"), _per_video("norm")
+order = sorted(raw_by, key=lambda b: np.median(raw_by[b]))   # shared order, ascending raw median
+short = [b.split(" / ")[0].split(" out")[0] for b in order]
+
+fig4, ax4 = plt.subplots(2, 1, figsize=(3.45, 2.9))   # single column: stacked, not side-by-side
+panels = [
+    (raw_by, "(a) Raw arm-tip speed", "speed (px s$^{-1}$)", "{:.0f}",
+     _STATS["raw_px_s"]["kruskal"]),
+    (norm_by, "(b) Scale-invariant speed", "speed (body-lengths s$^{-1}$)", "{:.2f}",
+     _STATS["norm_bodylen_s"]["kruskal"]),
+]
+for a, (by, title, xlab, fmt, kw) in zip(ax4, panels):
+    data = [by[b] for b in order]
+    a.boxplot(data, vert=False, patch_artist=True, widths=0.55,
+              medianprops=dict(color=INK, lw=1.1),
+              boxprops=dict(facecolor=HUE, alpha=0.55, edgecolor=HUE, lw=0.8),
+              whiskerprops=dict(color=MUTE, lw=0.8), capprops=dict(color=MUTE, lw=0.8),
+              flierprops=dict(marker="o", ms=2.5, mfc=MUTE, mec=MUTE))
+    a.set_yticks(range(1, len(order) + 1))
+    a.set_yticklabels([f"{s} ({len(by[b])} vid)" if a is ax4[0] else s
+                       for s, b in zip(short, order)], fontsize=6.4)
+    hi = max(max(v) for v in data)
+    for i, b in enumerate(order, 1):
+        a.text(float(np.median(by[b])), i + 0.32, fmt.format(float(np.median(by[b]))),
+               ha="center", fontsize=6, color=INK)
+    a.set_xlim(0, hi * 1.08)
+    a.set_xlabel(xlab, fontsize=7)
+    a.set_title(f"{title}\n$H$={kw['H']:.1f}, $p$={kw['p']:.0e}, $\\varepsilon^2$={kw['eps2']:.2f}",
+                fontsize=7.4, loc="left")
+    a.grid(True, axis="x", color=GRID, lw=0.5); a.set_axisbelow(True)
+    for sp in ("top", "right"): a.spines[sp].set_visible(False)
+    a.tick_params(length=0)
+fig4.tight_layout(pad=0.4, h_pad=1.2)
 fig4.savefig(OUT / "kinematics_by_behaviour.pdf", bbox_inches="tight"); plt.close(fig4)
-print("wrote kinematics_by_behaviour.pdf")
+print("wrote kinematics_by_behaviour.pdf  (%d clips / %d videos)"
+      % (_STATS["n_clips"], _STATS["n_videos"]))
 
 # ── Fig 5: skeleton qualitative example (image panels: base vs SAM2-refined) ───────────────
 # Figure sources are FROZEN under assets/frozen/: data/skel_diag/ is a scratch dir that every

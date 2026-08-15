@@ -192,8 +192,9 @@ videos + 19 negatives), **SKEL-50**, **TRACK-10**.
 - **Kinematics n (recomputed 2026-08-15 from `behaviour_records.json`, same filter as
   `make_figures.py` Fig. 4):** 41 clips carry state-gated kinematics; **40** after dropping
   `behavior="uncertain"` — resting 4 · crawling 2 · human 13 · exploration 17 · reaching 4.
-  The paper quotes n=40 (the plotted set). A 149-clip / 66-video recompute with video-level
-  statistics is pending and will supersede these medians.
+  The paper quoted n=40 (the plotted set) until 2026-08-15; **superseded by R12** (146 clips /
+  66 videos, video-level statistics). The n=40 medians are retained here only as the historical
+  row and are referenced in the paper as the earlier, mildly optimistic estimate.
 
 ## Open rigor items (must close before paper claims)
 - **No shared human-verified held-out test sets yet.** Segmentation has none; captioning has partial
@@ -424,6 +425,11 @@ Prompted by the discovery that all 5 SEG-TEST holdout videos appear in thin768's
    the trainer partitions them by source video.
 **Conclusion: the headline IoU 0.6415 / 0.7193 and everything derived from it are leak-free.**
 
+**Paper action taken (2026-08-15):** Sec. III-F of the .tex states that all five SEG-TEST videos
+appear in the dataset manifest but are excluded from training by the forced-holdout flag, that the
+split was re-derived and reproduces the logged partition exactly (3450 train / 1693 val), and that
+the audit also found and fixed a logging bug printing wrong video counts for a correct split.
+
 Two by-products:
 - **thin768's true training set is 142 source videos** (not 183 = the dataset, and not 147 = the logged
   figure). Enumerated to `data/thin768_train_videos.json` — this is the exclusion list any future
@@ -473,6 +479,14 @@ stage consumes these masks and a thinner mask at t=0.8 may cost arms.
 19 empty-tank frames = 2 source videos**, so it inherits the one-video problem and carries no CI.
 Re-testing it on EMPTY-V2 is the pending deliverable.
 
+**Paper action taken (2026-08-15).** Sec. V of the .tex now carries "A negative that needed a
+control: test-time temporal fusion" — best-vs-best 0.5866 (ema) vs 0.6552 (single frame), the
+unwarped-median control beating flow on both IoU (0.5527 vs 0.5109) and presence AUC (0.9629 vs
+0.9521), and the explicit statement that the fusion presence gain is NOT headlined because it rests
+on the same 19 two-recording empty frames. The limitation now reads "**test-time** temporal fusion
+does not fix mislocalisation; a temporally *trained* student remains untested". Cut for space (still
+true, still logged here): the +0.0137 IoU available at threshold 0.80 — noted in the .tex header.
+
 ## R12 — Kinematics × behaviour cross-validation, recomputed with video-level statistics (2026-08-15)
 The paper's headline cross-validation (skeleton kinematics agree with the VLM's behaviour labels) rested
 on **n=40 clips with crawling at n=2**, pooled at clip level — pseudo-replication, since several clips
@@ -520,3 +534,11 @@ magnitudes (53 → 141) — the small-sample version was mildly optimistic, not 
 CAVEAT: behaviour labels come from the VLM structured extractor, whose reliability study (VLM-250) is
 still BLOCKED on a revoked OpenRouter key. This validates that kinematics track the labels, not that
 the labels are correct. Speeds are px/s in crop space (no px→cm calibration).
+
+**Paper action taken (2026-08-15):** R12 replaced the n=40 cross-validation everywhere in the .tex
+(abstract, contribution 4, Sec. VI, Fig. 5, limitations). Fig. 5 is now a two-panel figure generated
+by `OCEANS_2026/make_figures.py` **through `src/kinematics_stats.collect` on
+`data/skeleton_motion_study.json`** — the same loader that produced `data/kinematics_stats.json`, so
+the plotted medians are the published medians by construction; it plots per-(video,class) medians,
+not clips. The old 63→159 px/s figures are cited in the paper only as the earlier, less conservative
+clip-pooled estimate.
