@@ -596,3 +596,50 @@ BOTH arms by true source video — grouping only the negatives is not enough.**
 PENDING: re-test R8's fusion presence gain (0.794 -> 0.9685 ema) on EMPTY-V2 — it rests on the same
 19 two-recording frames. Needs neighbour frames per negative, i.e. another server pass.
 CAVEAT: labels are AI-verified, not human-verified — PAPER_NOTES only until human confirmation.
+
+## R13-FINAL — EMPTY-V2 HUMAN-VERIFIED (2026-08-15). Now citable in the paper.
+All **120/120** frames confirmed by a human via `ui/verify_negatives.py` (port 8020). Human labels are
+stored in a separate `human` field; the model's labels stay in `review`, so agreement is measurable.
+
+### Model-vs-human agreement: 102/120 = 85.0%
+| my label | human said | n | direction |
+|---|---|---|---|
+| empty | **octopus present** | **9** | **contamination — I would have scored 9 animal-containing frames as negatives** |
+| octopus present | empty | 2 | I over-called |
+| ambiguous | octopus present | 6 | resolved |
+| ambiguous | empty | 1 | resolved |
+
+Final human set: **99 empty / 21 present / 0 ambiguous**. My proposed negative set of 105 was
+**8.6% contaminated**. This is the third time in this project that an assumed-empty pool turned out to
+contain the animal (166/232 in the 2026-06 hard-negative mining; 7-19% in the reflection pilot).
+**An AI-verified negative set is not a substitute for a human one** — 85% agreement sounds high, but it
+is the 15% that decides the number.
+
+### Headline (HUMAN-verified, thin768, threshold 0.5, CI cluster-bootstrapped by source video)
+| negative set | n | videos | AUC | CI95 | FP@R.90 | FP@area>=.01 |
+|---|---|---|---|---|---|---|
+| **EMPTY-V2 human-verified** | **99** | **53** | **0.9093** | **[0.833, 0.957]** | 0.182 | 0.152 |
+| EMPTY-V2 as I had labelled it | 105 | 53 | 0.9170 | [0.839, 0.962] | 0.171 | 0.143 |
+| old SEG-TEST empty-tank (paper's 0.794) | 19 | **2** | descriptive only | — | — | — |
+
+**The paper's 0.794 should become 0.909 [0.833, 0.957] on 53 recordings.** Even after removing my
+contamination the properly-powered figure is far above the published one, which was dominated by a
+single hard recording.
+
+### LESSON — contamination does not always deflate a metric; here it INFLATED it
+Intuitively, octopus-containing frames scored as negatives should *hurt* the AUC. They did the
+opposite (0.9170 -> 0.9093 when removed) because **7 of the 9 frames I missed also fell below the
+deployed gate — the segmenter missed the animal in exactly the frames I did**. They therefore looked
+like unusually clean negatives and flattered the score. When the reviewer and the model share a blind
+spot, contamination masquerades as good performance. Do not assume label noise is conservative.
+
+### Deployment statistic worth reporting (uniformly-sampled footage, not curated clips)
+At the deployed gate (mask area >= 0.01): **11/21 (52%) of human-confirmed present frames fire**, and
+**15/99 (15%) of confirmed empty frames fire**. Note these present frames are uniformly sampled, so
+many show the animal small, dim or half-denned — a much harder recall test than SEG-TEST's curated
+positives, and a more honest picture of what the gate does on raw footage.
+
+### STILL AI-ONLY: the reflection set (R9 / R10)
+`data/reflection_negatives/` (42 frames) has **0/42** human labels. Given 85% agreement and 8.6%
+contamination on EMPTY-V2, R9's reflection AUC 0.9214 and R10's head-to-head dAUC +0.1263 must stay
+**out of the paper** and be treated as provisional until the same pass is run on them.
