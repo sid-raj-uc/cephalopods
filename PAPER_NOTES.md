@@ -109,6 +109,71 @@ Motivating evidence: the merged model scored 0.49 vs tiny masks but 0.70 vs HQ m
   `unscanned_sec` per video so skipped footage can be mined later.
 - Full run: 1,769 Nity colour videos; projected ~6–12 h.
 
+## R6 — Skeleton, tracking and kinematics (2026-08-13/15)
+Downstream of segmentation: silhouette → anatomical graph (mantle/head/8 arms) → per-arm kinematics.
+Code: `src/skeleton/`, `src/segment_to_skeleton.py`, `src/batch_skeleton_motion.py`. Full trail:
+`src/SEGMENTATION_LOG.md`.
+
+**Skeleton extraction phases** (frozen `data/skel_bench50`, 50 frames / 20 videos, model-mask input,
+tip-correctness guarded). ⚠️ **All rows below are PRE-GATE and are being re-measured** — commit
+`8343d2a` added anti-mess gates as unconditional defaults inside `select_arm_paths`, so even the
+"baseline" row is no longer reproducible by today's code.
+| phase | arms/frame | tip-match |
+|---|---|---|
+| baseline extractor | 2.82 | 0.876 |
+| + selection floors (2.5×/0.30, prefix 0.70) | 3.65 | — |
+| + prep (bin_thresh 96, spur width_factor 0.35) | 4.16 | 0.851 |
+| + thin768 segmentation (768², Tversky β=0.8) | 4.64 | — |
+| + SAM2 mask refine (offline) | 5.04 | 0.792 |
+| clean human-mask ceiling (pre-gate) | 6.15 | — |
+- Anatomical head (neck constriction on the mantle→crown line) replaced the 2nd-distance-peak head:
+  "plausible" 9%→96% at the time; the same check later read 86% (refine, pre-gate) and **80%**
+  post-gate. The "plausible" criterion is loose (head merely between mantle and crown) and is being
+  replaced by pixel error against human head clicks (`data/skel_bench50/head_gt.json`, `src/skel_head_eval.py`).
+- Measured NULLS: hysteresis on the seg probability field (+0.08 arms, noise — the student genuinely
+  does not see the thin arms); zoom-2-pass segmentation (4.38 vs 4.60 — crops are OOD for the student).
+- **Anti-mess gates (2026-08-15, `8343d2a`)**: unique-suffix (unshared portion ≥ max(2× root radius,
+  30% of length)) + tip-thinness (tip clearance ≤ 0.55× root radius). Motivated by visible tangle
+  (duplicate late-forking arms, stubs ending in the fat body). Effect on the `skel_bench_latest`
+  harness (no tip guard, SAM2 refine): **4.80 → 3.48 arms/frame**, head-plausible 80%.
+- ⚠️ **Provenance defect (recorded honestly):** the figure "≥6 arms rose 3/50 → 17/50" quoted in the
+  tex came from a live UI header, not a logged artifact, and is **not reproducible**; the current
+  on-disk post-gate value is 11/50. Do not cite 17/50.
+
+**Tracking v2** (frozen 10-clip set, `src/skel_eval_tracking.py`, metrics `src/skeleton/track_metrics.py`):
+| run | teleport | arms | verdict |
+|---|---|---|---|
+| baseline (centroid prior) | 14.85% | 5.1 | — |
+| flow prior, unchanged gates | 15.71% | 4.9 | ❌ worse — a better prior admits more noisy detections |
+| **flow + tightened gates (adopted)** | **14.27%** | 4.9 | ✅ |
+| global tracklet association (2 tunings) | 15.07 / 14.35% | 4.2–4.3 | ❌ negative, kept opt-in |
+- **occluded_frac = 41.7%**: nearly half of arm samples in naive tracking were evidence-free holds;
+  `compute_motion` now emits rows only from `detected`/`fitted` samples (teleport-confident 16.5% >
+  overall 14.3% — held nodes' fake stillness was flattering the average).
+
+**Kinematics × behaviour cross-validation** (state-gated arm-tip speed vs VLM behaviour label):
+resting 63 · crawling 101 · human-interaction 136 · exploration 139 · reaching 159 px s⁻¹.
+⚠️ n = 41 clips only (crawling n=2, resting n=4), no significance test, speeds in crop-pixel units
+(camera-distance confound unaddressed), and computed with the PRE-GATE detector.
+
+## R7 — Frozen benchmark suite (2026-08-15)
+`BENCHMARKS.md` + `src/benchmarks.py` — one runner, tagged results in `data/benchmarks.json`,
+auto-generated LaTeX table. Three suites: **SEG-TEST** (122 human-mask frames from 5 held-out
+videos + 19 negatives), **SKEL-50**, **TRACK-10**.
+- **Metric fix:** arms/frame is *not* a score — the anti-mess gates improved the output while the
+  count fell 27%. SKEL-50's headline is now **arm-tip F1** vs the human mask's protrusions (greedy
+  1-1 within 5% of the diagonal, GT capped at 8), penalising both spurious and missed arms.
+- **SEG-TEST head-to-head (same leak-free test, 2026-08-15):**
+  | model | IoU mean | IoU median | area err | presence AUC |
+  |---|---|---|---|---|
+  | clean512tv (paper's current headline) | 0.6075 | 0.6661 | 1.07% | 0.718 |
+  | **thin768** | **0.6415** | **0.7193** | 1.05% | **0.794** |
+  → thin768 wins on every metric; the paper should promote it and quote 0.642/0.719. This also fixes
+  a rigor defect the paper review found: the abstract currently pairs clean512tv's IoU with a
+  presence AUC measured on a *different* model (v3 aug-LR-ASPP), reading as one system.
+- **SKEL-50 first run (thin768, no refine, post-gate):** tip-F1 **0.419** (precision 0.712,
+  **recall 0.353**), arms/frame 3.24 → the gates are over-strict; gate grid in progress.
+
 ## Open rigor items (must close before paper claims)
 - **No shared human-verified held-out test sets yet.** Segmentation has none; captioning has partial
   (`data/caption_training_set.json`). Every "A beats B" (e.g. seg gate vs CLIP gate) needs a head-to-head
