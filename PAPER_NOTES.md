@@ -303,10 +303,26 @@ n for the CI is the number of **videos**, not frames; CIs are cluster-bootstrapp
 (positive median mask area 0.0325; the empty-tank AUC reproduces the benchmark's 0.794 exactly, which
 validates the harness.)
 
-**FINDING — the assumed failure mode is backwards.** thin768 rejects *reflections* well (0.917) and
-rejects the *empty tank* poorly (0.794). The paper's "reflection-robust" claim survives contact with
-a leak-free test; the genuine weakness is dim empty-tank frames, where the model latches onto pipes
-and rocks. Any future presence work should target empty-tank false positives, not reflections.
+**CORRECTION (2026-08-15, same day).** I first wrote this up as "the assumed failure mode is
+backwards — the model rejects reflections (0.921) better than the empty tank (0.794)". That
+comparison does not hold up and is withdrawn. The empty-tank negatives are **19 frames from only 2
+source videos, 18 of them from `2026-02-21/183003` alone** — effectively a single-video estimate.
+Comparing it against a 27-video reflection estimate is not a like-for-like contrast, so the *ordering*
+of the two AUCs cannot be asserted. Reported descriptively only, with no CI and no A-beats-B claim.
+
+**What DOES survive, and it is the more useful finding:**
+1. **The reflection failure mode is comfortably handled.** AUC **0.9214** across 27 source videos,
+   CI95 [0.871, 0.964], FP at the deployed gate (area>=0.01) **0.176**. This is a properly-powered,
+   leak-free measurement and it validates the paper's "reflection-robust" claim for the first time.
+2. **The paper's published presence AUC of 0.794 is effectively a ONE-VIDEO number.** That is a defect
+   in the benchmark, not a property of the model: 18/19 of its negatives come from one recording, so it
+   is a near-meaningless population estimate and its CI [0.626, 0.932] is correspondingly useless. It
+   must be either re-based on negatives drawn from many videos, or reported descriptively with the
+   n=2-videos caveat stated. **This is the highest-value fix available to the presence section** and
+   it was invisible until negatives were counted BY VIDEO rather than by frame.
+3. Lesson, consistent with the leakage rule: **count n in videos at every stage, including the
+   negatives.** We applied by-video discipline to training splits and to the kinematics statistics but
+   never to the negative sets, and a headline benchmark number silently rested on one recording.
 
 **Consequence for the R8 follow-up:** the referee's pre-registered early-stop was AUC(none) >= 0.93 on
 reflections. Measured **0.9214** (stable: 0.9173 on the first 24 negatives, 0.9214 on 34 / 27 videos, so the
