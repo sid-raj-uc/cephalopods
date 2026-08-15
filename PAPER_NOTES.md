@@ -263,3 +263,51 @@ SEG-TEST (122 human-mask frames, 5 held-out videos, 19 negatives), thin768:
   bad one for morphology.
   ⚠️ CAVEAT: only **19 negatives** in the leak-free holdout, so this AUC has wide uncertainty; it
   should be re-measured on more negatives before being claimed as headline.
+
+## R9 — Reflection robustness of the DEPLOYED model, measured for the first time (2026-08-15)
+The paper reports presence AUC 0.794 for `thin768` and describes the system as reflection-robust.
+Those are two different claims: the 0.794 came from **19 empty-TANK negatives on the same cameras as
+the positives**; the *reflection* failure mode (Right_Left — the camera sees the room and a mirrored
+human through the glass, and the CLIP detector fires at p_visible=1.0) was only ever measured for the
+**v3 negatives model**, never for the deployed thin768. R9 closes that gap.
+
+**Leakage assertion (verified, not assumed):** thin768's training set `/dataset_seg_thin768` =
+**4,965 images, 0 of them Right_Left** (checked file-by-file on the Modal volume; the camera is
+excluded by construction in `auto_segment.py` and absent from the human label set). Reflections are
+therefore a leak-free negative source for this model. New: `src/reflection_negatives.py`,
+`src/eval_reflection_presence.py`.
+
+### Right_Left is NOT a pure-reflection camera — 10–20% of frames contain the real animal
+30 frames, one from each of 30 distinct source videos, reviewed at full resolution before scoring.
+**3/30 (10%) unmistakably contain the octopus** (animal spread on the glass with its own mirror image
+beside it; arms with clearly resolved suckers), and **3 more are ambiguous → up to 20%**. Frames were
+labelled conservatively: ambiguous frames are excluded from the negative set, never counted as empty.
+- This revises the 2026-07-05 reading of the 235B result ("534/847 clips came back not-present, almost
+  all Right_Left reflections → drop Right_Left"). Right_Left is **mostly** empty, not **purely** empty,
+  so the standing "drop Right_Left" rule is discarding a real, if sparse, source of animal data.
+- It also re-confirms the 2026-06 hard-negative lesson: an assumed-negative pool must be verified
+  before it is trained or scored on. Assuming these 30 frames were empty would have injected a 10–20%
+  label error straight into the headline metric.
+- ⚠️ PROVENANCE: this review was done by an **AI vision model, not a human**. It is staged for human
+  confirmation (`data/reflection_negatives/`, contact sheets + `ui/review_hardneg.py`). Treat the exact
+  percentage as provisional; the qualitative finding (some frames plainly contain the animal) is not
+  in doubt — see `data/reflection_negatives/pilot_1.jpg` #11 and `pilot_4.jpg` #24, #29.
+
+### Presence separation, by negative type (never pooled), thin768 @ threshold 0.5
+n for the CI is the number of **videos**, not frames; CIs are cluster-bootstrapped by source video.
+| negative type | n | AUC | AUC CI95 (by video) | FP@recall .90 | FP@recall .80 | FP@area>=.01 | median neg area |
+|---|---|---|---|---|---|---|---|
+| empty tank (same cameras) | 19 frames | 0.7942 | [0.626, 0.932] | 0.316 | 0.210 | 0.316 | 0.0036 |
+| reflection (Right_Left)   | 24 frames / 24 videos | **0.9173** | [0.858, 0.964] | 0.250 | 0.125 | 0.208 | 0.0039 |
+(positive median mask area 0.0325; the empty-tank AUC reproduces the benchmark's 0.794 exactly, which
+validates the harness.)
+
+**FINDING — the assumed failure mode is backwards.** thin768 rejects *reflections* well (0.917) and
+rejects the *empty tank* poorly (0.794). The paper's "reflection-robust" claim survives contact with
+a leak-free test; the genuine weakness is dim empty-tank frames, where the model latches onto pipes
+and rocks. Any future presence work should target empty-tank false positives, not reflections.
+
+**Consequence for the R8 follow-up:** the referee's pre-registered early-stop was AUC(none) >= 0.93 on
+reflections. Measured **0.9173** — just under the line, so the cycle is not killed, but the headroom
+for fusion on this negative type is only +0.083, and the referee's second criterion (>= +0.05 AUC gain)
+must clear that ceiling to count.
