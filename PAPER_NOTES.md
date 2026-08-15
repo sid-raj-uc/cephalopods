@@ -692,3 +692,52 @@ produced an unintended **test-retest**: the same human, the same frames, twice, 
 **118/120 = 98.3% self-consistency** (differing only on `empty_0014`, `empty_0015`).
 This bounds label noise: the human agrees with themselves at 98.3% while agreeing with the model at
 83%, so **the model-human gap is model error, not rater instability**. Both UI bugs are fixed.
+
+## R15 — VLM-250: the behaviour labels are only MODERATELY self-consistent (2026-08-15)
+UNBLOCKED by a fresh API key. `src/vlm_reliability.py --run` re-ran the structured extractor over the
+frozen 250-clip / 140-video sample using a **disjoint set of input frames** (detector ranks
+N_KEEP..2*N_KEEP instead of the top N_KEEP). 250/250 succeeded, **$0.165**. Analysis:
+`src/vlm_reliability_stats.py` → `data/vlm_reliability_stats.json`.
+
+**What this measures: frame-sampling sensitivity — does a label survive being shown different clear
+frames from the same clip. It is CONSISTENCY, not accuracy.** Consistency upper-bounds accuracy; a
+perfectly consistent extractor can still be consistently wrong. Never write "accurate" for these.
+
+| field | raw agreement | Cohen's κ | κ CI95 (by video) |
+|---|---|---|---|
+| **behavior (7-class)** | 0.652 | **0.552** | [0.472, 0.624] |
+| posture | 0.684 | 0.510 | [0.423, 0.594] |
+| location | 0.632 | 0.511 | [0.426, 0.591] |
+| context | 0.756 | 0.585 | [0.482, 0.676] |
+| activity | 0.752 | 0.592 | [0.507, 0.675] |
+| present | 0.848 | 0.413 | [0.229, 0.579] |
+| body_color | 0.868 | 0.744 | [0.658, 0.819] |
+| color_or_texture_change | 1.000 | 1.000 | — **ARTIFACT, see below** |
+
+**1. THE HEADLINE CAVEAT. Every behavioural result in this paper — activity budget, circadian
+profile, human-presence stimulus response, kinematics × behaviour — is grouped by a label with
+κ ≈ 0.55 ("moderate" on Landis–Koch).** Change which frames the model sees and roughly a third of
+behaviour labels change. This must appear in the paper's limitations; it was previously unmeasured
+and simply assumed.
+
+**2. Rare classes are the least stable — and they are exactly the classes carrying the fewest videos:**
+Exploration 72.4% · Resting 71.2% · Human-interaction 60.7% · Crawling 53.8% · Reaching 47.6% ·
+**Swimming/jetting 42.9%**. So the classes with the widest kinematic CIs also have the least reliable
+labels; treat per-class claims about swimming/reaching with corresponding caution.
+
+**3. This STRENGTHENS R12 rather than undermining it.** Label noise that is independent of kinematics
+causes regression dilution — it biases a group-difference test **toward the null**. Finding
+KW p=3.5e-06, ε²=0.224 *despite* labels at κ=0.55 means the true separation is likely larger than
+measured, not smaller. CAVEAT: this holds only if the mislabelling is independent of motion; if fast
+clips are preferentially labelled "swimming", noise could inflate instead. Not currently testable.
+
+**4. `color_or_texture_change` is a DEAD FIELD, and its κ=1.000 is an artifact.** Its value is
+**100% determined by the greyscale gate** (IR clips forced to `uncertain` = 151; colour clips `none`
+= 99) — the perfect agreement measures the determinism of a preprocessing rule, not model judgement.
+More damning: across **99 colour clips the model reported a colour/texture change exactly zero times**.
+The field carries no information and should be dropped from the schema or redesigned. The stats script
+now detects and flags gate-determined fields rather than reporting them as excellent reliability.
+
+**5. `present` has high raw agreement (84.8%) but low κ (0.413)** because the class is imbalanced
+(~87% present). Report κ, not raw agreement, for this field. Abstention (`uncertain` behaviour) ran at
+17.6% in condition B.
