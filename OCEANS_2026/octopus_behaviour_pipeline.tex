@@ -3,11 +3,15 @@
 % Sibling paper: conference_101719.tex (protest-behavior -> lighting).
 % TODO before submission:
 %   - finalise author list / affiliations (placeholder below, mirrors the consortium)
-%   - generate figures listed in comments (behaviour dashboard charts, seg before/after,
-%     pipeline diagram); verify all \includegraphics paths
+%   - generate remaining figures (pipeline diagram, behaviour dashboard, seg demo);
+%     kinematics figure is real (assets/kinematics_by_behaviour.png)
 %   - verify every citation's details
 %   - decide final length / trim to target track (full vs work-in-progress)
-%   - build the human-verified test sets before making any "A beats B" claim (see Sec. Limitations)
+%   - DONE (2026-08): human-verified seg test set built (499 masks, video-level holdout);
+%     seg numbers now leak-free. Detection/captioning test sets still pending.
+%   - 2026-08-15: updated with segmentation phases (diversity/HQ-negative/human labels/
+%     512+Tversky/thin768) + new skeleton & kinematics section (frozen bench, +79% arms,
+%     anatomical head, occlusion-honest tracking, kinematics-vs-VLM cross-validation)
 % ============================================================================
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
@@ -59,10 +63,17 @@ presence nearly doubles movement and raises a transparent arousal index. To make
 the system deployable and self-hosting, we distil the large teacher into small
 local models: a captioning student (Qwen3-VL-2B, QLoRA) that runs 4-bit on a
 laptop, and a single-class octopus mask model auto-labelled by GroundingDINO and
-SAM2. The segmentation presence signal reliably rejects tank-glass reflections,
-a dominant false-positive source. We frame results in terms of arousal and
-behavioural state rather than emotion, report the pipeline's current
-limitations honestly, and position the work as the profiling layer complementary
+SAM2 and subsequently anchored by human-verified masks, reaching $0.61$ IoU on a
+leak-free human-labelled test while rejecting tank-glass reflections, a dominant
+false-positive source. On top of the masks we extract an \emph{anatomical
+skeleton}---mantle, head and up to eight arm splines---whose per-frame accuracy
+we raise by $79\%$ on a frozen benchmark through a sequence of measured fixes,
+and whose occlusion-honest arm kinematics independently reproduce the ordering
+of the VLM-derived behaviour classes (resting $63$ vs.\ reaching
+$159$\,px\,s$^{-1}$ arm-tip speed), cross-validating both signals. We frame
+results in terms of arousal and behavioural state rather than emotion, report
+the pipeline's current limitations honestly---including several measured
+negative results---and position the work as the profiling layer complementary
 to real-time single-behaviour response systems.
 \end{abstract}
 
@@ -103,11 +114,19 @@ interpretable activity budget, an exposure-normalised circadian profile, and a
 quantified stimulus response, framed as arousal / behavioural state.
 \item Teacher$\rightarrow$student distillation into deployable local models---a
 4-bit captioning student that runs on a laptop, and a single-class octopus
-segmentation model auto-labelled by GroundingDINO$+$SAM2 whose mask-area signal
-robustly rejects reflections.
-\item An honest account of current limitations---most importantly the absence of
-human-verified held-out test sets---and the diverse-footage data strategy that
-addresses the dominant generalisation gap.
+segmentation model auto-labelled by GroundingDINO$+$SAM2, anchored by
+human-verified masks, and evaluated leak-free on a held-out human-labelled test
+($0.61$ IoU, $\sim\!1\%$ body-area error); its mask-area signal robustly rejects
+reflections.
+\item An anatomical skeleton and kinematics layer on top of the masks:
+per-frame mantle/head/arm graphs whose accuracy we improve $+79\%$ on a frozen
+benchmark via measured fixes, occlusion-honest arm tracking, and per-arm
+kinematics that independently reproduce the VLM behaviour ordering---a
+cross-validation of two unrelated signal paths.
+\item An honest account of methodology and limitations, including measured
+negative results (a train--test leakage we caught and corrected, and several
+plausible improvements that failed under a fixed benchmark), and the
+diverse-footage data strategy that addressed the dominant generalisation gap.
 \end{enumerate}
 
 \section{Related Work}
@@ -265,17 +284,42 @@ size sweep (a compact U-Net at several widths and an LR-ASPP head); we retain th
 smallest model clearing our quality bar, an LR-ASPP student of $3.2$\,M
 parameters.
 
-Two results, one positive and one cautionary. \emph{Positive:} used as a
-\emph{presence} signal, the mask area is highly reflection-robust. A model trained
-with empty-mask negatives reaches AUC $0.86$ overall and $0.99$ against
-reflections, with $0\%$ reflection false-positives at an area threshold while
-retaining $88\%$ present-recall---directly attacking the pipeline's dominant
-false-positive source. \emph{Cautionary:} pixel-accurate masks are not yet
-solved---mask IoU plateaus near $0.47$ across model sizes, architectures and
-augmentation. We diagnosed this as a \emph{video-diversity} generalisation gap
-(only $62$ distinct training videos; training IoU $0.68$ vs.\ validation $0.47$,
-failing by mislocating an otherwise correctly-sized blob), which motivates the
-harvesting effort of Sec.~\ref{sec:harvest} rather than a larger model.
+Used as a \emph{presence} signal, the mask area is highly reflection-robust: a
+model trained with empty-mask negatives reaches AUC $0.86$ overall and $0.99$
+against reflections, with $0\%$ reflection false-positives at an area threshold
+while retaining $88\%$ present-recall---directly attacking the pipeline's
+dominant false-positive source.
+
+\textbf{Raising mask quality: what worked and what did not.} Early students
+plateaued near $0.47$ IoU across model sizes, architectures and augmentation. We
+resolved this through a sequence of controlled experiments, each evaluated on
+fixed splits, and report the failures alongside the successes because they
+changed our conclusions. (i)~\emph{Video diversity} (expanding training from $62$
+to $176$ distinct source videos via the harvest of Sec.~\ref{sec:harvest})
+helped modestly and robustly ($0.468\!\rightarrow\!0.494$ on a harder,
+diverse-date validation). (ii)~\emph{Cleaner teacher labels did not help}:
+re-labelling everything with larger teacher models (GroundingDINO-base,
+SAM2-large) left held-out IoU flat ($0.494\!\rightarrow\!0.506$); an earlier
+signal suggesting label noise was the ceiling turned out to be
+\emph{train--test leakage}---two label sources shared source videos---which we
+caught, corrected with a hard video-level holdout, and re-measured.
+(iii)~\emph{Human-verified masks}: a click-to-SAM2 labelling tool (one click
+seeds SAM2, the human corrects) produced $412$ positive and $87$ empty-mask
+human labels; training on human labels alone underperformed the blend ($0.505$
+vs.\ $0.608$)---at this scale, label volume beats purity---but they provide the
+project's first \emph{human-verified held-out test set}. (iv)~The decisive
+levers were found by inspecting failures on that test set: the octopus occupies
+a median $2.5\%$ of the frame, so at the original $256^2$ input its arms are
+$1$--$2$ pixels wide---unrepresentable; and the symmetric Dice$+$BCE loss did
+not penalise under-segmentation. Training at $512^2$ with a focal Tversky loss
+($\beta\!>\!\alpha$, penalising false negatives) on human$+$teacher labels
+yields, on the leak-free human-verified test, \textbf{$0.608$ mean / $0.666$
+median IoU} with $\sim\!1\%$ body-area error---up from a $0.466$ baseline.
+A $768^2$, $\beta{=}0.8$ variant further improves thin-structure recall and is
+used for the skeleton extraction of Sec.~\ref{sec:skeleton}. We note the
+residual IoU gap is dominated by thin arm boundaries; the \emph{area} signal
+that the behavioural analysis consumes (posture spread, presence) is accurate to
+$\sim\!1\%$.
 
 % FIGURE: seg before/after (data/segmentation_demo) + presence-gate ROC
 \begin{figure}[t]
@@ -288,6 +332,90 @@ harvesting effort of Sec.~\ref{sec:harvest} rather than a larger model.
     is rejected by low seed confidence.}
     \label{fig:seg}
 \end{figure}
+
+\section{Anatomical Skeleton and Arm Kinematics}
+\label{sec:skeleton}
+The masks enable a further, more structured representation: a per-frame
+\emph{anatomical skeleton}---a mantle centre, a head node, and up to eight arm
+splines with base/mid/tip landmarks---from which per-arm kinematics (tip speed,
+posture spread) are derived. Extraction is classical: topology-preserving
+thinning of the silhouette, Dijkstra arm-path selection from an anatomical root,
+and mask-constrained splines.
+
+\textbf{A frozen benchmark and measured fixes.} All skeleton work is evaluated
+on a frozen benchmark of $50$ frames (image, human-verified mask, model mask),
+scored by arms recovered per frame under a \emph{tip-correctness guard}
+(selected arm tips must coincide with true silhouette protrusions, so arm count
+cannot be bought with spurious branches). Decomposing the loss per stage
+(silhouette $\rightarrow$ thinning $\rightarrow$ selection) located the errors
+and produced the arc of Table~\ref{tab:skel}: relaxed arm-selection floors that
+had discarded genuinely short, curled arms; mask preparation whose blur
+threshold erased thin arms; an anatomically constrained head (the previous
+widest-second-blob rule placed the head plausibly in only $9\%$ of frames; a
+neck-constriction rule between mantle and arm crown reaches $96\%$); the
+higher-resolution segmentation student; and, for offline analysis, SAM2
+refinement of the student's mask (the student \emph{locates}, SAM2
+\emph{sharpens}), which improves both arm count and tip correctness. Two
+plausible improvements measured as nulls and are reported as such:
+skeletonising the segmentation \emph{probability field} with hysteresis (the
+missing arms are not sub-threshold---the student genuinely does not see them),
+and a zoom-in second segmentation pass (crops are out-of-distribution for the
+student). Frames recovering $\geq\!6$ of the $8$ arms rose from $3/50$ to
+$17/50$; ceilings for context: clean human masks yield $6.15$ arms and a 2-D
+silhouette $\sim\!7$, so per-frame extraction now sits within one arm of what
+the mask representation permits.
+
+\begin{table}[t]
+\caption{Skeleton-extraction accuracy on the frozen 50-frame benchmark
+(model-mask input; tip-correctness guarded at every step).}
+\label{tab:skel}
+\centering
+\begin{tabular}{lc}
+\toprule
+Configuration & Arms/frame \\
+\midrule
+Baseline extractor & 2.82 \\
+$+$ selection-floor tuning & 3.65 \\
+$+$ mask-preparation fixes & 4.16 \\
+$+$ $768^2$ thin-structure segmentation & 4.64 \\
+$+$ SAM2 mask refinement (offline) & \textbf{5.04} \\
+\midrule
+Clean human-mask ceiling & 6.15 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Occlusion-honest tracking and kinematics.} Across a clip, per-frame
+skeletons are linked by seeding from the best-resolved frame and propagating
+bidirectionally (median arms maintained across a clip rise from $2.2$ to
+$5.8$), with a per-node optical-flow motion prior. Critically, every node
+carries a state---\emph{detected}, \emph{fitted}, or \emph{occluded}---and
+motion is computed \emph{only} from evidence-backed samples: instrumenting this
+revealed that $42\%$ of arm samples in naive tracking were evidence-free holds
+whose apparent smoothness masked fabricated stillness. A global
+tracklet-association alternative measured worse than the gated chain and is
+reported as a negative.
+
+% FIGURE: kinematics-by-behaviour boxplot (results/segmentation/kinematics_by_behaviour.png)
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.48\textwidth]{assets/kinematics_by_behaviour.png}
+    \caption{State-gated arm-tip speed grouped by the VLM-assigned behaviour
+    class. The two signals are computed by unrelated paths (geometry vs.\
+    language model), yet the kinematics reproduce the expected ordering.}
+    \label{fig:kinematics}
+\end{figure}
+
+\textbf{Cross-validation of the two signal paths.} Merging per-clip kinematics
+into the structured records gives an independent check on the VLM labels:
+state-gated arm-tip speed orders the behaviour classes exactly as ethology
+expects---resting $63$, crawling $101$, human interaction $136$,
+exploration/manipulation $139$, reaching out of water $159$\,px\,s$^{-1}$
+(Fig.~\ref{fig:kinematics})---with resting under half of the active classes.
+Because the kinematic and language-model pathways share no components beyond
+the raw video, their agreement is evidence that both measure real behaviour
+rather than each other's artefacts. Kinematics are reported in pixel units
+(camera-relative); metric calibration is future work.
 
 \section{Relevance to the OCEANS Community}
 The work targets intelligent sensing and longitudinal behavioural analysis for
@@ -302,40 +430,51 @@ interventions---can be interpreted.
 \section{Limitations and Ongoing Work}
 We are deliberate about what is not yet established.
 \begin{itemize}[leftmargin=*, itemsep=1pt, topsep=2pt]
-\item \textbf{No human-verified held-out test sets yet.} All reported numbers are
-on internal evaluation splits (teacher-derived or auto-labelled). We therefore make
-\emph{no} claim that one model beats another; building small human-verified test
-sets for detection, captioning and segmentation is the immediate next step and a
-prerequisite for any comparative claim.
+\item \textbf{Human-verified test sets exist only for segmentation.}
+Segmentation now reports on a leak-free human-labelled held-out test
+($499$ human masks; five source videos excluded from \emph{all} training
+sources); detection and captioning numbers remain on internal splits, so we
+make no comparative claims for those components yet.
+\item \textbf{Leakage is easy and we hit it once.} Two label sources sharing
+source videos silently placed test videos in training; an apparent
+$0.49\!\rightarrow\!0.70$ improvement evaporated under a hard video-level
+holdout. All segmentation and skeleton results reported here post-date that
+correction; we recommend video-level holdouts as standard practice for
+camera-trap-style data.
 \item \textbf{Presence-gate noise propagates.} Absolute behavioural rates depend on
 the detector; we report contrasts, which are robust to a constant gate bias.
 \item \textbf{Context label is coarse.} The ``enrichment interaction'' context
 fires whenever a permanent tank object is visible ($\sim$66\% of clips); the clean
 stimulus contrast is human-present vs.\ absent.
-\item \textbf{Segmentation.} Pixel-accurate masks await more distinct training
-videos; infrared masks additionally need a prompt-refinement fix. A static-feature
-behaviour classifier failed (below the majority baseline), confirming that
-behaviour classification needs temporal/motion features rather than more labels.
+\item \textbf{Skeleton and kinematics.} Arm recovery is silhouette-limited (a 2-D
+mask shows $\sim\!7$ of $8$ arms at best, and imperfect masks cost a further
+$\sim\!1$--$2$); kinematics are in pixel units without metric calibration;
+infrared cameras are not yet covered by the colour-trained segmenter. A
+static-feature behaviour classifier failed (below the majority baseline),
+confirming that behaviour classification needs temporal/motion features rather
+than more labels---consistent with the kinematics layer now providing exactly
+those features.
 \end{itemize}
-Ongoing work follows two tracks. First, we are lifting the segmentation student's
-mask accuracy \emph{by data rather than by size}: a recently completed diverse
-harvest (Sec.~\ref{sec:harvest}) expands training coverage from $7$ to over $100$
-distinct days, and---consistent with the video-diversity diagnosis---we are
-retraining the same small model on this broader set and re-selecting the smallest
-architecture that meets the quality bar, so the deployed model stays compact while
-its masks improve. Second, we distil the structured behavioural extractor itself
-into the local $2$-B student (JSON targets in place of a sentence). Both tracks
-depend on the human-verified test sets above, which we are building in parallel.
+Ongoing work follows three tracks: scaling the state-gated kinematics from the
+current validation subset to the full clip corpus so per-behaviour kinematic
+profiles reach statistical strength; distilling the structured behavioural
+extractor itself into the local $2$-B student (JSON targets in place of a
+sentence); and, to move past the silhouette ceiling, a learned keypoint model
+operating on RGB appearance rather than masks, for which the current skeleton
+outputs can bootstrap pseudo-labels.
 
 \section{Conclusion}
 We presented an automated vision--language pipeline that converts continuous
 octopus footage into a quantified behavioural and affective-state time-series, and
 distils its large teachers into local models that run offline. The aggregate
 analysis surfaces an interpretable activity budget, a clear circadian rhythm and a
-measurable stimulus response, while the reflection-robust presence signal improves
-the extraction itself. Framed as arousal and behavioural state and reported with
-its limitations, the system offers a practical, welfare-oriented layer for
-longitudinal behavioural understanding in controlled marine habitats.
+measurable stimulus response; the segmentation student---evaluated leak-free on a
+human-verified test---supplies a reflection-robust presence signal and the masks
+for an anatomical skeleton whose occlusion-honest arm kinematics independently
+reproduce the ordering of the language-model behaviour labels. Framed as arousal
+and behavioural state, and reported together with the negative results and the
+leakage lesson that shaped it, the system offers a practical, welfare-oriented
+layer for longitudinal behavioural understanding in controlled marine habitats.
 
 \section*{Ethical Statement and Data Availability}
 The work was conducted in a private aquarium, with only sub-threshold interactions
