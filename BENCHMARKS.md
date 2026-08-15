@@ -16,6 +16,17 @@ Results append to `data/benchmarks.json` (keyed by tag); `--latex` writes
    video-level holdout) — see `SEGMENTATION_LOG.md`.
 3. **The holdout videos are excluded from every training source**, not just the one being trained.
 4. **Report the metric that can't be gamed** (see the tip-F1 note below), and report negatives.
+5. **A leakage check must account for every row of the manifest it reads.** Print
+   `rows parsed / rows total` and fail loudly on any unparsed row. `data/frames/manifest.csv` mixes two
+   filename conventions — `2026-04-05_2015_Right_Front_...` (date_HHMM) and
+   `p0.50_2026-02-20_095420_Right_Back_...` (date_HHMMSS) — so a regex written for one silently skips
+   the other. A check matching only the 6-digit form ignored **8,658 of 11,224 rows (77%)** and
+   under-reported the detector's training set as 24 videos / 5 Right_Left / 1 overlap when the truth is
+   **32 videos / 11 Right_Left / 5 overlapping videos**. A leakage check that quietly matches nothing
+   looks exactly like a leakage check that passes.
+6. **Different arms of a head-to-head must be scored on the IDENTICAL set.** If leakage forces frames
+   out for one arm, drop them for every arm and restate, rather than comparing arm A on 34 frames with
+   arm B on 28.
 
 ---
 
