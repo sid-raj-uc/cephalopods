@@ -105,10 +105,26 @@ def grab(url, t, dst, timeout=90):
     return dst.exists() and cv2.imread(str(dst)) is not None
 
 
-def sample(n_videos=60, per_video=2, seed=23):
+def sample(n_videos=60, per_video=2, seed=23, collections_=None, outdir=None):
+    """collections_: restrict the crawl to specific server collections.
+
+    DOMAIN MATCHING MATTERS MORE THAN VOLUME. The two Nity collections are two different physical
+    setups: `O-vulgaris-Nity-2026-2-20--` is the lab tank the SEG-TEST positives come from (Camera 2,
+    lab shelving), while `O-vulgaris-Nity-2025-9-17--` is a different room and tank entirely (Cameras
+    7/9, a blue reef tank with curtains and a table). A first run crawled both and drew mostly the
+    2025 setup; separating "2026 tank containing an octopus" from "2025 room containing no octopus"
+    would have measured SCENE DIFFERENCE, not octopus presence, and produced a flatteringly high AUC
+    for the wrong reason. Match the collection to the positives for the headline number; the
+    cross-setup frames are a separate, genuinely useful question (false positives in an unseen
+    environment) and must be reported as such, never pooled.
+    """
+    global OUTDIR, INDEX
+    if outdir:
+        OUTDIR = REPO / "data" / outdir
+        INDEX = OUTDIR / "index.json"
     excl = excluded_sessions()
     plan = []
-    for coll in H.NITY_COLLECTIONS:
+    for coll in (collections_ or H.NITY_COLLECTIONS):
         try:
             dates = H.list_dates(H.BASE + coll)
         except Exception as e:
@@ -222,8 +238,16 @@ if __name__ == "__main__":
     ap.add_argument("--contact-sheet", action="store_true")
     ap.add_argument("--videos", type=int, default=60)
     ap.add_argument("--per-video", type=int, default=2)
+    ap.add_argument("--collection", default="", help="restrict crawl to one server collection "
+                    "(match the positives' setup — see the docstring on domain matching)")
+    ap.add_argument("--outdir", default="", help="output dir under data/ (default empty_negatives)")
     a = ap.parse_args()
+    if a.outdir:
+        OUTDIR = REPO / "data" / a.outdir
+        INDEX = OUTDIR / "index.json"
     if a.sample:
-        sample(a.videos, a.per_video)
+        sample(a.videos, a.per_video,
+               collections_=[a.collection] if a.collection else None,
+               outdir=a.outdir or None)
     if a.contact_sheet:
         contact_sheet()
