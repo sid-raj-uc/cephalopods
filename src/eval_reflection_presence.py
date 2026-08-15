@@ -40,9 +40,19 @@ OUT = REPO / "data" / "reflection_presence.json"
 
 
 def areas_from_cache(mode, thresh):
-    """Positive + empty-tank negative mask areas from the prob cache (already computed)."""
+    """Positive + empty-tank negative mask areas from the prob cache (already computed).
+
+    BUG FIXED 2026-08-15: `video` used to be the image FILENAME, so the cluster bootstrap treated
+    all 122 positives as 122 independent recordings when they come from just 5. That understates
+    clustering and yields CIs that are too NARROW (the reflection CI was reported as [0.871, 0.964];
+    with the true 5-video grouping it is [0.826, 0.966]). Point estimates are unaffected — only the
+    uncertainty was wrong, and in the flattering direction.
+    """
+    import benchmarks as B
     d = CACHE / mode
     idx = json.load(open(d / "index.json"))
+    pos_src = [r for r in B._manifest("human") if B._source_video(r["clip"]) in B.HOLDOUT_VIDEOS]
+    neg_src = [r for r in B._manifest("negative") if B._source_video(r["clip"]) in B.HOLDOUT_VIDEOS]
     pos, neg = [], []
     for r in idx["rows"]:
         pr = np.load(d / f"{r['key']}.npz")["prob"].astype(np.float32)
@@ -50,8 +60,10 @@ def areas_from_cache(mode, thresh):
         m = cv2.resize(pr, (W, H), interpolation=cv2.INTER_LINEAR) > thresh
         if m.any():
             m = _largest_blob(m)
-        (pos if r["label"] == "pos" else neg).append(
-            {"area": float(m.mean()), "video": Path(r["image"]).name})
+        bucket, src = (pos, pos_src) if r["label"] == "pos" else (neg, neg_src)
+        i = len(bucket)
+        vid = B._source_video(src[i]["clip"]) if i < len(src) else "unknown"
+        bucket.append({"area": float(m.mean()), "video": vid})
     return pos, neg
 
 

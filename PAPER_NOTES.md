@@ -542,3 +542,57 @@ by `OCEANS_2026/make_figures.py` **through `src/kinematics_stats.collect` on
 the plotted medians are the published medians by construction; it plots per-(video,class) medians,
 not clips. The old 63→159 px/s figures are cited in the paper only as the earlier, less conservative
 clip-pooled estimate.
+
+## R13 — EMPTY-V2: the presence benchmark repaired, and 0.794 was WRONG as well as under-powered (2026-08-15)
+The paper's presence AUC of 0.794 came from 19 empty frames drawn from **2 recordings (18 from one)**.
+EMPTY-V2 replaces it with a properly-powered, **detector-independent**, verified set.
+
+**Construction** (`src/empty_negatives.py`). Frames are grabbed at **uniform random timestamps from
+whole server videos** by input-seek — never from clips the extractor selected, because extracted clips
+exist only where the CLIP detector fired, which enriches the set with that detector's own false
+positives (the bias now recorded against R10). Excluded: thin768's 132 training sessions and the
+detector's 32 sessions, matched on `(date, HHMM)`. All 120 frames reviewed at full resolution before
+scoring: **8 (6.7%) unmistakably contain the animal, 7 more ambiguous (12.5% total)**; ambiguous frames
+are excluded rather than assumed empty. Result: **105 verified negatives / 53 source videos.**
+
+**Two sampling defects were caught and fixed before any number was computed** — both would have
+produced a confident, wrong result:
+1. *Single-date concentration.* The first run drew all 40 frames from 20 recordings on ONE date and ONE
+   camera, because one directory listing supplied every recording before the loop advanced —
+   reproducing exactly the concentration defect this benchmark exists to fix. Fixed with a per-listing
+   cap and round-robin.
+2. *Domain mismatch.* The second run crawled both Nity collections, which are **two different physical
+   setups** — the 2026-02 lab tank (the positives' domain) and a 2025-09 collection in a different room
+   with a different tank. Separating "2026 tank containing an octopus" from "2025 room containing none"
+   would have measured SCENE DIFFERENCE and returned a flatteringly high AUC for the wrong reason.
+   Fixed by matching the collection; the cross-setup frames are kept separately
+   (`data/empty_negatives_crossdomain/`) as a distinct question (FP in an unseen environment).
+
+### Results — thin768, threshold 0.5, CIs cluster-bootstrapped by source video
+| negative set | n | videos | AUC | CI95 | FP@R.90 | FP@R.80 | FP@area>=.01 |
+|---|---|---|---|---|---|---|---|
+| **EMPTY-V2 (empty frames, multi-video)** | 105 | **53** | **0.9170** | [0.839, 0.962] | 0.171 | 0.086 | 0.143 |
+| reflection REFL-34 | 34 | 27 | 0.9214 | [0.826, 0.966] | 0.235 | 0.118 | 0.176 |
+| old SEG-TEST empty-tank | 19 | **2** | *descriptive only* | — | — | — | — |
+
+**1. The published 0.794 was not merely under-powered — it was PESSIMISTIC.** Properly measured across
+53 recordings the model separates empty frames from present frames at **0.917**, not 0.794. The old
+figure was dominated by a single unusually hard recording. The paper's presence claim is stronger than
+what it currently reports, and can now carry a confidence interval.
+
+**2. NULL RESULT, and it settles the question I withdrew in R9.** Empty-frame AUC 0.9170 and reflection
+AUC 0.9214 are statistically indistinguishable (CIs almost entirely overlapping). There is **no
+measurable difference between the two failure modes** — neither "reflections are the dominant problem"
+(the paper's original framing) nor "the failure mode is backwards" (my withdrawn claim) is supported.
+Recording the null explicitly so neither framing returns.
+
+**3. BUG FIXED in my own earlier statistics.** `areas_from_cache` set each positive's `video` to its
+image FILENAME, so the cluster bootstrap treated 122 positives as 122 independent recordings when they
+come from 5. That understates clustering and yields CIs that are too narrow *in the flattering
+direction*. R9's reflection CI [0.871, 0.964] is corrected to **[0.826, 0.966]**; the point estimate
+0.9214 is unchanged. Fixed in `src/eval_reflection_presence.py`. **Every cluster bootstrap must group
+BOTH arms by true source video — grouping only the negatives is not enough.**
+
+PENDING: re-test R8's fusion presence gain (0.794 -> 0.9685 ema) on EMPTY-V2 — it rests on the same
+19 two-recording frames. Needs neighbour frames per negative, i.e. another server pass.
+CAVEAT: labels are AI-verified, not human-verified — PAPER_NOTES only until human confirmation.
