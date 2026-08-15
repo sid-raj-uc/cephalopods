@@ -38,18 +38,18 @@
 \newlabel{sec:skeleton}{{VI}{4}{}{section.6}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Arm-selection gate frontier on SKEL-50 ($50$ frozen frames, corrected tip ground truth). Gates are (unique-suffix scale, unique-suffix fraction, tip-thinness ratio); P/R are against human-mask protrusions and arms per frame is descriptive only. \emph  {Caveat:} the duplicate rate uses the same criterion the gates enforce, so gated rows are $0$ by construction.}}{5}{}\protected@file@percent }
 \newlabel{tab:skel}{{II}{5}{}{table.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Limitations and Ongoing Work}{5}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Qualitative example from the frozen benchmark (arm splines coloured, tips marked), shipped post-gate configuration. Left: skeleton on the segmentation student's mask ($3$ arms). Right: the same frame after offline SAM2 refinement, which sharpens the silhouette and recovers $5$ arms; the rest are folded against the body, not separable in a 2-D silhouette.}}{5}{}\protected@file@percent }
+\newlabel{fig:skel_example}{{4}{5}{}{figure.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces State-gated arm-tip speed by VLM-assigned behaviour class ($146$ clips / $66$ source videos, $\leq \!2$ per video). Each box summarises the per-\emph  {video} medians---the independent unit, since clip-level pooling would be pseudo-replication; dots are videos beyond the whiskers. (b) divides speed by arm spread, removing the apparent-size confound; both panels keep the class order of (a), so the rank change is visible: reaching is fastest in raw pixels but third in body-lengths per second, being performed with an extended body.}}{5}{}\protected@file@percent }
+\newlabel{fig:kinematics}{{5}{5}{}{figure.5}{}}
 \bibcite{disc_o}{1}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Qualitative example from the frozen benchmark (arm splines coloured, tips marked), shipped post-gate configuration. Left: skeleton on the segmentation student's mask ($3$ arms). Right: the same frame after offline SAM2 refinement, which sharpens the silhouette and recovers $5$ arms; the rest are folded against the body, not separable in a 2-D silhouette.}}{6}{}\protected@file@percent }
-\newlabel{fig:skel_example}{{4}{6}{}{figure.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces State-gated arm-tip speed by VLM-assigned behaviour class ($146$ clips / $66$ source videos, $\leq \!2$ per video). Each box summarises the per-\emph  {video} medians---the independent unit, since clip-level pooling would be pseudo-replication; dots are videos beyond the whiskers. (b) divides speed by arm spread, removing the apparent-size confound; both panels keep the class order of (a), so the rank change is visible: reaching is fastest in raw pixels but third in body-lengths per second, being performed with an extended body.}}{6}{}\protected@file@percent }
-\newlabel{fig:kinematics}{{5}{6}{}{figure.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VIII}Conclusion}{6}{}\protected@file@percent }
 \bibcite{clip}{2}
 \bibcite{groundingdino}{3}
 \bibcite{sam2}{4}
 \bibcite{lora}{5}
 \bibcite{mobilenetv3}{6}
 \bibcite{qwenvl}{7}
-\@writefile{toc}{\contentsline {section}{References}{7}{}\protected@file@percent }
-\gdef \@abspage@last{7}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Limitations and Ongoing Work}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Conclusion}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{6}{}\protected@file@percent }
+\gdef \@abspage@last{6}

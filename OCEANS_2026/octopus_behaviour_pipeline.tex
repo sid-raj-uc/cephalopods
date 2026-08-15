@@ -475,16 +475,16 @@ concentrated in recall, so every pre-fix F1 is incomparable with post-fix ones
 and every ranking had to be re-measured (Table~\ref{tab:skel}). Validate a new
 metric's \emph{own} ground truth before trusting rankings it produces.
 
-\begin{figure*}[t]
+\begin{figure}[t]
     \centering
-    \includegraphics[width=0.52\textwidth]{assets/skeleton_example.pdf}
+    \includegraphics[width=0.48\textwidth]{assets/skeleton_example.pdf}
     \caption{Qualitative example from the frozen benchmark (arm splines coloured,
     tips marked), shipped post-gate configuration. Left: skeleton on the
     segmentation student's mask ($3$ arms). Right: the same frame after offline
     SAM2 refinement, which sharpens the silhouette and recovers $5$ arms; the
     rest are folded against the body, not separable in a 2-D silhouette.}
     \label{fig:skel_example}
-\end{figure*}
+\end{figure}
 
 \textbf{Occlusion-honest tracking and kinematics.} Across a clip, per-frame
 skeletons are linked by seeding from the best-resolved frame and propagating
