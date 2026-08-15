@@ -232,3 +232,34 @@ Deployed model `octo_seg_thin768_lraspp.pt`, trained on Modal (A10G) via `src/mo
   (old-HQ 3,991 + harvest-HQ 740); **split BY SOURCE VIDEO**, with 5 test videos forced out of *all*
   training sources via `--holdout-videos` (leakage guard added after the incident in R3c)
 - **Selection** best epoch by validation IoU
+
+## R8 — Test-time temporal fusion: a NEGATIVE for masks, an unexpected WIN for presence (2026-08-15)
+Motivation: R3c concluded the mask model fails by *mislocalizing* a correctly-sized blob and asserted
+"a temporal student is the real lever" — an untested claim in the paper's limitations. Also a
+reporting defect: every published IoU is single-frame, while the deployed skeleton path
+(`segment_to_skeleton.py`, `EMA_ALPHA=0.45`) thresholds an EMA-smoothed probability map.
+Method: `src/temporal_fusion.py` + `benchmarks.py --fusion {none,ema,flow}`; neighbours t±1,±2 warped
+onto t with DIS optical flow, fused by per-pixel median. **Frame-alignment trap avoided:**
+`seed_frame` indexes the labeller's `ffmpeg fps=2, scale='min(1024,iw)'` list, NOT raw video frames,
+so neighbours are produced by re-running that identical extraction and asserting the regenerated
+frame matches the stored labelled image (align_err 0.4–0.55 vs tolerance 12; **0/141 failures**).
+
+SEG-TEST (122 human-mask frames, 5 held-out videos, 19 negatives), thin768:
+| fusion | IoU mean | IoU median | area err | presence AUC |
+|---|---|---|---|---|
+| none (single frame — what the paper reports) | 0.6415 | 0.7193 | 1.05% | 0.794 |
+| flow ±2 (DIS-warped median) | **0.5109** | **0.5505** | 1.06% | **0.9495** |
+
+- **NEGATIVE (pre-registered kill criterion met, ≥+0.01 mean IoU required):** temporal fusion does
+  **not** fix mislocalization — it makes masks materially worse (−0.131 mean, −0.169 median IoU),
+  consistent with boundary blurring on a fast-deforming animal. The paper's limitation must be
+  rewritten from "a temporal student is the real lever" to "**test-time** temporal fusion does not
+  fix mislocalization" (a temporal *trained* student remains untested, but this removes the cheap
+  evidence for it).
+- **UNEXPECTED POSITIVE:** presence AUC **0.794 → 0.9495**. Fusion washes out single-frame
+  hallucinations that are inconsistent across neighbouring frames, which is exactly the pipeline's
+  dominant false-positive mode (reflections / empty tank). Body-area error is unchanged (1.05→1.06%),
+  so mask *size* survives while boundary fidelity degrades — a good trade for a presence GATE and a
+  bad one for morphology.
+  ⚠️ CAVEAT: only **19 negatives** in the leak-free holdout, so this AUC has wide uncertainty; it
+  should be re-measured on more negatives before being claimed as headline.
