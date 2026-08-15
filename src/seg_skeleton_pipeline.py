@@ -36,7 +36,9 @@ def _overlay(frame, mask, outline=True):
     return out.astype(np.uint8)
 
 
-def _draw_skeleton(canvas, nodes, edges, thick=2):
+def _draw_skeleton(canvas, nodes, edges, thick=2, draw_center=False):
+    """draw_center=False (current default): the mantle/body-centre dot is hidden — it crowded the
+    head marker and reads as clutter; the arm splines already converge there visually."""
     for e in edges:
         p = np.rint(np.asarray(e["polyline"])).astype(np.int32).reshape(-1, 1, 2)
         if len(p) < 2:
@@ -46,6 +48,8 @@ def _draw_skeleton(canvas, nodes, edges, thick=2):
     for n in nodes:
         pt = (int(round(n["x"])), int(round(n["y"])))
         if n["is_center"]:
+            if not draw_center:
+                continue
             col, r = (0, 0, 255), 7
         elif n.get("is_head"):
             col, r = (120, 230, 0), 7
@@ -95,7 +99,7 @@ def _write_mp4(frames, path, fps):
 
 
 def process_video_3way(video, out_dir, S=None, fps=5.0, work_w=960, present=0.004,
-                       min_arms=3, max_arms=8, on_stage=None):
+                       min_arms=3, max_arms=8, on_stage=None, refine=False):
     out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
     if S is None:
         S = OctoSegmenter(str(DEFAULT_CKPT))
@@ -132,6 +136,10 @@ def process_video_3way(video, out_dir, S=None, fps=5.0, work_w=960, present=0.00
             if sm.any():
                 sm = _largest_blob(sm)
                 sm = cv2.morphologyEx(sm.astype(np.uint8), cv2.MORPH_CLOSE, _KERNEL).astype(bool)
+            if refine and sm.any() and sm.mean() >= present:
+                from mask_refine import sam2_refine   # student locates, SAM2 sharpens (offline)
+                stage(f"SAM2-refining frame {len(frames)+1}") if (len(frames) % 20 == 0) else None
+                sm = sam2_refine(fr, sm, largest_blob=_largest_blob)
             frames.append(fr); raws.append(rm); smooths.append(sm)
         i += 1
     cap.release()
@@ -160,7 +168,8 @@ def process_video_3way(video, out_dir, S=None, fps=5.0, work_w=960, present=0.00
     for k in present_idx:
         fc = crop(frames[k])
         raw_frames.append(_label(_overlay(fc, crop(raws[k])), "1) RAW segmentation"))
-        smooth_frames.append(_label(_overlay(fc, crop(smooths[k])), "2) SMOOTHED segmentation", (120, 255, 120)))
+        lbl2 = "2) SMOOTHED + SAM2-refined" if refine else "2) SMOOTHED segmentation"
+        smooth_frames.append(_label(_overlay(fc, crop(smooths[k])), lbl2, (120, 255, 120)))
 
     # ---- pass 2b: skeleton tracked over the smoothed-mask crop sequence (best-frame seeded) ----
     stage("extracting skeleton")

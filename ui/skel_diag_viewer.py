@@ -76,7 +76,16 @@ HTML = """<!doctype html><html><head><meta charset=utf-8><title>Skeleton diagnos
 </div>
 <div id=wrap>
  <div id=left><img id=cmp></div>
- <div id=right><h3>Arm-count summary (n=40)</h3><img id=chart src="/chart"></div>
+ <div id=right>
+  <h3>Legend</h3>
+  <div style="background:#16181d;border:1px solid #2a2d35;border-radius:8px;padding:12px;font-size:13px;line-height:2">
+   <div><span style="display:inline-block;width:13px;height:13px;border-radius:50%;background:#00e678;border:1.5px solid #1e1e1e;vertical-align:-2px"></span>&nbsp; <b style="color:#7ed47e">Head</b> <span class=k>(at the neck; short green line links it to the body)</span></div>
+   <div><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#ffd700;border:1.5px solid #1e1e1e;vertical-align:-2px"></span>&nbsp; <b style="color:#fd6">Arm tips</b></div>
+   <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fff;border:1.5px solid #1e1e1e;vertical-align:-1px"></span>&nbsp; <b>Arm landmarks</b> <span class=k>(base / mid)</span></div>
+   <div><span style="display:inline-block;width:26px;height:4px;border-radius:2px;background:linear-gradient(90deg,#e64646,#f09123,#41af4b,#3773e1,#9155d2);vertical-align:2px"></span>&nbsp; <b>Arm splines</b> <span class=k>(one colour per arm, consistent IDs)</span></div>
+   <div class=k style="line-height:1.5;margin-top:6px">Body-centre marker hidden — the arm splines converge there.</div>
+  </div>
+ </div>
 </div>
 <script>
 let rows=[], order=[], pos=0;
@@ -85,7 +94,6 @@ async function load(){const d=await (await fetch('/api/summary')).json();
  document.getElementById('title').textContent=m.title||'Skeleton phase results';
  document.getElementById('llab').textContent=m.left||'left'; document.getElementById('rlab').textContent=m.right||'right';
  document.getElementById('hint').textContent='left = '+(m.left||'left')+' · right = '+(m.right||'right');
- document.getElementById('chart').src='/chart?t='+Date.now();
  gtm.textContent=s.left_mean; mm.textContent=s.right_mean; gt6.textContent=s.left_ge6+'/'+s.n; m6.textContent=s.right_ge6+'/'+s.n;
  document.getElementById('tot').textContent=rows.length; sortit(); show();}
 function sortit(){const by=document.getElementById('sort').value;

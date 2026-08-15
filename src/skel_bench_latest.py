@@ -44,8 +44,7 @@ def main(refine=False):
                                  tuple(np.mean(np.asarray(bases, float), axis=0)))))
         arms_all.append(arms); head_all.append(hok)
         cv2.rectangle(vis, (0, 0), (vis.shape[1], 30), (0, 0, 0), -1)
-        cv2.putText(vis, f"LATEST skeleton: {arms} arms | head {'ok' if hok else 'off'} "
-                         f"(red=mantle green=head yellow=tips)",
+        cv2.putText(vis, f"LATEST skeleton: {arms} arms | head {'ok' if hok else 'off'}",
                     (6, 21), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
         cv2.imwrite(str(OUT / f"{j:03d}.jpg"), vis, [cv2.IMWRITE_JPEG_QUALITY, 88])
         rows.append({"file": f"{j:03d}.jpg", "left_arms": arms, "right_arms": hok})
