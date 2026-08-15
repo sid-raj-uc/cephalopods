@@ -433,3 +433,42 @@ Two by-products:
   "train 147 / val 36" for a split that was actually 142/41. Frame counts were always correct, so the
   printed numbers were mutually inconsistent — which is precisely what made this audit look like a leak
   at first glance. Now prints the actual partition sizes.
+
+## R8-FINAL — threshold sweep resolves the calibration confound; the negative HOLDS (2026-08-15)
+R8 compared fusion arms at the shipped threshold 0.5. That is not a fair comparison: a per-pixel
+median over warped neighbours suppresses any pixel not confidently octopus in most frames, so the fused
+probability map is systematically shrunk relative to a single-frame map, and a fixed 0.5 handicaps it.
+Publishing a negative on that basis would have been wrong. `src/fusion_threshold_sweep.py` caches one
+probability map per frame per mode and sweeps the binarisation threshold, scoring **each arm at its own
+best operating point**. SEG-TEST, 122 positives / 5 held-out videos / 19 empty-tank negatives:
+
+| mode | best IoU | @ t | best presence AUC | @ t | best FP@recall .90 | @ t |
+|---|---|---|---|---|---|---|
+| **none** (single frame) | **0.6552** | 0.80 | 0.8192 | 0.80 | 0.316 | 0.10 |
+| flow ±2 (DIS-warped median) | 0.5109 | 0.50 | 0.9521 | 0.70 | 0.105 | 0.25 |
+| **median ±2 (unwarped CONTROL)** | 0.5527 | 0.55 | 0.9629 | 0.70 | **0.000** | 0.25 |
+| ema α=0.45 (deployed config) | 0.5866 | 0.40 | **0.9763** | 0.60 | **0.000** | 0.50 |
+
+**1. The mask negative HOLDS.** Best-vs-best, the strongest fusion arm still loses to single frame:
+0.5866 vs 0.6552 = **−0.0686**. The confound was real (it narrowed the gap from −0.094 at t=0.5 to
+−0.069 best-vs-best) but does not change the conclusion. Test-time temporal fusion does not fix
+mislocalization; it degrades mask fidelity. The paper's limitation must read "**test-time** temporal
+fusion does not fix mislocalization", and the claim "a temporal student is the real lever" loses its
+cheap supporting evidence (a temporal *trained* student remains untested).
+
+**2. MECHANISM ESTABLISHED — optical flow is not the mechanism, and is actively harmful.** The
+unwarped control beats flow on **both** metrics (IoU 0.5527 vs 0.5109; AUC 0.9629 vs 0.9521). Plain
+temporal averaging supplies the entire benefit; motion compensation subtracts from it, presumably
+because DIS flow is unreliable on a deforming, low-texture animal in dim IR and warping errors smear
+the map. Without this control the natural write-up would have been "optical-flow fusion improves the
+presence gate" — true in isolation and wrong about why. **EMA — the cheapest arm, already deployed and
+requiring no flow computation — is the best of the three.**
+
+**3. The shipped binarisation threshold is mildly suboptimal.** Single-frame peaks at t=0.80
+(IoU 0.6552) versus 0.6415 at the shipped 0.5: **+0.0137 IoU for free**, no retraining. Not yet applied
+— changing it is a pipeline default and needs its own before/after on SKEL-50, since the skeleton
+stage consumes these masks and a thinner mask at t=0.8 may cost arms.
+
+**4. The presence gain survives best-vs-best** (0.8192 → 0.9763, +0.157) **but is measured on the
+19 empty-tank frames = 2 source videos**, so it inherits the one-video problem and carries no CI.
+Re-testing it on EMPTY-V2 is the pending deliverable.
