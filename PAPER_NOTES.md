@@ -278,9 +278,10 @@ therefore a leak-free negative source for this model. New: `src/reflection_negat
 `src/eval_reflection_presence.py`.
 
 ### Right_Left is NOT a pure-reflection camera — 10–20% of frames contain the real animal
-30 frames, one from each of 30 distinct source videos, reviewed at full resolution before scoring.
-**3/30 (10%) unmistakably contain the octopus** (animal spread on the glass with its own mirror image
-beside it; arms with clearly resolved suckers), and **3 more are ambiguous → up to 20%**. Frames were
+42 frames reviewed at full resolution before scoring (indices 0-33 are one frame from each of the 34
+ distinct Right_Left source videos; 34-41 add second frames).
+**3/42 (7%) unmistakably contain the octopus** (animal spread on the glass with its own mirror image
+beside it; arms with clearly resolved suckers), and **5 more are ambiguous → up to 19%**. Frames were
 labelled conservatively: ambiguous frames are excluded from the negative set, never counted as empty.
 - This revises the 2026-07-05 reading of the 235B result ("534/847 clips came back not-present, almost
   all Right_Left reflections → drop Right_Left"). Right_Left is **mostly** empty, not **purely** empty,
@@ -298,7 +299,7 @@ n for the CI is the number of **videos**, not frames; CIs are cluster-bootstrapp
 | negative type | n | AUC | AUC CI95 (by video) | FP@recall .90 | FP@recall .80 | FP@area>=.01 | median neg area |
 |---|---|---|---|---|---|---|---|
 | empty tank (same cameras) | 19 frames | 0.7942 | [0.626, 0.932] | 0.316 | 0.210 | 0.316 | 0.0036 |
-| reflection (Right_Left)   | 24 frames / 24 videos | **0.9173** | [0.858, 0.964] | 0.250 | 0.125 | 0.208 | 0.0039 |
+| reflection (Right_Left)   | 34 frames / 27 videos | **0.9214** | [0.871, 0.964] | 0.235 | 0.118 | 0.176 | 0.0035 |
 (positive median mask area 0.0325; the empty-tank AUC reproduces the benchmark's 0.794 exactly, which
 validates the harness.)
 
@@ -308,6 +309,7 @@ a leak-free test; the genuine weakness is dim empty-tank frames, where the model
 and rocks. Any future presence work should target empty-tank false positives, not reflections.
 
 **Consequence for the R8 follow-up:** the referee's pre-registered early-stop was AUC(none) >= 0.93 on
-reflections. Measured **0.9173** — just under the line, so the cycle is not killed, but the headroom
-for fusion on this negative type is only +0.083, and the referee's second criterion (>= +0.05 AUC gain)
+reflections. Measured **0.9214** (stable: 0.9173 on the first 24 negatives, 0.9214 on 34 / 27 videos, so the
+estimate is not an artifact of the smaller pilot) — just under the line, so the cycle is not killed, but the headroom
+for fusion on this negative type is only +0.079, and the referee's second criterion (>= +0.05 AUC gain)
 must clear that ceiling to count.
