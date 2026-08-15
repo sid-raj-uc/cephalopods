@@ -643,3 +643,52 @@ positives, and a more honest picture of what the gate does on raw footage.
 `data/reflection_negatives/` (42 frames) has **0/42** human labels. Given 85% agreement and 8.6%
 contamination on EMPTY-V2, R9's reflection AUC 0.9214 and R10's head-to-head dAUC +0.1263 must stay
 **out of the paper** and be treated as provisional until the same pass is run on them.
+
+## R14 — ALL presence results HUMAN-VERIFIED (2026-08-15). R9/R10/R13 are now citable.
+Both staged negative sets fully human-labelled via `ui/verify_negatives.py`:
+**EMPTY-V2 120/120** (83% model-human agreement) and **reflection 42/42** (88%).
+
+### Final numbers — human-verified negatives, thin768 @ 0.5, CIs cluster-bootstrapped by source video
+| negative set | n | videos | AUC | CI95 | FP@R.90 | FP@area>=.01 |
+|---|---|---|---|---|---|---|
+| **EMPTY-V2 (empty frames)** | 97 | 52 | **0.9070** | [0.826, 0.958] | 0.186 | 0.155 |
+| **reflection** | 36 | 29 | **0.9064** | [0.806, 0.956] | 0.278 | 0.222 |
+| old SEG-TEST empty-tank (paper's 0.794) | 19 | **2** | descriptive only | — | — | — |
+
+**1. The paper's 0.794 becomes 0.907 [0.826, 0.958] across 52 recordings.** Human-verified,
+detector-independent, multi-video. The old figure was a single-recording artifact.
+
+**2. The NULL RESULT is now airtight: 0.9070 vs 0.9064.** Empty frames and reflections are equally
+hard for the model — a near-exact tie on human labels. Neither "reflections are the dominant
+false-positive source" (the paper's original framing) nor "the failure mode is backwards" (my
+withdrawn claim) is supported. State the null; drop both framings.
+
+**3. Head-to-head survives human verification** (human-verified reflection negatives, detector
+training sessions excluded → 30 frames / 24 videos):
+| arm | AUC | CI95 | FP@R.90 |
+|---|---|---|---|
+| mask area (**zero-shot** on this camera) | **0.9126** | [0.821, 0.962] | 0.267 |
+| CLIP detector `p_visible` (**in-domain**, 1,519 Right_Left training frames) | 0.7989 | [0.598, 0.882] | 0.700 |
+
+Paired **ΔAUC +0.1340, CI95 [+0.024, +0.308] — still excludes 0.** The wide CI (24 videos) is the
+honest weakness; claim the ordering, not the magnitude. The R10 selection-bias caveat still applies:
+these negatives come from extractor-selected clips, so the effect size remains an upper bound.
+
+### My labelling erred in the FLATTERING direction on both sets
+| set | my labels | human labels | shift |
+|---|---|---|---|
+| EMPTY-V2 | 0.9170 | 0.9070 | −0.0100 |
+| reflection | 0.9214 | 0.9064 | −0.0150 |
+Every AI-verified figure I produced was optimistic. The mechanism (documented in R13-FINAL) is a
+**shared blind spot**: frames where I missed the animal are disproportionately frames where the
+segmenter also missed it, so they masquerade as unusually clean negatives. **AI verification of a
+negative set is systematically biased toward the model being evaluated** — it cannot substitute for
+human labels, and the bias has a predictable sign.
+
+### Bonus — intra-rater reliability, measured by accident
+A UI bug (`first_unreviewed` wrapping to 0 on a completed set + the set dropdown resetting on reload)
+sent a session intended for the reflection set back over EMPTY-V2, re-labelling all 120 frames. That
+produced an unintended **test-retest**: the same human, the same frames, twice, independently.
+**118/120 = 98.3% self-consistency** (differing only on `empty_0014`, `empty_0015`).
+This bounds label noise: the human agrees with themselves at 98.3% while agreeing with the model at
+83%, so **the model-human gap is model error, not rater instability**. Both UI bugs are fixed.
