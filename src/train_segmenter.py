@@ -256,8 +256,13 @@ def main():
         print(f"forced holdout: {len(hv & set(vids))}/{len(hv)} holdout videos present -> excluded from train", flush=True)
     tr = [r for r in rows if source_video(r["clip"]) not in val_vids]
     va = [r for r in rows if source_video(r["clip"]) in val_vids]
+    # NOTE: report the ACTUAL split. This used to print `len(vids)-n_val / n_val`, which ignored the
+    # forced holdout and so under-reported val whenever --holdout-videos added videos to it (thin768
+    # logged "train 147 / val 36" for a split that was really 142/41). The frame counts were always
+    # right, so the numbers looked mutually inconsistent and cost an audit to re-derive.
     print(f"device={device}  pairs={len(rows)}  videos={len(vids)} "
-          f"(train {len(vids)-n_val} / val {n_val})  ->  train {len(tr)} / val {len(va)} frames", flush=True)
+          f"(train {len(vids)-len(val_vids)} / val {len(val_vids)})  ->  "
+          f"train {len(tr)} / val {len(va)} frames", flush=True)
 
     tl = DataLoader(SegDS(tr, ds_root, args.in_size, train=True, aug=args.aug), batch_size=args.batch,
                     shuffle=True, num_workers=4, pin_memory=(device == "cuda"), drop_last=True)

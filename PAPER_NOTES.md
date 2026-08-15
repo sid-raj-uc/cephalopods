@@ -410,3 +410,26 @@ properly-powered empty-frame set is a deliverable of the next cycle.
 
 **Paper action taken:** the .tex now states the $19$ empty frames come from two recordings (18 from
 one), reports $0.794$ descriptively, and attaches no confidence interval to it.
+
+## R11 — LEAKAGE AUDIT of the headline segmentation model (2026-08-15): PASSES
+Prompted by the discovery that all 5 SEG-TEST holdout videos appear in thin768's dataset manifest
+(493 frames), which would invalidate every published IoU if those frames had been trained on.
+**They were not.** Verified three independent ways, not asserted:
+1. The training command (`/tmp/modal_train_thin768.log`) carries `--holdout-videos /data/holdout.txt`
+   and the run prints `forced holdout: 5/5 holdout videos present -> excluded from train`.
+2. The split was re-derived from scratch (manifest + `--sources human` filter + `RandomState(42)`
+   shuffle + `val_frac 0.2` + forced holdout) and reproduces the logged frame counts **exactly**:
+   train 3450 / val 1693. No holdout video appears in the training partition.
+3. Presence in the *dataset* manifest is not presence in *training* — the manifest lists all pairs and
+   the trainer partitions them by source video.
+**Conclusion: the headline IoU 0.6415 / 0.7193 and everything derived from it are leak-free.**
+
+Two by-products:
+- **thin768's true training set is 142 source videos** (not 183 = the dataset, and not 147 = the logged
+  figure). Enumerated to `data/thin768_train_videos.json` — this is the exclusion list any future
+  negative set must be filtered against, since empty-tank negatives fall squarely in its domain.
+- **Logging bug found and fixed** in `src/train_segmenter.py`: the split line printed
+  `len(vids)-n_val / n_val`, which ignores videos added to val by `--holdout-videos`, so thin768 logged
+  "train 147 / val 36" for a split that was actually 142/41. Frame counts were always correct, so the
+  printed numbers were mutually inconsistent — which is precisely what made this audit look like a leak
+  at first glance. Now prints the actual partition sizes.
