@@ -376,3 +376,37 @@ CAVEATS that must travel with any use of this: (a) the detector is scored **per 
 deployed gate"; (b) the reflection labels are **AI-verified, not human-verified**, so this stays in
 PAPER_NOTES and out of the .tex until human review of the 28 frames; (c) read-only study — no gate,
 threshold or default was changed.
+
+## R10 CAVEAT — selection bias in the reflection negative set (found by review, 2026-08-15)
+**This qualifies R10's headline and must travel with it.** The reflection negatives were sampled from
+`src/octopus_clips_verified/*/Right_Left_*.mp4` — clips the *extraction pipeline* selected, and that
+pipeline fires only when the CLIP detector marks >50% of a 20 s window as visible at p>=0.6. So the
+reflection negatives are, by construction, **enriched for frames the detector got wrong**. Both arms
+are scored on the identical frames, but the *set itself* was chosen by a process that used one of the
+two arms. The bias runs **against the detector and in favour of mask area** — i.e. in the direction of
+R10's result.
+
+I had this backwards in my own framing (I worried the pool would flatter the detector; it flatters the
+segmenter). Consequences:
+- R10's paired dAUC **+0.1263 [+0.056, +0.198] is an upper bound**, not an unbiased estimate, on the
+  mask-area advantage over the detector on reflections. The *sign* is well supported (the detector
+  fires on only 32% of these frames at p>=0.6, so the set is not purely its own false positives), but
+  the magnitude is inflated by an unquantified amount.
+- An unbiased version needs negatives drawn **detector-independently** — uniform random timestamps
+  from whole source videos via input-seek, the way `src/harvest_stream.py` probes — not frames from
+  clips the extractor already chose.
+- The same latent bias sits in R9's REFL-34 segmenter-only numbers, though there it has no head-to-head
+  to distort: it makes the reflection set *harder-than-random* for the detector and roughly
+  representative for the segmenter.
+- Nothing here is withdrawn; the claim is narrowed to "mask area is the better reflection gate, with the
+  effect size an upper bound pending detector-independent sampling".
+
+## R8/R9 CAVEAT — every presence number resting on the 19 empty-tank frames inherits the one-video problem
+This includes **R8's fusion presence result** (AUC 0.794 -> 0.9685 ema / 0.9495 flow). Those negatives
+are the same 19 frames from 2 recordings, so the fusion presence gain is a one-video observation and
+cannot carry a CI either. The fusion *mask* results (IoU 0.642 -> 0.547 / 0.511) are unaffected: they
+are computed on 122 positives across 5 held-out videos. Re-testing the fusion presence claim on a
+properly-powered empty-frame set is a deliverable of the next cycle.
+
+**Paper action taken:** the .tex now states the $19$ empty frames come from two recordings (18 from
+one), reports $0.794$ descriptively, and attaches no confidence interval to it.

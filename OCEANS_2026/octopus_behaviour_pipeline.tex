@@ -314,7 +314,12 @@ attacking the pipeline's dominant false-positive source; training with
 empty-mask negatives is what makes this work, as a positives-only student was a
 coin flip (AUC $0.50$). On SEG-TEST the deployed model reaches presence AUC
 $0.794$ ($122$ present vs.\ $19$ empty frames)---the same model and test set as
-the IoU reported below, so the two describe one system. An earlier
+the IoU reported below, so the two describe one system. We report that figure
+descriptively and attach no confidence interval to it: those $19$ empty frames
+come from only \emph{two} source recordings, $18$ of them from a single one, so
+it is effectively a single-video estimate and must not be ordered against
+estimates drawn from many recordings. Enlarging the empty-frame set across
+recordings is the single most valuable repair to this benchmark. An earlier
 negatives-trained variant, evaluated separately against a reflection-heavy set
 from the tank-glass camera, reached AUC $0.86$ overall and $0.99$ against
 reflections with $0\%$ reflection false-positives at area $0.01$ and $88\%$
