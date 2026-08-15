@@ -385,6 +385,16 @@ Clean human-mask ceiling & 6.15 \\
 \end{tabular}
 \end{table}
 
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.92\textwidth]{assets/skeleton_example.pdf}
+    \caption{Qualitative example from the frozen benchmark (arm splines coloured,
+    tips marked). Left: skeleton on the segmentation student's mask ($5$ arms).
+    Right: the same frame after offline SAM2 mask refinement recovers all $8$
+    arms of a reaching pose.}
+    \label{fig:skel_example}
+\end{figure*}
+
 \textbf{Occlusion-honest tracking and kinematics.} Across a clip, per-frame
 skeletons are linked by seeding from the best-resolved frame and propagating
 bidirectionally (median arms maintained across a clip rise from $2.2$ to
@@ -396,13 +406,13 @@ whose apparent smoothness masked fabricated stillness. A global
 tracklet-association alternative measured worse than the gated chain and is
 reported as a negative.
 
-% FIGURE: kinematics-by-behaviour boxplot (results/segmentation/kinematics_by_behaviour.png)
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.48\textwidth]{assets/kinematics_by_behaviour.png}
+    \includegraphics[width=0.44\textwidth]{assets/kinematics_by_behaviour.pdf}
     \caption{State-gated arm-tip speed grouped by the VLM-assigned behaviour
-    class. The two signals are computed by unrelated paths (geometry vs.\
-    language model), yet the kinematics reproduce the expected ordering.}
+    class (medians labelled). The two signals are computed by unrelated paths
+    (geometry vs.\ language model), yet the kinematics reproduce the expected
+    ordering.}
     \label{fig:kinematics}
 \end{figure}
 

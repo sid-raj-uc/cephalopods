@@ -11,8 +11,8 @@ import matplotlib.image as mpimg
 REPO = Path("/Users/siddharthraj/Documents/my-projects/sentiment-analysis")
 OUT = REPO / "OCEANS_2026" / "assets"; OUT.mkdir(parents=True, exist_ok=True)
 INK, MUTE, GRID = "#222222", "#666666", "#dddddd"
-HUE = "#2A6F97"                      # single hue (magnitude)
-C_NONE, C_HUMAN = "#4E79A7", "#E1873C"   # categorical pair (CVD-safe), fixed order
+HUE = "#2a78d6"                      # single hue (magnitude; validated, chroma>=0.1)
+C_NONE, C_HUMAN = "#2a78d6", "#eb6834"   # categorical pair (validator: ALL PASS, light)
 plt.rcParams.update({"font.size": 8, "axes.edgecolor": MUTE, "axes.labelcolor": INK,
                      "xtick.color": MUTE, "ytick.color": MUTE, "text.color": INK,
                      "axes.linewidth": 0.6, "font.family": "sans-serif"})
@@ -118,6 +118,58 @@ ax3.text(88, 33, "distilled local models", ha="center", fontsize=6.5, color=MUTE
 # aggregate output
 box(58, 2, 16, 10, "Behavioural\ntime-series\n(ethogram)", fc="#EAF1F6")
 arrow(66, 18, 66, 12)
+# skeleton & kinematics stage (2026-08): masks -> anatomical graph -> gated kinematics
+box(78, 1, 20, 8, "Skeleton + arm\nkinematics", fc="#EAF1F6")
+arrow(88, 12, 88, 9.4)     # seg student -> skeleton
+arrow(78, 5, 74, 6)        # kinematics -> behavioural time-series
 fig3.savefig(OUT / "pipeline_behaviour.pdf", bbox_inches="tight"); plt.close(fig3)
 print("wrote pipeline_behaviour.pdf")
 print("\nassets now:", sorted(p.name for p in OUT.glob("*.pdf")))
+
+# ── Fig 4: kinematics by behaviour (print-clean; single measure across categories → one hue,
+#           identity carried by axis labels, medians direct-labeled) ────────────────────────
+import collections
+br = json.load(open(REPO / "data" / "behaviour_records.json"))
+by = collections.defaultdict(list)
+for rel, rec in br.items():
+    k = rec.get("kinematics") or {}
+    if "occluded_frac" not in k or not k.get("activity_px_s") or "Right_Left" in rel:
+        continue
+    by[(rec.get("struct") or {}).get("behavior", "?")].append(k["activity_px_s"]["mean"])
+by.pop("uncertain", None)
+order = sorted(by, key=lambda b: np.median(by[b]))
+fig4, ax4 = plt.subplots(figsize=(3.45, 2.2))
+data = [by[b] for b in order]
+bp = ax4.boxplot(data, vert=False, patch_artist=True, widths=0.55,
+                 medianprops=dict(color=INK, lw=1.1),
+                 boxprops=dict(facecolor=HUE, alpha=0.55, edgecolor=HUE, lw=0.8),
+                 whiskerprops=dict(color=MUTE, lw=0.8), capprops=dict(color=MUTE, lw=0.8),
+                 flierprops=dict(marker="o", ms=2.5, mfc=MUTE, mec=MUTE))
+ax4.set_yticks(range(1, len(order) + 1))
+ax4.set_yticklabels([f"{b.split(' / ')[0].split(' out')[0]} (n={len(by[b])})" for b in order],
+                    fontsize=6.4)
+for i, b in enumerate(order, 1):
+    med = float(np.median(by[b]))
+    ax4.text(med, i + 0.34, f"{med:.0f}", ha="center", fontsize=6, color=INK)
+ax4.set_xlabel("state-gated arm-tip speed (px s$^{-1}$)", fontsize=7)
+ax4.grid(True, axis="x", color=GRID, lw=0.5); ax4.set_axisbelow(True)
+for sp in ("top", "right"): ax4.spines[sp].set_visible(False)
+ax4.tick_params(length=0)
+fig4.tight_layout(pad=0.4)
+fig4.savefig(OUT / "kinematics_by_behaviour.pdf", bbox_inches="tight"); plt.close(fig4)
+print("wrote kinematics_by_behaviour.pdf")
+
+# ── Fig 5: skeleton qualitative example (image panels: base vs SAM2-refined) ───────────────
+src = REPO / "data" / "skel_diag" / "004.jpg"      # 3-panel base|zoom|sam2 from skel_zoom_sam2
+if src.exists():
+    im = mpimg.imread(str(src))
+    W = im.shape[1]; w = (W - 10) // 3
+    base_p, sam_p = im[:, :w], im[:, W - w:]
+    fig5, ax5 = plt.subplots(1, 2, figsize=(7.0, 1.75))
+    ax5[0].imshow(base_p); ax5[0].axis("off")
+    ax5[1].imshow(sam_p); ax5[1].axis("off")
+    fig5.tight_layout(pad=0.3)
+    fig5.savefig(OUT / "skeleton_example.pdf", bbox_inches="tight", dpi=200); plt.close(fig5)
+    print("wrote skeleton_example.pdf")
+else:
+    print("WARN: skel_diag/004.jpg missing")
