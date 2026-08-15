@@ -188,3 +188,13 @@ videos + 19 negatives), **SKEL-50**, **TRACK-10**.
 
 ## Pointers
 Plans: `src/DATA_PLAN.md`, `src/SEGMENTATION_PLAN.md`, `src/TRAINING_PLAN.md`. Trails: `src/SEGMENTATION_LOG.md`.
+
+## BLOCKED — VLM-250 reliability study (2026-08-15)
+Code is complete and verified end-to-end locally (`src/vlm_reliability.py`: frames extracted,
+detector-scored, disjoint frame set selected correctly), but every API call returns
+**HTTP 401 `{"error":{"message":"User not found"}}`**. The key in `.env` is present and well-formed
+(`sk-or-v1…`, 73 chars) but is rejected by OpenRouter — revoked/expired account, not a code fault.
+**Unblocks with a fresh `OPENROUTER_API_KEY`; then just run**
+`venv/bin/python3 src/vlm_reliability.py --run` (~$0.17, 250 clips, resumable).
+This is the highest-value open rigor item: every headline behavioural result is grouped by labels
+this extractor produced, and their reliability is still unmeasured.
