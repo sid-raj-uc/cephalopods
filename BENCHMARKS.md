@@ -35,7 +35,15 @@ Holdout videos: `2026-02-21/150002`, `2026-02-21/183003`, `2026-02-22/153002`,
 |---|---|
 | Data | `data/skel_bench50/frames.json` — **50 frozen frames** across 20 source videos, each with image + human mask + model mask |
 | Metrics | **arm-tip F1** (headline), tip precision, tip recall, head error (body radii), arms/frame (descriptive only) |
-| Ground truth for tips | the ≥8 strongest protrusions of the **human** mask (`finger_tips`), capped at 8 (biological maximum); a predicted tip matches a GT protrusion within 5% of the image diagonal, greedy 1-1 |
+| Ground truth for tips | protrusions of the **human** mask (`finger_tips`, `min_prominence=1.8`, `min_len_frac=0.10`) — mean 5.7 / median 6 / max 8 per frame; a predicted tip matches a GT protrusion within 5% of the image diagonal, greedy 1-1 (so a duplicate arm cannot match the same protrusion twice) |
+
+> **The GT detector was itself validated — and was initially wrong.** With the library default
+> (`min_len_frac=0.06`) two peaks only 6% of the contour apart counted as separate arms, giving
+> **mean 9.7 / max 14** protrusions per human mask; the 8-cap then bound in **80%** of frames, so
+> recall was being scored against padded, partly-fictional arms. Requiring peaks ≥10% of the contour
+> apart (closer peaks belong to the *same* arm) fixed it. Effect on the shipped skeleton config:
+> tip-F1 **0.441 → 0.539** (precision 0.685→0.722, recall 0.380→0.502). Lesson worth keeping: when a
+> metric is introduced, measure the metric's own ground truth before trusting any ranking it produces.
 | Head GT | human clicks on the eyes via `ui/skel_static_viewer.py` (port 8019) → `data/skel_bench50/head_gt.json`; head error is reported in **body radii** so it is pose/scale independent |
 
 > **Why tip-F1 and not "arms per frame".** Arm count is not a score: *fewer* can be *better*.
