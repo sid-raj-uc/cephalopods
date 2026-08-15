@@ -329,3 +329,50 @@ reflections. Measured **0.9214** (stable: 0.9173 on the first 24 negatives, 0.92
 estimate is not an artifact of the smaller pilot) — just under the line, so the cycle is not killed, but the headroom
 for fusion on this negative type is only +0.079, and the referee's second criterion (>= +0.05 AUC gain)
 must clear that ceiling to count.
+
+## R10 — CLIP detector vs mask area as a presence gate, head-to-head on ONE verified set (2026-08-15)
+Closes the standing rigor item ("every 'A beats B' needs a head-to-head on one verified set"). The
+paper's Sec. III-C claim that the detector is the weak presence filter rested on a single anecdote
+(534/847 clips came back `octopus not present` in the 235B captioning run). The two gates had never
+been scored against each other. New: `src/eval_presence_headtohead.py`; per-frame scores in
+`data/presence_headtohead_frames.csv`.
+
+**REFL-28 — the benchmark this had to be run on.** The detector was TRAINED on Right_Left frames, so
+its training sessions must be dropped — and dropped from **both** arms, or the head-to-head commits the
+sin it exists to fix. Leakage unit is the recording **session** (`date/segment`), not the camera: this
+repo splits by session, and two cameras in one session are the same scene, lighting and animal state at
+the same instant. Excluding only the *Right_Left* training sessions leaves 4 further sessions the
+detector had already seen through another camera (my first run made exactly this error and got
+33 frames; corrected → **28 frames / 22 videos**, dropping 6 frames from 5 sessions).
+R9's REFL-34 number stands as a separately-scoped measurement (thin768 is Right_Left-free, so it needs
+no exclusion); the REFL-28 row is reported beside it, not over it — segmenter AUC 0.9214 (34 fr/27 vid)
+vs 0.9315 (28 fr/22 vid).
+
+### Results — REFL-28, identical frame set for every arm
+| arm | AUC | CI95 (cluster-bootstrap by video) | FP @ present-recall 0.90 |
+|---|---|---|---|
+| **mask area** (thin768) | **0.9315** | [0.884, 0.964] | **0.214** |
+| CLIP detector `p_visible` | 0.8053 | [0.747, 0.864] | 0.679 |
+| combined (rank-product) | 0.9186 | [0.884, 0.946] | 0.286 |
+
+- **Paired ΔAUC (area − detector) = +0.1263, CI95 [+0.056, +0.198] — excludes 0.** Mask area is the
+  better reflection gate, and now on a leak-free verified set rather than an anecdote.
+- **The asymmetry makes this stronger, not weaker.** The detector is **in-domain** here — it trained on
+  **1,519 Right_Left frames across 11 sessions**. The segmenter is **zero-shot**: not one Right_Left
+  frame in its 4,965 training images. The zero-shot model beats the in-domain one by 0.126 AUC. Must be
+  written as in-domain vs zero-shot wherever it is claimed.
+- **Detector false-positive rate at its deployed threshold (p_visible ≥ 0.6): 32% of reflection frames
+  and 68% of empty-tank frames.** This is the concrete number behind "the extraction over-extracts",
+  replacing the 63%-not-present anecdote.
+- **PRE-REGISTERED NEGATIVE — the combined gate is dead.** ΔAUC (combined − area) = −0.0129,
+  CI95 [−0.032, +0.009], includes 0. Kill criterion met: the two signals are redundant, **mask area
+  alone is the gate**. (One variant only, rank-product, fixed before running; a `min` variant was
+  proposed and dropped as fishing on n=22 videos.)
+- **Empty tank: descriptive only, no AUC and no CI** — 19 frames but **2 source videos, 18 from one**.
+  Median mask area 0.0036 (neg) vs 0.0325 (pos); median p_visible 0.8179 (neg) vs 0.9989 (pos).
+
+CAVEATS that must travel with any use of this: (a) the detector is scored **per frame at p≥0.6**, a
+**proxy** — deployment applies that threshold to >50% of frames in a 20 s window, so this is not "the
+deployed gate"; (b) the reflection labels are **AI-verified, not human-verified**, so this stays in
+PAPER_NOTES and out of the .tex until human review of the 28 frames; (c) read-only study — no gate,
+threshold or default was changed.
