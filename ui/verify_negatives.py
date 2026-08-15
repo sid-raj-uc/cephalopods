@@ -67,7 +67,12 @@ def rows(set: str = "empty"):
     _, _, rs = STATE[set]
     out = [{"i": i, "key": r["key"], "video": r.get("video"), "camera": r.get("camera", ""),
             "model": r.get("review"), "human": r.get("human")} for i, r in enumerate(rs)]
-    first = next((o["i"] for o in out if not o["human"]), 0)
+    # BUG FIXED: this used to fall back to 0 when every frame was already labelled, so reopening a
+    # COMPLETED set silently parked you on frame 0 and the next keypress overwrote it. Combined with
+    # the set dropdown resetting on reload, one session meant to label the reflection set instead
+    # re-labelled all 120 EMPTY-V2 frames from the top. Signal completion instead of wrapping to 0.
+    unlabelled = [o["i"] for o in out if not o["human"]]
+    first = unlabelled[0] if unlabelled else -1
     done = sum(1 for o in out if o["human"])
     agree = sum(1 for o in out if o["human"] and o["human"] == o["model"])
     return {"rows": out, "first_unreviewed": first, "n": len(out), "done": done, "agree": agree}
@@ -108,7 +113,7 @@ PAGE = """
  #hint{color:#888;font-size:12px}
 </style>
 <div id=top>
- <select id=set onchange="boot()"><option value=empty>EMPTY-V2</option><option value=reflection>reflection</option></select>
+ <select id=set onchange="onset()"><option value=empty>EMPTY-V2</option><option value=reflection>reflection</option></select>
  <span id=pos></span><span id=prog></span>
  <span>model: <span id=model class=tag>-</span></span>
  <span>human: <span id=human class=tag>-</span></span>
@@ -119,23 +124,36 @@ PAGE = """
  <button onclick="full()">F · full-res</button>
 </div>
 <div id=wrap><img id=im></div>
-<div id=hint>E/1 empty · O/2 octopus · A/3 ambiguous · U clear · ←/→ navigate · F full-res. Saves on every keypress.</div>
+<div id=hint>E/1 empty · O/2 octopus · A/3 ambiguous · U clear · ←/→ navigate · F full-res · L unlock a completed set. Saves on every keypress. Your set choice persists across reloads.</div>
 <script>
-let R=[],i=0,S='empty';
-async function boot(){S=document.getElementById('set').value;
+let R=[],i=0,S='empty',DONE=false,UNLOCK=false;
+// persist the chosen set: the dropdown used to reset to EMPTY-V2 on every reload, which silently
+// redirected keypresses to the wrong set mid-session.
+function boot(){const sel=document.getElementById('set');
+ const saved=new URLSearchParams(location.search).get('set')||localStorage.getItem('vn_set');
+ if(saved&&[...sel.options].some(o=>o.value===saved))sel.value=saved;
+ S=sel.value;localStorage.setItem('vn_set',S);load()}
+async function load(){
  const d=await (await fetch('/api/rows?set='+S)).json();
- if(d.error){alert(d.error);return} R=d.rows;i=d.first_unreviewed;draw();upd(d)}
-function upd(d){document.getElementById('prog').textContent=
- `— ${d.done}/${d.n} confirmed, ${d.agree} agree with model`}
+ if(d.error){alert(d.error);return}
+ R=d.rows;DONE=(d.first_unreviewed<0)&&!UNLOCK;i=(d.first_unreviewed<0)?0:d.first_unreviewed;draw();upd(d)}
+function onset(){S=document.getElementById('set').value;UNLOCK=false;localStorage.setItem('vn_set',S);load()}
+function upd(d){const e=document.getElementById('prog');
+ e.textContent=`— ${d.done}/${d.n} confirmed, ${d.agree} agree with model`
+   +(DONE?'  ✅ SET COMPLETE — keys are locked, press L to relabel':'');
+ e.style.color=DONE?'#5c5':'#eee'}
 function draw(){const r=R[i];if(!r)return;
  document.getElementById('im').src=`/img?set=${S}&i=${i}&_=${Date.now()}`;
  document.getElementById('pos').textContent=`#${i} ${r.camera} ${r.video}`;
  const m=document.getElementById('model');m.textContent=r.model||'-';m.className='tag '+(r.model||'');
  const h=document.getElementById('human');h.textContent=r.human||'-';h.className='tag '+(r.human||'');}
-async function lab(v){const d=await (await fetch(`/api/label?set=${S}&i=${i}&value=${v}`,{method:'POST'})).json();
+async function lab(v){
+ if(DONE){alert('This set is already fully labelled. Press L to unlock before changing anything.');return}
+ const d=await (await fetch(`/api/label?set=${S}&i=${i}&value=${v}`,{method:'POST'})).json();
  R[i].human=v||null;upd(d);if(v&&i<R.length-1){i++}draw()}
 function full(){window.open(`/img?set=${S}&i=${i}`,'_blank')}
 document.onkeydown=e=>{const k=e.key.toLowerCase();
+ if(k==='l'){UNLOCK=!UNLOCK;load();return}
  if(k==='arrowright'){i=Math.min(i+1,R.length-1);draw()}
  else if(k==='arrowleft'){i=Math.max(i-1,0);draw()}
  else if(k==='e'||k==='1')lab('empty');
