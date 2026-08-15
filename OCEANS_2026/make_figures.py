@@ -160,10 +160,12 @@ fig4.savefig(OUT / "kinematics_by_behaviour.pdf", bbox_inches="tight"); plt.clos
 print("wrote kinematics_by_behaviour.pdf")
 
 # ── Fig 5: skeleton qualitative example (image panels: base vs SAM2-refined) ───────────────
-src = REPO / "data" / "skel_diag" / "004.jpg"      # 3-panel base|zoom|sam2 from skel_zoom_sam2
+# Figure sources are FROZEN under assets/frozen/: data/skel_diag/ is a scratch dir that every
+# experiment overwrites, so reading it here silently changed a published figure once.
+src = OUT / "frozen" / "skeleton_example_src.jpg"
 if src.exists():
     im = mpimg.imread(str(src))
-    W = im.shape[1]; w = (W - 10) // 3
+    W = im.shape[1]; w = (W - 6) // 2          # frozen source is a 2-panel strip: base | refined
     base_p, sam_p = im[:, :w], im[:, W - w:]
     fig5, ax5 = plt.subplots(1, 2, figsize=(7.0, 1.75))
     ax5[0].imshow(base_p); ax5[0].axis("off")
