@@ -42,8 +42,8 @@ GRID = [
 ]
 
 
-def tips_for(mask255, cfg):
-    """Best-scoring skeleton across the smoothing schedule -> full-res tip coordinates."""
+def paths_for(mask255, cfg):
+    """Best-scoring skeleton across the smoothing schedule -> (tips, small-res paths, points)."""
     us, uf, tr = cfg
     best = None
     for sm in SMOOTHS:
@@ -63,11 +63,42 @@ def tips_for(mask255, cfg):
             except Exception:
                 paths = []
             tips = [(float(pts[p[-1], 1] * sx), float(pts[p[-1], 0] * sy)) for p in paths]
-            if best is None or len(tips) > len(best):
-                best = tips
+            if best is None or len(tips) > len(best[0]):
+                best = (tips, paths, pts)
         except Exception:
             continue
-    return best or []
+    return best or ([], [], None)
+
+
+def duplicate_rate(paths, pts):
+    """Fraction of selected arms whose UNSHARED suffix is < 30% of their own length.
+
+    This is the quantity the anti-mess gates target and the thing a human sees as 'tangle':
+    two arms that run together from the root and fork only near the tip. tip-F1 does NOT
+    penalise it (both tips can still land on distinct real protrusions), so it must be
+    reported alongside F1 — cleanliness and correctness are different axes."""
+    if len(paths) < 2 or pts is None:
+        return 0.0
+    def arc(idx):
+        if len(idx) < 2:
+            return 0.0
+        q = pts[idx].astype(float)
+        return float(np.linalg.norm(np.diff(q, axis=0), axis=1).sum())
+    dup = 0
+    for i, a in enumerate(paths):
+        share = 0
+        for j, b in enumerate(paths):
+            if i == j:
+                continue
+            k = 0
+            while k < min(len(a), len(b)) and a[k] == b[k]:
+                k += 1
+            share = max(share, k)
+        total = arc(a)
+        uniq = arc(a[max(share - 1, 0):])
+        if total > 0 and uniq / total < 0.30:
+            dup += 1
+    return dup / len(paths)
 
 
 def main():
@@ -91,9 +122,10 @@ def main():
 
     results = []
     for cfg in GRID:
-        P, R, F, C = [], [], [], []
+        P, R, F, C, D = [], [], [], [], []
         for c in cache:
-            tips = tips_for(c["m255"], cfg)
+            tips, paths, pts = paths_for(c["m255"], cfg)
+            D.append(duplicate_rate(paths, pts))
             nm = _match(tips, c["gt"], c["r"])
             p = nm / len(tips) if tips else (1.0 if not c["gt"] else 0.0)
             rc = nm / len(c["gt"]) if c["gt"] else 1.0
@@ -101,10 +133,11 @@ def main():
             C.append(len(tips))
         row = {"cfg": list(cfg), "precision": round(float(np.mean(P)), 4),
                "recall": round(float(np.mean(R)), 4), "f1": round(float(np.mean(F)), 4),
-               "arms": round(float(np.mean(C)), 2)}
+               "arms": round(float(np.mean(C)), 2), "dup_rate": round(float(np.mean(D)), 4)}
         results.append(row)
         print(f"  uniq={cfg[0]:.1f}/{cfg[1]:.2f} tip_ratio={cfg[2]:.2f}  "
-              f"P {row['precision']:.3f}  R {row['recall']:.3f}  F1 {row['f1']:.3f}  arms {row['arms']:.2f}",
+              f"P {row['precision']:.3f}  R {row['recall']:.3f}  F1 {row['f1']:.3f}  "
+              f"dup {row['dup_rate']:.3f}  arms {row['arms']:.2f}",
               flush=True)
 
     win = max(results, key=lambda r: r["f1"])
