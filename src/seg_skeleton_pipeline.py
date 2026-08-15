@@ -175,23 +175,21 @@ def process_video_3way(video, out_dir, S=None, fps=5.0, work_w=960, present=0.00
     stage("extracting skeleton")
     crops = [(crop(smooths[k]).astype(np.uint8)) * 255 for k in present_idx]
     greys = [cv2.cvtColor(crop(frames[k]), cv2.COLOR_BGR2GRAY) for k in present_idx]
-    graphs = tracked_sequence(crops, min_arms, max_arms, 2, 1024, seed="best", greys=greys)
+    # display="detected": draw each frame's OWN clean medial-axis skeleton (chain only supplies
+    # consistent arm IDs). The fitted/held graphs looked like moving residuals when rendered.
+    graphs = tracked_sequence(crops, min_arms, max_arms, 2, 1024, seed="best", greys=greys,
+                              display="detected")
     n_tracked = len(graphs)
     skel_frames = []
-    trails = {}
     for pos, k in enumerate(present_idx):
         fc = crop(frames[k]).copy()
         if pos in graphs:
             nodes, edges = graphs[pos]
-            for n in nodes:
-                if n.get("is_tip"):
-                    trails.setdefault(n["branch_id"], []).append((n["x"], n["y"]))
             arms = len({n["branch_id"] for n in nodes if n["branch_id"] > 0})
-            _draw_trails(fc, trails)
             skel_frames.append(_label(_draw_skeleton(fc, nodes, edges), f"3) SKELETON - {arms} arms", (0, 215, 255)))
         else:
             base = _overlay(fc, crop(smooths[k]), outline=True)
-            skel_frames.append(_label(base, "3) SKELETON - tracking", (0, 165, 255)))
+            skel_frames.append(_label(base, "3) SKELETON - no detection this frame", (0, 165, 255)))
 
     stage("encoding videos")
     raw_p, sm_p, sk_p = out_dir / "raw.mp4", out_dir / "smooth.mp4", out_dir / "skeleton.mp4"

@@ -226,7 +226,7 @@ def _global_arm_ids(det, crops, greys, max_arms, link_gap=8,
 
 
 def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, seed="best",
-                     greys=None, method="chain"):
+                     greys=None, method="chain", display="fitted"):
     """Track the skeleton across a list of temporally-ordered crop masks (uint8*255).
 
     Detects every frame once, then seeds the temporal chain from the BEST-resolved frame (most
@@ -237,6 +237,14 @@ def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, 
     `greys` (optional): grey images aligned with `crops` (same shape). When given, dense optical
     flow between adjacent sampled frames supplies a PER-NODE motion prior to temporal_fit
     (Tracking v2 Phase 1) instead of the coarse global centroid shift.
+
+    `display`: what the returned graphs contain.
+      "fitted"   (default) — temporal_fit output every tracked frame: arms persist through
+                 detection gaps (held/blended). Right for KINEMATICS (continuous series), but
+                 held arms look like moving residuals when RENDERED.
+      "detected" — only frames with a real detection, showing the detection's own clean
+                 medial-axis geometry (relabeled to consistent IDs by the chain). Right for
+                 VIDEO display; frames without detections are simply absent.
     """
     det = []
     for cm in crops:
@@ -296,7 +304,11 @@ def tracked_sequence(crops, min_arms=3, max_arms=8, iterations=2, max_dim=1024, 
                 continue
         prev_nodes, prev_mask, prev_k = nodes, cm.copy(), k
         prev_sig = arm_signatures(nodes, edges)
-        out[k] = (nodes, edges)
+        if display == "detected":
+            if dn is not None:
+                out[k] = (dn, de)          # clean per-frame geometry, chain-consistent IDs
+        else:
+            out[k] = (nodes, edges)
     return out
 
 
