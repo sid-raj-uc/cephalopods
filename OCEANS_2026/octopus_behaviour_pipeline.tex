@@ -61,9 +61,9 @@ Institute of Software Engineering and Artificial Intelligence, Graz University o
 \begin{abstract}
 Continuous camera monitoring of captive marine animals produces far more video
 than caretakers can review, yet most of it is used only reactively. We present
-an automated vision--language pipeline that converts months of continuous
-multi-camera aquarium footage of a single \emph{Octopus vulgaris} into a
-quantified behavioural and affective-state time-series. It detects when the
+an automated vision--language pipeline that converts continuous multi-camera
+aquarium footage of a single \emph{Octopus vulgaris} into a quantified
+behavioural and affective-state time-series. It detects when the
 animal is visible (a frozen CLIP encoder with a lightweight probe under
 aspect-preserving preprocessing), extracts short behaviour clips gated on
 visibility and motion, and re-prompts a large vision--language model for a
@@ -132,9 +132,10 @@ small local models needed to run it cheaply and offline. Our contributions are:
 \item An end-to-end pipeline from raw footage to a per-clip \emph{structured
 behavioural record}, using a large vision--language model (VLM) as a
 zero-shot behavioural annotator with snap-to-list validation.
-\item An aggregate behavioural analysis of the animal over several months: an
-interpretable activity budget, an exposure-normalised circadian profile, and a
-quantified stimulus response, framed as arousal / behavioural state.
+\item An aggregate behavioural analysis over a nine-day observation window
+($3{,}083$ present clips, seven recording days): an interpretable activity
+budget, an exposure-normalised circadian profile, and a quantified stimulus
+response, framed as arousal / behavioural state.
 \item Teacher$\rightarrow$student distillation into deployable local models---a
 4-bit captioning student that runs on a laptop, and a single-class octopus
 segmentation model auto-labelled by GroundingDINO$+$SAM2, anchored by
@@ -275,7 +276,12 @@ like at a glance.
 
 \section{Behavioural and Affective-State Analysis}
 Aggregating the $3{,}083$ present clips (joined to absolute clock time) yields an
-interpretable behavioural profile. We report \textbf{arousal and behavioural
+interpretable behavioural profile. These clips come from \emph{seven recording
+days spanning nine calendar days} (20--28 February 2026), so the profile below
+characterises one observation window rather than a season: the circadian curve in
+particular is an average over seven days, and we make no claim about seasonal or
+long-term drift. Extending this analysis across the harvested $\sim\!209$-day
+corpus is the immediate next step (Sec.~\ref{sec:limits}). We report \textbf{arousal and behavioural
 state}, not emotion; the transparent arousal index is
 $0.6\cdot\mathrm{activity} + 0.4\cdot\mathrm{posture\text{-}spread}$, with static
 body colour a secondary channel on colour cameras only.
@@ -608,6 +614,7 @@ on one behaviour in real time, this pipeline supplies the baseline against which
 such events are interpreted.
 
 \section{Limitations and Ongoing Work}
+\label{sec:limits}
 We are deliberate about what is not yet established.
 \begin{itemize}[leftmargin=*, itemsep=1pt, topsep=2pt]
 \item \textbf{Human-verified test sets exist only for segmentation} ($499$ human

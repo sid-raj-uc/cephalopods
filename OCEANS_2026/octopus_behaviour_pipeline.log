@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  15 AUG 2026 20:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  16 AUG 2026 00:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -348,7 +348,7 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 59.
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Underfull \vbox (badness 1097) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 Underfull \hbox (badness 1642) in paragraph at lines 132--135
@@ -356,18 +356,18 @@ Underfull \hbox (badness 1642) in paragraph at lines 132--135
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 138--144
+Underfull \hbox (badness 10000) in paragraph at lines 139--145
 []\OT1/ptm/m/n/10 Teacher$\OMS/cmsy/m/n/10 !$\OT1/ptm/m/n/10 student dis-til-la
 -tion into de-ploy-able lo-cal
  []
 
 
-Underfull \hbox (badness 3439) in paragraph at lines 138--144
+Underfull \hbox (badness 3439) in paragraph at lines 139--145
 \OT1/ptm/m/n/10 models---a 4-bit cap-tion-ing stu-dent that runs on a
  []
 
 
-Underfull \hbox (badness 2689) in paragraph at lines 138--144
+Underfull \hbox (badness 2689) in paragraph at lines 139--145
 \OT1/ptm/m/n/10 human-verified masks, and eval-u-ated leak-free on a
  []
 
@@ -377,34 +377,34 @@ map/pdftex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/base/8r
 
 
 ]
-Underfull \hbox (badness 1354) in paragraph at lines 167--174
+Underfull \hbox (badness 1354) in paragraph at lines 168--175
 \OT1/ptm/m/n/10 pres-ence de-tec-tor; the de-ployed seg-menter uses an LR-
  []
 
 <assets/pipeline_behaviour.pdf, id=19, 406.51875pt x 127.8088pt>
 File: assets/pipeline_behaviour.pdf Graphic file (type pdf)
 <use assets/pipeline_behaviour.pdf>
-Package pdftex.def Info: assets/pipeline_behaviour.pdf  used on input line 184.
+Package pdftex.def Info: assets/pipeline_behaviour.pdf  used on input line 185.
 
 (pdftex.def)             Requested size: 247.6778pt x 77.86963pt.
 LaTeX Font Info:    Trying to load font information for OMS+ptm on input line 2
-16.
+17.
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 216.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 217.
  [2 <./assets/pipeline_behaviour.pdf>] (./assets/benchmarks_table.tex)
 Underfull \vbox (badness 2126) has occurred while \output is active []
 
 <assets/behaviour_findings.pdf, id=86, 510.31967pt x 160.63388pt>
 File: assets/behaviour_findings.pdf Graphic file (type pdf)
 <use assets/behaviour_findings.pdf>
-Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 286.
+Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 292.
 
 (pdftex.def)             Requested size: 247.6778pt x 77.96124pt.
 
-Underfull \hbox (badness 1910) in paragraph at lines 312--317
+Underfull \hbox (badness 1910) in paragraph at lines 318--323
 []\OT1/ptm/m/n/10 We dis-til the teacher's one-sentence de-scrip-tions into
  []
 
@@ -415,26 +415,29 @@ Underfull \vbox (badness 3724) has occurred while \output is active []
 <assets/segmentation_demo.pdf, id=152, 497.15338pt x 206.80006pt>
 File: assets/segmentation_demo.pdf Graphic file (type pdf)
 <use assets/segmentation_demo.pdf>
-Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 454.
+Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 460.
 (pdftex.def)             Requested size: 211.56189pt x 88.00403pt.
 
 
 LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
-(Font)              using `OT1/ptm/m/it' instead on input line 507.
+(Font)              using `OT1/ptm/m/it' instead on input line 513.
 
 <assets/skeleton_example.pdf, id=153, 479.92694pt x 136.1085pt>
 File: assets/skeleton_example.pdf Graphic file (type pdf)
 <use assets/skeleton_example.pdf>
-Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 541.
+Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 547.
 (pdftex.def)             Requested size: 247.6778pt x 70.24098pt.
-[5 <./assets/segmentation_demo.pdf> <./assets/skeleton_example.pdf>]
-<assets/kinematics_by_behaviour.pdf, id=206, 256.94118pt x 213.54222pt>
+[5 <./assets/segmentation_demo.pdf>]
+<assets/kinematics_by_behaviour.pdf, id=201, 256.94118pt x 213.54222pt>
 File: assets/kinematics_by_behaviour.pdf Graphic file (type pdf)
 <use assets/kinematics_by_behaviour.pdf>
 Package pdftex.def Info: assets/kinematics_by_behaviour.pdf  used on input line
- 562.
+ 568.
 (pdftex.def)             Requested size: 242.52063pt x 201.55733pt.
- [6 <./assets/kinematics_by_behaviour.pdf>]
+ [6 <./assets/skeleton_example.pdf> <./assets/kinematics_by_behaviour.pdf>]
+Underfull \vbox (badness 1215) has occurred while \output is active []
+
+
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -453,10 +456,10 @@ L3 programming layer <2026-01-19>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 4710 strings out of 469006
- 75385 string characters out of 5454814
- 497595 words of memory out of 5000000
- 33348 multiletter control sequences out of 15000+600000
+ 4711 strings out of 469006
+ 75397 string characters out of 5454814
+ 499000 words of memory out of 5000000
+ 33349 multiletter control sequences out of 15000+600000
  675828 words of font info for 136 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
  57i,14n,65p,792b,370s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -478,7 +481,7 @@ nts/type1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2026basic/texmf-dist
 s/type1/urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/ty
 pe1/urw/times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/u
 rw/times/utmri8a.pfb>
-Output written on octopus_behaviour_pipeline.pdf (7 pages, 1048101 bytes).
+Output written on octopus_behaviour_pipeline.pdf (7 pages, 1048553 bytes).
 PDF statistics:
  351 PDF objects out of 1000 (max. 8388607)
  107 compressed objects within 2 object streams
