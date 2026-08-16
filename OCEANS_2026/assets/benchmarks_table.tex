@@ -3,9 +3,11 @@
 \begin{table}[t]
 \caption{Frozen benchmark suite, deployed configuration (octo\_seg\_thin768\_lraspp.pt). All splits are by
 SOURCE VIDEO; the segmentation test videos are excluded from every training source.
-Mask IoU and presence AUC come from the same model on the same test set. Tip-F1 scores
-arm recovery against the human mask's protrusions, so both missed and spurious arms
-are penalised; arm count is descriptive only.}
+Mask IoU comes from the same model and test set as the presence row, but that row's
+19 negatives come from only two recordings; it is retained for continuity and is
+superseded by the multi-recording human-verified negative sets reported in the text.
+Tip-F1 scores arm recovery against the human mask's protrusions, so both missed and
+spurious arms are penalised; arm count is descriptive only.}
 \label{tab:benchmarks}
 \centering
 \small
@@ -16,7 +18,7 @@ Metric & Value \\
 \multicolumn{2}{@{}l}{\textbf{SEG-TEST} --- 122 human-mask frames, 5 held-out videos} \\
 \quad mask IoU (mean / median) & 0.641 / 0.719 \\
 \quad body-area error & 1.05\% \\
-\quad presence AUC (vs 19 empty) & 0.794 \\
+\quad presence AUC (vs 19 empty, 2 recordings) & 0.794 \\
 \midrule
 \multicolumn{2}{@{}l}{\textbf{SKEL-50} --- 50 frozen frames} \\
 \quad arm-tip F1 & 0.539 \\

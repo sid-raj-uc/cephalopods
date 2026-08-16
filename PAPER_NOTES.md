@@ -741,3 +741,36 @@ now detects and flags gate-determined fields rather than reporting them as excel
 **5. `present` has high raw agreement (84.8%) but low κ (0.413)** because the class is imbalanced
 (~87% present). Report κ, not raw agreement, for this field. Abstention (`uncertain` behaviour) ran at
 17.6% in condition B.
+
+## PAPER INTEGRATION LOG — R13/R14/R15 folded into the .tex (2026-08-15)
+What is now cited in `OCEANS_2026/octopus_behaviour_pipeline.tex`, and what is deliberately not.
+
+**Cited (human-verified only, from `data/presence_human_verified.json` / `data/vlm_reliability_stats.json`):**
+- Sec. V-B, new Table `tab:presence` + three run-in paragraphs: EMPTY-V2 **0.907 [0.826,0.958]**
+  (97 frames / 52 videos), reflection **0.906 [0.806,0.956]** (36 / 29), head-to-head mask area
+  **0.913 [0.821,0.962]** vs CLIP probe **0.799 [0.598,0.882]** (30 / 24), paired **ΔAUC +0.134
+  [+0.024,+0.308]**, plus deployed-gate FP 15.5% (empty) / 22.2% (reflection).
+- The NULL RESULT is stated as a null ("equally hard", no ordering asserted in either direction) and
+  the "reflections are the dominant false-positive source" framing is removed everywhere it appeared
+  (abstract, Sec. V-B). Abstract + contribution 5 updated because the headline genuinely changed.
+- Sec. III-C's "63% not present" anecdote is REPLACED by a pointer to the head-to-head.
+- Limitations: R15 κ=0.552 [0.472,0.624] (raw 0.652), stated as **consistency, not accuracy**, with
+  the regression-dilution upside (and its independence caveat) and the rare-class instability
+  (swimming/jetting 43%, n=7; reaching 48%, n=21). Abstract carries κ=0.55 as a bound.
+- Sec. III-C notes `color_or_texture_change` never fired across the 99 colour clips.
+
+**Refused / deliberately NOT written:**
+- Every AI-labelled figure (0.9170, 0.9214, 0.9315, 0.8053, +0.1263) — superseded by R14.
+- R10's **combined rank-product gate** negative (ΔAUC −0.0129 [−0.032,+0.009]): it has no
+  human-verified re-measurement, so it stays in PAPER_NOTES. Re-run it on the human labels if the
+  paper should claim "the two signals are redundant".
+- The withdrawn "failure mode is backwards" claim, and the unprovenanced "17/50".
+- R15's κ=1.000 for `color_or_texture_change` (gate artifact — only the "never fired" fact is cited).
+
+**Page count:** the draft is now **7 pages** (was 6). The added table + presence prose + κ limitation
+is ~1.15 columns; nothing was cut to recover it, per the instruction to keep caveats over pages.
+The 7th page holds the limitations tail, conclusion, ethics statement and references.
+
+**Also changed:** `src/benchmarks.py` prints the SEG-TEST presence row as "vs 19 empty, 2 recordings"
+and its caption now says the row is superseded — so the auto-generated table can no longer be read as
+a population estimate. Regenerate with `--latex-from paper_current`.

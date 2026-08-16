@@ -6,10 +6,14 @@
 % into assets/benchmarks_table.tex — do not hand-edit it here.
 % Open before submission:
 %   - finalise author list / affiliations (placeholder below, mirrors the consortium)
-%   - VLM-250 label-reliability benchmark blocked on an API credential (see Limitations)
-%   - presence AUC rests on 19 empty frames from 2 recordings; EMPTY-V2 (multi-video
-%     negatives) is the pending repair. Reflection-negative results (PAPER_NOTES R9/R10)
-%     are AI-verified, not human-verified, and are deliberately NOT cited here.
+% Presence numbers (Table \ref{tab:presence}) = PAPER_NOTES R14 / data/presence_human_verified.json:
+%   negatives are HUMAN-verified (EMPTY-V2 120/120, reflection 42/42), so R9/R10/R13 are now
+%   citable. Cite ONLY the human-verified figures; the earlier AI-labelled versions (0.9170,
+%   0.9214, 0.9315, 0.8053, +0.1263) were optimistic on both sets and must never be used.
+%   Not cited, deliberately: the combined rank-product gate (R10) has no human-verified
+%   re-measurement; the withdrawn "failure mode is backwards" claim (R9 CORRECTION).
+% Label reliability = PAPER_NOTES R15 / data/vlm_reliability_stats.json (VLM-250, 250 clips /
+%   140 videos, disjoint frame set). It measures CONSISTENCY, never accuracy.
 % Kinematics numbers = PAPER_NOTES R12 (data/kinematics_stats.json, 146 clips / 66 videos,
 % video-level). Fig. 4 is generated from the same loader (src/kinematics_stats.collect).
 % Cut for space (logged in PAPER_NOTES R8-FINAL, still true): the fusion threshold sweep
@@ -74,8 +78,11 @@ and a single-class mask model auto-labelled by GroundingDINO and SAM2 and
 anchored by human-verified masks. On a
 leak-free human-labelled test (122 frames from five held-out source videos) that
 model reaches $0.64$ mean / $0.72$ median IoU with $1.1\%$ body-area error, and
-its mask area doubles as the pipeline's presence gate, which works only because
-the student is trained with empty-mask negatives. On top of
+its mask area doubles as the pipeline's presence gate---AUC $0.91$ against
+human-verified empty frames from $52$ recordings, and indistinguishably $0.91$
+against tank-glass reflections, retiring our assumption that reflections were
+the dominant failure mode---which works only because the student is trained
+with empty-mask negatives. On top of
 the masks we extract an \emph{anatomical skeleton}---mantle, head and up to eight
 arm splines---scored on a frozen benchmark by arm-tip F1 against protrusions of
 the human mask ($0.54$), a metric adopted only after ``arms per frame'' proved
@@ -87,9 +94,11 @@ vs.\ $141$ reaching out of water; Kruskal--Wallis
 $p{=}3.5\!\times\!10^{-6}$, $\varepsilon^2{=}0.22$, and still significant in
 scale-invariant body-lengths per second): a cross-validation of two signal paths
 that share no components. We frame results as arousal and behavioural state
-rather than emotion, report the limitations and the measured negative results
-honestly, and position the work as the profiling layer complementary to
-real-time single-behaviour response systems.
+rather than emotion, measure the reliability of the very labels the analysis
+groups by (Cohen's $\kappa{=}0.55$ under a disjoint frame sample---moderate, and
+a bound on every aggregate here), report the limitations and the measured
+negative results honestly, and position the work as the profiling layer
+complementary to real-time single-behaviour response systems.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -142,8 +151,9 @@ clips from $66$ recordings---a cross-validation of two unrelated signal paths.
 tagged results, video-level splits) and an honest account of the methodology
 around it, including measured negative results: a train--test leakage we caught
 and corrected, a headline metric retired because a genuine improvement made it
-worse, a metric ground truth we had to validate and fix, and several plausible
-improvements that failed under the fixed benchmark.
+worse, a metric ground truth we had to validate and fix, a null result retiring
+our own assumption about the pipeline's dominant failure mode, and several
+plausible improvements that failed under the fixed benchmark.
 \end{enumerate}
 
 \section{Related Work}
@@ -208,9 +218,12 @@ context, body colour, colour/texture change, confidence\}. Each
 field is validated by snapping to an allowed value list; colour fields are gated
 per clip, so infrared/greyscale clips (detected by low BGR channel divergence)
 are told to leave colour \emph{uncertain}. The run over $3{,}205$ clips cost
-$\approx\$2.22$ ($\sim\$0.0006$/clip). We note---and exploit---that the VLM is a
-far stronger presence filter than the detector: on one batch it judged $63\%$ of
-detector-``verified'' clips to contain no octopus, almost all reflections.
+$\approx\$2.22$ ($\sim\$0.0006$/clip). One field of the schema is dead and we
+report it as such: \emph{colour/texture change} was never once asserted across
+the $99$ colour clips of the reliability sample, so it carries no signal and is
+a candidate for redesign. The visibility probe is the weaker of our two presence
+signals; Sec.~\ref{sec:models} measures it head-to-head against the mask-area
+gate rather than by anecdote.
 
 \subsection{Distillation to Local Models}
 \label{sec:distill}
@@ -322,20 +335,67 @@ lock-step (flip, affine, $\pm25\%$ brightness--contrast, sensor noise); $5{,}143
 pairs from $183$ source videos, split by source video. Code, frozen benchmark
 definitions and evaluation scripts will be released with the paper.
 
-Used as a \emph{presence} signal, the mask area attacks the pipeline's dominant
-false-positive source---tank-glass reflections, on which the visibility probe
-fires confidently---and works only because the student sees empty-mask
-negatives: a positives-only student was a coin flip (AUC $0.50$). On SEG-TEST
-the deployed model reaches presence AUC $0.794$ ($122$ present vs.\ $19$ empty
-frames), the same model and test set as the IoU below. We report it
-descriptively with no confidence interval: those $19$ negatives come from only
-\emph{two} recordings, $18$ from a single one, so this is effectively a
-single-video estimate and must not be ordered against estimates from many
-recordings; enlarging that set is the most valuable repair to this benchmark. An
-earlier negatives-trained variant, scored separately on a reflection-heavy set
-from the tank-glass camera, reached AUC $0.86$ overall and $0.99$ against
-reflections ($0\%$ false positives at area $0.01$, $88\%$ present-recall)---a
-different model on a different set, not merged with the above.
+\textbf{Mask area as the presence gate.} Mask area doubles as the pipeline's
+presence signal, and works only because the student sees empty-mask negatives: a
+positives-only student was a coin flip (AUC $0.50$). Measuring it required
+negatives the detector had no hand in choosing, so we sampled frames at uniform
+random timestamps from whole source videos---not from extracted clips, which
+exist only where the visibility probe fired---excluded every recording session
+used to train either model, and had every frame \emph{human}-verified before
+scoring; that step is not a formality, since $9$ of the $105$ frames our own
+vision-model pass called empty contained the animal. The deployed model reaches
+presence AUC $0.907$ on $97$ verified empty frames from $52$ recordings
+(Table~\ref{tab:presence}), \emph{superseding} the $0.794$ of
+Table~\ref{tab:benchmarks} from $19$ frames in two recordings---an artefact of
+one unusually hard recording rather than a property of the model.
+
+\textbf{A null result: reflections are not the harder case.} Tank-glass
+reflections, on which the visibility probe fires confidently, were assumed to be
+the pipeline's dominant false-positive source. Against $36$ verified reflection
+frames from $29$ recordings the gate scores $0.906$, indistinguishable from the
+empty-frame $0.907$. We drop the reflection framing and assert no ordering in
+either direction: on this evidence the two failure modes are equally hard. At the
+\emph{deployed} operating point (area $\geq\!0.01$) $15.5\%$ of verified empty
+frames and $22.2\%$ of reflection frames still fire, so the gate attenuates
+rather than removes false positives.
+
+\textbf{Head-to-head: zero-shot mask area vs.\ the in-domain probe.} Scored on
+one identical verified set with the probe's training sessions removed from
+\emph{both} arms, mask area beats the probe by a paired $\Delta$AUC of $+0.134$,
+CI95 $[+0.024,+0.308]$, excluding zero---and the asymmetry sharpens it: the probe
+is \emph{in-domain} here, trained on $1{,}519$ frames from this camera, while the
+segmenter is \emph{zero-shot}. Two caveats travel with it: the interval is wide
+($24$ recordings), so the claim is the \emph{ordering} and not the effect size;
+and these frames come from extractor-selected clips, enriched for the probe's own
+false positives, making $+0.134$ an upper bound.
+
+\begin{table}[t]
+\caption{Presence gate on \textbf{human-verified} negatives (deployed segmenter,
+threshold $0.5$; CIs cluster-bootstrapped by source video). Negatives are drawn
+at uniform random timestamps from whole source videos, so each set is independent
+of the gate being tested. Top: the two failure modes, measured separately and
+never pooled. Bottom: both gates on one identical subset of the reflection
+frames, the probe's training sessions removed from both arms (paired
+$\Delta$AUC $+0.134$, $[+0.024,+0.308]$); that subset comes from
+extractor-selected clips, so the gap is an upper bound. FP is the false-positive
+rate at present-recall $0.90$.}
+\label{tab:presence}
+\centering
+\small
+\setlength{\tabcolsep}{3.4pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Negatives / gate & fr / vid & AUC [CI95] & FP \\
+\midrule
+Empty frames & 97 / 52 & 0.907 [0.826,0.958] & 0.186 \\
+Reflections & 36 / 29 & 0.906 [0.806,0.956] & 0.278 \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Head-to-head, identical frames}} \\
+\quad mask area (zero-shot) & 30 / 24 & \textbf{0.913} [0.821,0.962] & 0.267 \\
+\quad CLIP probe (in-domain) & 30 / 24 & 0.799 [0.598,0.882] & 0.700 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \textbf{Raising mask quality: what worked and what did not.} Early students
 plateaued near $0.47$ IoU across model sizes, architectures and augmentation.
@@ -384,8 +444,9 @@ flow on \emph{both} metrics (IoU $0.5527$ vs.\ $0.5109$; presence AUC $0.9629$
 vs.\ $0.9521$), so averaging supplies the benefit and motion compensation
 subtracts from it---dense flow is unreliable on a low-texture, deforming body in
 dim infrared. Without the control we would have published ``optical-flow fusion improves the
-presence gate'': true in isolation, wrong about the mechanism. We do not headline the fusion presence gain, since it rests on the same $19$
-two-recording empty frames.
+presence gate'': true in isolation, wrong about the mechanism. We do not headline the fusion presence gain: it rests
+on the same $19$ two-recording empty frames and has not been re-measured on the
+verified negative sets above.
 
 % FIGURE: seg before/after (data/segmentation_demo) + presence-gate ROC
 \begin{figure}[t]
@@ -529,8 +590,11 @@ one: reaching is fastest in pixels but only third in body-lengths per second,
 being performed with an extended body, while swimming and crawling rise. Since
 the two pathways share no components beyond the raw video, their agreement
 indicates both track real behaviour rather than each other's artefacts---though
-it shows the kinematics follow the labels, not that the labels are correct,
-which the blocked reliability benchmark below must settle. An earlier
+it shows the kinematics follow the labels, not that the labels are correct. The
+labels are in fact only moderately self-consistent (Cohen's $\kappa{=}0.55$,
+below), which cuts in this result's favour: label noise unrelated to motion
+dilutes a group-difference test toward the null, so the separation found here is
+likely conservative. An earlier
 $n{=}40$-clip version, pooled at clip level, gave the same ordering with more
 extreme endpoints ($63$ to $159$\,px\,s$^{-1}$); the powered estimate is the
 more conservative one. Speeds are camera-relative pixels; metric calibration is
@@ -549,24 +613,34 @@ We are deliberate about what is not yet established.
 \item \textbf{Human-verified test sets exist only for segmentation} ($499$ human
 masks; five source videos excluded from \emph{all} training sources). Detection
 and captioning stay on internal splits, so we make no comparative claims there.
-\item \textbf{The VLM behaviour labels are not yet validated.} Every aggregate
-result is grouped by labels the structured extractor produced, and their
-reliability is unmeasured; a frozen $250$-clip re-annotation benchmark
-(stratified over behaviours, cameras and not-present clips, with a disjoint
-frame sample to expose frame-selection sensitivity) is implemented but blocked
-on an expired API credential. It measures the extractor's \emph{consistency},
-not accuracy against a human ethologist---the larger open item.
+\item \textbf{The behaviour labels are only moderately self-consistent, and every
+aggregate result is grouped by them.} Re-annotating a frozen sample of $250$
+clips from $140$ recordings with a \emph{disjoint} set of input frames changes
+roughly a third of the behaviour labels: raw agreement $0.652$, Cohen's
+$\kappa{=}0.552$, CI95 $[0.472,0.624]$---``moderate''. This bounds the activity
+budget, circadian profile, stimulus response and kinematics cross-validation
+alike. It measures \emph{consistency under frame sampling}, not accuracy: a
+perfectly consistent extractor can be consistently wrong, and validation against
+a human ethologist remains the larger open item. Noise of this kind, if
+independent of motion, attenuates group differences toward the null, so the
+kinematics separation (Sec.~\ref{sec:skeleton}) is likely understated rather
+than inflated---an argument that fails if fast clips are preferentially
+mislabelled, which we cannot yet test. The rare classes are least stable
+(swimming/jetting $43\%$ reproduced, $n{=}7$; reaching out of water $48\%$,
+$n{=}21$) and are also the classes with the fewest recordings in the kinematics
+test, so per-class claims about them deserve extra caution.
 \item \textbf{Leakage is easy and we hit it once.} Two label sources sharing
 source videos silently placed test videos in training; an apparent
 $0.49\!\rightarrow\!0.70$ improvement evaporated under a hard video-level
 holdout. All results here post-date that correction and the current holdout was
 re-verified (Sec.~\ref{sec:bench}).
-\item \textbf{The presence benchmark is under-powered.} Its $19$ empty-tank
-negatives come from two recordings, so we report it descriptively; a
-detector-independent, multi-recording empty-frame set is built and is the next
-measurement. Reflection negatives for the deployed model are staged but not yet
-human-verified, so we claim no number for them. Absolute behavioural rates
-depend on this gate; we report contrasts, robust to constant gate bias.
+\item \textbf{The presence gate is now powered, but not unbiased everywhere.}
+The frozen suite's $19$ empty-tank negatives (two recordings) are superseded by
+the human-verified multi-recording sets of Table~\ref{tab:presence}; the
+reflection subset used for the head-to-head, however, is still drawn from
+extractor-selected clips, so that comparison's effect size is an upper bound.
+Absolute behavioural rates depend on this gate; we report contrasts, which are
+robust to a constant gate bias.
 \item \textbf{Mask errors are localisation errors, and the cheap temporal fix
 fails.} Body area is accurate to $\sim\!1\%$ while IoU is $0.64$: the mask is the
 right size in the wrong place. Test-time fusion does not repair this even at
@@ -583,8 +657,8 @@ static-feature behaviour classifier failed (below the majority baseline),
 confirming that behaviour classification needs temporal features rather than
 more labels---which the kinematics layer supplies.
 \end{itemize}
-Ongoing work: extending the kinematics to the full corpus and re-basing the
-presence gate on multi-recording negatives; distilling the structured extractor
+Ongoing work: extending the kinematics to the full corpus and validating the
+behaviour labels against a human ethologist; distilling the structured extractor
 into the local $2$-B student (JSON targets rather than a sentence); and, to pass
 the silhouette ceiling, a learned keypoint model on RGB appearance rather than
 masks.

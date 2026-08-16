@@ -21,27 +21,30 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-E}}Diverse-Footage Harvesting}{2}{}\protected@file@percent }
 \newlabel{sec:harvest}{{\mbox  {III-E}}{2}{}{subsection.3.5}{}}
 \citation{qwenvl}
-\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Frozen benchmark suite, deployed configuration (octo\_seg\_thin768\_lraspp.pt). All splits are by SOURCE VIDEO; the segmentation test videos are excluded from every training source. Mask IoU and presence AUC come from the same model on the same test set. Tip-F1 scores arm recovery against the human mask's protrusions, so both missed and spurious arms are penalised; arm count is descriptive only.}}{3}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Frozen benchmark suite, deployed configuration (octo\_seg\_thin768\_lraspp.pt). All splits are by SOURCE VIDEO; the segmentation test videos are excluded from every training source. Mask IoU comes from the same model and test set as the presence row, but that row's 19 negatives come from only two recordings; it is retained for continuity and is superseded by the multi-recording human-verified negative sets reported in the text. Tip-F1 scores arm recovery against the human mask's protrusions, so both missed and spurious arms are penalised; arm count is descriptive only.}}{3}{}\protected@file@percent }
 \newlabel{tab:benchmarks}{{I}{3}{}{table.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-F}}Evaluation Protocol: a Frozen Benchmark Suite}{3}{}\protected@file@percent }
 \newlabel{sec:bench}{{\mbox  {III-F}}{3}{}{subsection.3.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Behavioural and Affective-State Analysis}{3}{}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Aggregate behaviour from the structured records: (a) activity budget; (b) exposure-normalised circadian visible-activity rate; (c) motion and arousal with vs.\ without human presence.}}{3}{}\protected@file@percent }
 \newlabel{fig:findings}{{2}{3}{}{figure.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Behavioural and Affective-State Analysis}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {V}Local Models}{3}{}\protected@file@percent }
 \newlabel{sec:models}{{V}{3}{}{section.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Captioning Student}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Segmentation Student}{3}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Auto-labelling teacher (GroundingDINO$+$SAM2) masks tracked across a clip on a colour camera (top) and an infrared camera (bottom). SAM2 video propagation with largest-blob and area-continuity cleanup yields the temporally consistent masks used to train the student.}}{4}{}\protected@file@percent }
-\newlabel{fig:seg}{{3}{4}{}{figure.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Anatomical Skeleton and Arm Kinematics}{4}{}\protected@file@percent }
-\newlabel{sec:skeleton}{{VI}{4}{}{section.6}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Arm-selection gate frontier on SKEL-50 ($50$ frozen frames, corrected tip ground truth). Gates are (unique-suffix scale, unique-suffix fraction, tip-thinness ratio); P/R are against human-mask protrusions and arms per frame is descriptive only. \emph  {Caveat:} the duplicate rate uses the same criterion the gates enforce, so gated rows are $0$ by construction.}}{5}{}\protected@file@percent }
-\newlabel{tab:skel}{{II}{5}{}{table.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Presence gate on \textbf  {human-verified} negatives (deployed segmenter, threshold $0.5$; CIs cluster-bootstrapped by source video). Negatives are drawn at uniform random timestamps from whole source videos, so each set is independent of the gate being tested. Top: the two failure modes, measured separately and never pooled. Bottom: both gates on one identical subset of the reflection frames, the probe's training sessions removed from both arms (paired $\Delta $AUC $+0.134$, $[+0.024,+0.308]$); that subset comes from extractor-selected clips, so the gap is an upper bound. FP is the false-positive rate at present-recall $0.90$.}}{4}{}\protected@file@percent }
+\newlabel{tab:presence}{{II}{4}{}{table.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Auto-labelling teacher (GroundingDINO$+$SAM2) masks tracked across a clip on a colour camera (top) and an infrared camera (bottom). SAM2 video propagation with largest-blob and area-continuity cleanup yields the temporally consistent masks used to train the student.}}{5}{}\protected@file@percent }
+\newlabel{fig:seg}{{3}{5}{}{figure.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Anatomical Skeleton and Arm Kinematics}{5}{}\protected@file@percent }
+\newlabel{sec:skeleton}{{VI}{5}{}{section.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Arm-selection gate frontier on SKEL-50 ($50$ frozen frames, corrected tip ground truth). Gates are (unique-suffix scale, unique-suffix fraction, tip-thinness ratio); P/R are against human-mask protrusions and arms per frame is descriptive only. \emph  {Caveat:} the duplicate rate uses the same criterion the gates enforce, so gated rows are $0$ by construction.}}{5}{}\protected@file@percent }
+\newlabel{tab:skel}{{III}{5}{}{table.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Qualitative example from the frozen benchmark (arm splines coloured, tips marked), shipped post-gate configuration. Left: skeleton on the segmentation student's mask ($3$ arms). Right: the same frame after offline SAM2 refinement, which sharpens the silhouette and recovers $5$ arms; the rest are folded against the body, not separable in a 2-D silhouette.}}{5}{}\protected@file@percent }
 \newlabel{fig:skel_example}{{4}{5}{}{figure.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces State-gated arm-tip speed by VLM-assigned behaviour class ($146$ clips / $66$ source videos, $\leq \!2$ per video). Each box summarises the per-\emph  {video} medians---the independent unit, since clip-level pooling would be pseudo-replication; dots are videos beyond the whiskers. (b) divides speed by arm spread, removing the apparent-size confound; both panels keep the class order of (a), so the rank change is visible: reaching is fastest in raw pixels but third in body-lengths per second, being performed with an extended body.}}{5}{}\protected@file@percent }
-\newlabel{fig:kinematics}{{5}{5}{}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces State-gated arm-tip speed by VLM-assigned behaviour class ($146$ clips / $66$ source videos, $\leq \!2$ per video). Each box summarises the per-\emph  {video} medians---the independent unit, since clip-level pooling would be pseudo-replication; dots are videos beyond the whiskers. (b) divides speed by arm spread, removing the apparent-size confound; both panels keep the class order of (a), so the rank change is visible: reaching is fastest in raw pixels but third in body-lengths per second, being performed with an extended body.}}{6}{}\protected@file@percent }
+\newlabel{fig:kinematics}{{5}{6}{}{figure.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Limitations and Ongoing Work}{6}{}\protected@file@percent }
 \bibcite{disc_o}{1}
 \bibcite{clip}{2}
 \bibcite{groundingdino}{3}
@@ -49,7 +52,6 @@
 \bibcite{lora}{5}
 \bibcite{mobilenetv3}{6}
 \bibcite{qwenvl}{7}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Limitations and Ongoing Work}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VIII}Conclusion}{6}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{References}{6}{}\protected@file@percent }
-\gdef \@abspage@last{6}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Conclusion}{7}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{7}{}\protected@file@percent }
+\gdef \@abspage@last{7}

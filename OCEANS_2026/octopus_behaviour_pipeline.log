@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  15 AUG 2026 18:14
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  15 AUG 2026 20:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -116,7 +116,7 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24> not available
 \c@IEEEbiography=\count289
 \@IEEEtranrubishbin=\box54
 )
-** ATTENTION: Overriding command lockouts (line 20).
+** ATTENTION: Overriding command lockouts (line 24).
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/cite/cite.sty
 LaTeX Info: Redefining \cite on input line 302.
 LaTeX Info: Redefining \nocite on input line 332.
@@ -296,20 +296,20 @@ File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
 ) (./octopus_behaviour_pipeline.aux)
 \openout1 = `octopus_behaviour_pipeline.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 36.
-LaTeX Font Info:    ... okay on input line 36.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 36.
-LaTeX Font Info:    ... okay on input line 36.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 36.
-LaTeX Font Info:    ... okay on input line 36.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 36.
-LaTeX Font Info:    ... okay on input line 36.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 36.
-LaTeX Font Info:    ... okay on input line 36.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 36.
-LaTeX Font Info:    ... okay on input line 36.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 36.
-LaTeX Font Info:    ... okay on input line 36.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 40.
+LaTeX Font Info:    ... okay on input line 40.
 
 -- Lines per column: 56 (exact).
 (/usr/local/texlive/2026basic/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
@@ -336,99 +336,105 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-LaTeX Font Info:    Calculating math sizes for size <11> on input line 55.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 55.
+LaTeX Font Info:    Calculating math sizes for size <11> on input line 59.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 59.
 
  (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 55.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 59.
 
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Underfull \hbox (badness 1642) in paragraph at lines 123--126
+Underfull \vbox (badness 1097) has occurred while \output is active []
+
+
+Underfull \hbox (badness 1642) in paragraph at lines 132--135
 []\OT1/ptm/m/n/10 An end-to-end pipeline from raw footage to a per-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 129--135
+Underfull \hbox (badness 10000) in paragraph at lines 138--144
 []\OT1/ptm/m/n/10 Teacher$\OMS/cmsy/m/n/10 !$\OT1/ptm/m/n/10 student dis-til-la
 -tion into de-ploy-able lo-cal
  []
 
 
-Underfull \hbox (badness 3439) in paragraph at lines 129--135
+Underfull \hbox (badness 3439) in paragraph at lines 138--144
 \OT1/ptm/m/n/10 models---a 4-bit cap-tion-ing stu-dent that runs on a
  []
 
 
-Underfull \hbox (badness 2689) in paragraph at lines 129--135
+Underfull \hbox (badness 2689) in paragraph at lines 138--144
 \OT1/ptm/m/n/10 human-verified masks, and eval-u-ated leak-free on a
  []
 
-
-Underfull \vbox (badness 1742) has occurred while \output is active []
-
- [1{/Users/siddharthraj/Library/texlive/2026basic/texmf-var/fonts/map/pdftex/up
-dmap/pdftex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/base/8
-r.enc}
+[1{/Users/siddharthraj/Library/texlive/2026basic/texmf-var/fonts/map/pdftex/upd
+map/pdftex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/base/8r
+.enc}
 
 
 ]
-Underfull \hbox (badness 1354) in paragraph at lines 157--164
+Underfull \hbox (badness 1354) in paragraph at lines 167--174
 \OT1/ptm/m/n/10 pres-ence de-tec-tor; the de-ployed seg-menter uses an LR-
  []
 
 <assets/pipeline_behaviour.pdf, id=19, 406.51875pt x 127.8088pt>
 File: assets/pipeline_behaviour.pdf Graphic file (type pdf)
 <use assets/pipeline_behaviour.pdf>
-Package pdftex.def Info: assets/pipeline_behaviour.pdf  used on input line 174.
+Package pdftex.def Info: assets/pipeline_behaviour.pdf  used on input line 184.
 
 (pdftex.def)             Requested size: 247.6778pt x 77.86963pt.
 LaTeX Font Info:    Trying to load font information for OMS+ptm on input line 2
-06.
+16.
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 206.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 216.
  [2 <./assets/pipeline_behaviour.pdf>] (./assets/benchmarks_table.tex)
+Underfull \vbox (badness 2126) has occurred while \output is active []
+
 <assets/behaviour_findings.pdf, id=86, 510.31967pt x 160.63388pt>
 File: assets/behaviour_findings.pdf Graphic file (type pdf)
 <use assets/behaviour_findings.pdf>
-Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 273.
+Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 286.
 
 (pdftex.def)             Requested size: 247.6778pt x 77.96124pt.
 
-Underfull \hbox (badness 1910) in paragraph at lines 299--304
+Underfull \hbox (badness 1910) in paragraph at lines 312--317
 []\OT1/ptm/m/n/10 We dis-til the teacher's one-sentence de-scrip-tions into
  []
 
 [3 <./assets/behaviour_findings.pdf>]
-<assets/segmentation_demo.pdf, id=147, 497.15338pt x 206.80006pt>
+Underfull \vbox (badness 3724) has occurred while \output is active []
+
+ [4]
+<assets/segmentation_demo.pdf, id=152, 497.15338pt x 206.80006pt>
 File: assets/segmentation_demo.pdf Graphic file (type pdf)
 <use assets/segmentation_demo.pdf>
-Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 393.
+Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 454.
 (pdftex.def)             Requested size: 211.56189pt x 88.00403pt.
- [4 <./assets/segmentation_demo.pdf>]
+
 
 LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
-(Font)              using `OT1/ptm/m/it' instead on input line 446.
+(Font)              using `OT1/ptm/m/it' instead on input line 507.
 
-<assets/skeleton_example.pdf, id=196, 479.92694pt x 136.1085pt>
+<assets/skeleton_example.pdf, id=153, 479.92694pt x 136.1085pt>
 File: assets/skeleton_example.pdf Graphic file (type pdf)
 <use assets/skeleton_example.pdf>
-Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 480.
+Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 541.
 (pdftex.def)             Requested size: 247.6778pt x 70.24098pt.
-<assets/kinematics_by_behaviour.pdf, id=197, 256.94118pt x 213.54222pt>
+[5 <./assets/segmentation_demo.pdf> <./assets/skeleton_example.pdf>]
+<assets/kinematics_by_behaviour.pdf, id=206, 256.94118pt x 213.54222pt>
 File: assets/kinematics_by_behaviour.pdf Graphic file (type pdf)
 <use assets/kinematics_by_behaviour.pdf>
 Package pdftex.def Info: assets/kinematics_by_behaviour.pdf  used on input line
- 501.
+ 562.
 (pdftex.def)             Requested size: 242.52063pt x 201.55733pt.
-[5 <./assets/skeleton_example.pdf> <./assets/kinematics_by_behaviour.pdf>]
+ [6 <./assets/kinematics_by_behaviour.pdf>]
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -440,41 +446,42 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[6] (./octopus_behaviour_pipeline.aux)
+[7] (./octopus_behaviour_pipeline.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 4704 strings out of 469006
- 75331 string characters out of 5454814
- 494949 words of memory out of 5000000
- 33346 multiletter control sequences out of 15000+600000
- 671819 words of font info for 132 fonts, out of 8000000 for 9000
+ 4710 strings out of 469006
+ 75385 string characters out of 5454814
+ 497595 words of memory out of 5000000
+ 33348 multiletter control sequences out of 15000+600000
+ 675828 words of font info for 136 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 57i,14n,65p,691b,370s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,14n,65p,792b,370s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi1
 0.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/c
-mmi9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/c
-m/cmr10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfont
-s/cm/cmr6.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfo
-nts/cm/cmr7.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmr8.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/a
-msfonts/cm/cmr9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public
-/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/pu
-blic/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1
-/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/ty
-pe1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2026basic/texmf-dist/fonts
-/type1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2026basic/texmf-dist/fo
-nts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/t
-ype1/urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1
-/urw/times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/
-times/utmri8a.pfb>
-Output written on octopus_behaviour_pipeline.pdf (6 pages, 1032736 bytes).
+mmi8.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmmi9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfont
+s/cm/cmr10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsf
+onts/cm/cmr6.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmr7.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/
+amsfonts/cm/cmr8.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmr9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/pub
+lic/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmsy6.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2026basic/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2026basic/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2026basic/texmf-dist
+/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2026basic/texmf-dist/font
+s/type1/urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/ty
+pe1/urw/times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/u
+rw/times/utmri8a.pfb>
+Output written on octopus_behaviour_pipeline.pdf (7 pages, 1048101 bytes).
 PDF statistics:
- 340 PDF objects out of 1000 (max. 8388607)
- 100 compressed objects within 1 object stream
+ 351 PDF objects out of 1000 (max. 8388607)
+ 107 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  26 words of extra memory for PDF output out of 10000 (max. 10000000)
 
