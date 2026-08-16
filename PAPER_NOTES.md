@@ -774,3 +774,22 @@ The 7th page holds the limitations tail, conclusion, ethics statement and refere
 **Also changed:** `src/benchmarks.py` prints the SEG-TEST presence row as "vs 19 empty, 2 recordings"
 and its caption now says the row is superseded — so the auto-generated table can no longer be read as
 a population estimate. Regenerate with `--latex-from paper_current`.
+
+## R16 — combined-gate negative CONFIRMED on human labels (2026-08-15)
+The paper-integration pass correctly refused to cite R10's pre-registered combined-gate negative,
+because R14 re-scored only the two single-signal arms on human labels — citing the AI-labelled
+Δ alongside human-verified arms would have mixed label provenances inside one comparison. Re-run now
+on the same human-verified frames (122 positives, 30 reflection negatives / 24 videos, detector
+training sessions excluded), same pre-registered variant (rank-product, fixed before the first run):
+
+| arm | AUC | FP@recall .90 |
+|---|---|---|
+| mask area | 0.9126 | 0.267 |
+| CLIP detector | 0.7989 | 0.700 |
+| combined (rank-product) | 0.9120 | 0.333 |
+
+**Paired ΔAUC (combined − mask area) = −0.0050, CI95 [−0.057, +0.032] — includes 0.**
+Kill criterion met on human labels exactly as it was on AI labels (−0.0129 [−0.032, +0.009]).
+**NEGATIVE CONFIRMED: the two presence signals are redundant; mask area alone is the gate.** Adding
+the detector does not help and costs FP@R.90 (0.267 → 0.333). Now citable with a single label
+provenance throughout.
