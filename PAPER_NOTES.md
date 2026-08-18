@@ -793,3 +793,48 @@ Kill criterion met on human labels exactly as it was on AI labels (−0.0129 [�
 **NEGATIVE CONFIRMED: the two presence signals are redundant; mask area alone is the gate.** Adding
 the detector does not help and costs FP@R.90 (0.267 → 0.333). Now citable with a single label
 provenance throughout.
+
+## R17 — Uncertainty for the BEHAVIOURAL findings (day-clustered). Two of three hold; one is soft.
+The paper's vision results all carry CIs cluster-bootstrapped by source video, while the behavioural
+findings — the activity budget, circadian profile and stimulus response — were bare point estimates,
+and the most quotable claim in the paper ("human presence nearly doubles movement") had **no test at
+all**. `src/behaviour_uncertainty.py` fixes that. The independent unit is the **recording day** (7 of
+them), not the clip: clips within a day share lighting, the animal's state and whether a human was in
+the room. n=7 clusters is few, and the resulting widths are the honest measure of what one week supports.
+
+### Stimulus response — STRONGEST result in the behavioural section
+| metric | human present | absent | paired diff | CI95 (by day) | days higher | sign test |
+|---|---|---|---|---|---|---|
+| mean motion | 0.0856 | 0.0406 | **+0.0450** | [+0.0279, +0.0610] | **7/7** | p=0.0078 |
+| arousal index | 0.6574 | 0.4585 | **+0.1989** | [+0.1018, +0.3097] | **7/7** | p=0.0078 |
+Consistent in direction on **every single recording day**; exact paired sign test p=0.0078 (the floor
+at n=7). This claim is now the best-supported behavioural finding, not the weakest.
+
+### Circadian — holds, and the magnitude is larger than reported
+Afternoon (13–19h) **37.5%** vs overnight (00–05h) **2.8%** = **13.4× ratio**; peak hour 17:00 at
+**46.4%** (paper says ~45%, confirmed); dawn bump at 05–06h confirmed (10.4%, 13.7%).
+Afternoon > overnight on **4/4** days with enough exposure in both windows. Per-day spread at the peak
+hour is wide, though: **[1, 26, 36, 59, 67, 74, 88]%** — the direction is robust, the level is not.
+
+**Two computation traps, both hit on the first attempt** (worth keeping, both silently produce
+plausible-looking numbers):
+1. `video_timeline` is a clip **offset** (mm:ss–mm:ss), not a clock time. Parsing it as an hour makes
+   every hour look identical (~95–100% everywhere). Absolute clock time comes from the index
+   `segment` (HHMMSS) + the window's `start_sec`.
+2. The exposure denominator must be restricted to the **same recording days** as the numerator. The
+   index holds **13,342** extracted clips but only 3,205 were behaviourally analysed; off-date clips in
+   the denominator deflate the rate. Here it is only a 2.6% effect (12,995 of 13,342 are on-date), but
+   the *shape* of the curve is the published claim, so exposure must be matched, not assumed benign.
+
+### Activity budget — the SOFT finding; report intervals, not point estimates
+| behaviour | share | CI95 (by day) | per-day range |
+|---|---|---|---|
+| Exploration / manipulation | 41.2% | [31.9, 50.9] | 21.5–56.9% |
+| Resting / stationary | 32.5% | [20.2, 51.0] | **16.2–73.1%** |
+| Human / enrichment interaction | 13.7% | [7.9, 18.0] | 3.3–34.6% |
+| Reaching out of water | 9.0% | [5.7, 11.5] | 2.1–12.5% |
+| Crawling | 2.2% | [0.8, 4.1] | 0.0–7.7% |
+| Swimming / jetting | 1.4% | [0.4, 2.3] | 0.0–2.8% |
+**Resting ranges 16%–73% across seven days.** Quoting "33% resting" as a characteristic of the animal
+is not supportable from one week; the paper must give the interval or drop the precision. This is the
+clearest quantitative argument for extending to the harvested ~209-day corpus.
