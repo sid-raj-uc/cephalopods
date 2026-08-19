@@ -11,6 +11,16 @@
 % into assets/benchmarks_table.tex — do not hand-edit it here.
 % Open before submission:
 %   - finalise author list / affiliations (placeholder below, mirrors the consortium)
+%   - \cite{hideandseg} author list filled from the arXiv record (de Aguiar, Andrade, Santos,
+%     Gois; all Universidade Federal do ABC, Brazil), verified 2026-08-19.
+% v2 additions and their provenance (all pre-existing measurements, nothing new was run):
+%   - OWLv2 231/232 at thr 0.10 + the 166/232 human outcome: AGENTS.md "Hard-negative mining"
+%     (data/hard_negatives/_detector_verify.json, review_decisions.csv). Logged there, not yet
+%     mirrored into PAPER_NOTES.md's ledger - mirror it when PAPER_NOTES is next editable.
+%   - Phase-0 teacher bleed 11.8->6.5 (IR) / 15.5->5.8 (colour), seed conf ~0.50 vs 0.74-0.89:
+%     PAPER_NOTES R3 + AGENTS.md "Phase 0 DONE".
+%   - IR 13% clip acceptance (87 of 653): src/SEGMENTATION_LOG.md "IR auto-labeling - FAILED".
+%   - zero-shot CLIP detection invalidated 2026-06-13: AGENTS.md "Persistent memory" note.
 % Presence numbers (Table \ref{tab:presence}) = PAPER_NOTES R14 / data/presence_human_verified.json:
 %   negatives are HUMAN-verified (EMPTY-V2 120/120, reflection 42/42), so R9/R10/R13 are now
 %   citable. Cite ONLY the human-verified figures; the earlier AI-labelled versions (0.9170,
@@ -132,7 +142,20 @@ This paper addresses the complementary problem: \emph{understanding the whole
 behavioural repertoire over time}. We present an automated pipeline that turns
 continuous multi-camera footage of one captive \emph{O.\ vulgaris} (``Nity'')
 into a structured behavioural and affective-state time-series, together with the
-small local models needed to run it cheaply and offline. Our contributions are:
+small local models needed to run it cheaply and offline.
+
+One constraint shapes the entire design. There is no large-scale, publicly
+available annotated dataset for octopus segmentation or detection to train
+on---an absence independently reported by concurrent work on octopus
+segmentation in natural habitats, which cites ``the absence of large-scale,
+publicly available, annotated video datasets for octopus segmentation, which
+prevents standard supervised fine-tuning and evaluation''~\cite{hideandseg}. So
+supervised training on an existing corpus was never an option, and every label
+in this pipeline has to be manufactured: by foundation-model teachers run
+offline over our own footage, by a human wherever the measurement depends on it,
+or not at all. That is why the architecture is teacher$\rightarrow$student
+distillation rather than fine-tuning, and why so much of what follows is about
+verifying labels we generated ourselves. Our contributions are:
 \begin{enumerate}[leftmargin=*, itemsep=1pt, topsep=2pt]
 \item An end-to-end pipeline from raw footage to a per-clip \emph{structured
 behavioural record}, using a large vision--language model (VLM) as a
@@ -176,7 +199,34 @@ segmenters (GroundingDINO~\cite{groundingdino}, SAM/SAM2~\cite{sam2}) label
 without task-specific supervision. We use these as \emph{teachers}, distilling
 their labels into small students~\cite{lora}. CLIP~\cite{clip} provides the
 frozen features for our presence detector; the deployed segmenter uses an
-LR-ASPP/MobileNetV3 head~\cite{mobilenetv3}.
+LR-ASPP/MobileNetV3 head~\cite{mobilenetv3}. Off the shelf, however, these
+models were not usable as detectors on our footage; Sec.~\ref{sec:distill}
+quantifies where they failed.
+
+\textbf{Octopus segmentation in the field.} The closest work to ours is
+HideAndSeg~\cite{hideandseg}, a concurrent annotation-light segmentation
+pipeline: a human annotates initial frames to prompt SAM2, the resulting masks
+train a YOLOv11 detector, and that detector then auto-prompts SAM2 over the
+remaining footage. On $148$ videos of juvenile \emph{Octopus insularis}
+($366{,}514$ usable frames) recorded at three Brazilian coastal sites, it reports
+DICE $0.9677$ and IoU $0.9383$.
+
+Those figures are not comparable with the $0.641$ IoU we report, and we would
+rather say so than let the contrast be drawn for us. (i)~\emph{The reference
+differs.} Their ground truth is manual segmentation of the initial frame of each
+video---essentially the frame used to prompt SAM2---while ours is $122$
+human-drawn masks sampled across five source videos held out of \emph{all}
+training. (ii)~\emph{The imaging conditions differ}: natural-habitat colour
+video against dim aquarium footage with infrared cameras, tank-glass reflections
+and clutter. (iii)~\emph{The subject differs}: juvenile \emph{O.\ insularis}
+against an adult \emph{O.\ vulgaris}. (iv)~\emph{The deployment target
+differs}, which is our actual distinction: HideAndSeg runs SAM2 at inference,
+whereas we distil to a $3.2$\,M-parameter student that runs locally with no GPU
+and no API. The two lines are complementary rather than competing---they solve
+automated \emph{prompting} of a large model in the field, we solve
+\emph{distillation to a deployable model} and the behavioural layer built on it.
+That both projects had to manufacture their own labels is the same finding
+reported twice.
 
 \section{System and Methods}
 The tank is observed by a multi-camera rig (6 IP cameras, 4K, infrared and colour
@@ -196,6 +246,7 @@ camera; the same installation supports the companion response system.
 \end{figure}
 
 \subsection{Visibility Detection}
+\label{sec:detect}
 A frozen CLIP ViT-B/32 encoder feeds a small multi-layer-perceptron probe
 (512$\rightarrow$256$\rightarrow$64$\rightarrow$2) classifying
 \emph{octopus-visible} vs.\ \emph{hidden}. The single most important design
@@ -240,6 +291,24 @@ API. We apply the recipe twice---VLM captions into a compact captioning model,
 GroundingDINO$+$SAM2 masks into a single-class segmentation model
 (Sec.~\ref{sec:models})---each kept as small as the task allows so continuous
 in-situ inference is feasible on commodity hardware.
+
+\textbf{Why distil rather than prompt.} Distillation is not only a cost
+argument: we measured the off-the-shelf alternatives on this footage and none of
+them worked as a detector. Asked to verify $232$ mined hard-negative frames, an
+open-vocabulary detector (OWLv2~\cite{owlv2}) reported an octopus in $231$ of
+them at a $0.10$ threshold and its scores never separated the two classes---no
+operating point existed, so it was useless as an auto-filter. Human review of
+the same frames found that $166$ genuinely contained the animal and $66$ did
+not, a distinction the detector had not made. Zero-shot CLIP scoring for
+presence was likewise abandoned as unreliable; what works is a \emph{trained}
+probe on frozen CLIP features (Sec.~\ref{sec:detect}), and even that is the
+weaker of our two presence signals. The promptable segmentation teacher is
+usable, but only when gated by seed confidence and propagated through time, and
+it fails outright on one of our cameras (Sec.~\ref{sec:models}). Read together,
+these say the same thing: the foundation models here are \emph{gated,
+temporally propagated offline annotators}, not drop-in detectors---which is
+exactly the case for distilling them into a student rather than prompting them
+at inference time.
 
 \subsection{Diverse-Footage Harvesting}
 \label{sec:harvest}
@@ -331,9 +400,27 @@ Following Sec.~\ref{sec:distill} we target the \emph{smallest} model that yields
 usable masks: one foreground class at low resolution, with GroundingDINO (box)
 $+$ SAM2 (mask) as an offline auto-labeller, never deployed. The most-confident
 frame seeds SAM2 video propagation, and largest-blob plus area-continuity
-cleanup remove transient errors---correcting the two systematic failures of
-per-frame prompting (infrared bright-tool bleed, colour background bleed) and
-rejecting the reflection camera by low seed confidence. Auto-labelling produced
+cleanup remove transient errors.
+
+That recipe is a correction, not a refinement. Prompting the teacher
+independently per frame over-segments in two systematic directions, both
+measurable: on the infrared camera SAM2 attaches to bright metal tools, and
+seeding a single propagated track cuts mask area from $11.8\%$ to $6.5\%$ of the
+frame; on colour cameras the mask escapes the loosely fitted box into the
+background, $15.5\%$ to $5.8\%$. Clips already clean show no regression. Seed
+confidence supplies the rest: on the tank-glass reflection camera
+GroundingDINO's best frame peaks at $\approx\!0.50$ against $0.74$--$0.89$ on
+real animals, so the camera is rejected wholesale rather than quietly
+mislabelled. The limit of the recipe is worth stating with its success, because
+it is the same mechanism: temporal propagation removes errors that are
+\emph{transient} across a clip, and cannot touch errors that are
+\emph{consistent}---a reflection is present in every frame---which is why
+confidence gating is needed alongside it and not instead of it. Nor does the
+teacher transfer across sensors: on greyscale infrared clips GroundingDINO is so
+rarely confident enough to seed that only $13\%$ of clips ($87$ of $653$) pass
+the gate, and the masks that do survive over-segment onto bright fixtures
+(median area $8.5\%$ against $2.9\%$ on colour), leaving our largest deployment
+camera unlabelled (Sec.~\ref{sec:limits}). Auto-labelling produced
 $4{,}412$ (image, mask) pairs, from which we distilled students across a size
 sweep (a compact U-Net at several widths, an LR-ASPP head); we retain the
 smallest clearing our quality bar, an LR-ASPP student of $3.2$\,M parameters.
@@ -717,6 +804,13 @@ in \textit{ICLR}, 2022.
 A.\ Howard \textit{et al.}, ``Searching for MobileNetV3,'' in \textit{ICCV}, 2019.
 \bibitem{qwenvl}
 Qwen Team, ``Qwen3-VL,'' 2025.
+\bibitem{owlv2}
+M.\ Minderer, A.\ Gritsenko, and N.\ Houlsby, ``Scaling Open-Vocabulary Object
+Detection,'' in \textit{NeurIPS}, 2023.
+\bibitem{hideandseg}
+A.\ de Aguiar, M.\ P.\ Andrade, C.\ M.\ D.\ Santos, and J.\ P.\ Gois,
+``HideAndSeg: an AI-based tool with automated prompting for octopus segmentation
+in natural habitats,'' \textit{arXiv:2511.04426}, Nov.\ 2025.
 \end{thebibliography}
 
 \end{document}

@@ -838,3 +838,55 @@ plausible-looking numbers):
 **Resting ranges 16%–73% across seven days.** Quoting "33% resting" as a characteristic of the animal
 is not supportable from one week; the paper must give the interval or drop the precision. This is the
 clearest quantitative argument for extending to the harvested ~209-day corpus.
+
+## R18 — Related work: HideAndSeg, and the two motivations the paper was missing (2026-08-19)
+Two load-bearing claims were absent from v1 and are now in **v2**
+(`OCEANS_2026/octopus_behaviour_pipeline_v2.tex`; v1 frozen as the fallback):
+
+**1. There is no public annotated octopus segmentation dataset.** Never stated, so the entire
+teacher→student architecture was unmotivated. Independently confirmed by HideAndSeg: *"the absence of
+large-scale, publicly available, annotated video datasets for octopus segmentation, which prevents
+standard supervised fine-tuning and evaluation."* They assert it three times as their own motivation
+and release neither data nor code, so **the claim remains true after their paper** and is citable.
+
+**2. Foundation models fail out of the box here — now quantified** (all pre-existing measurements):
+OWLv2 231/232 at thr 0.10 with no class separation (vs the human outcome that 166/232 actually
+contained the animal); zero-shot CLIP presence scoring abandoned as unreliable (the working detector
+is a *trained* probe on frozen features); GD+SAM2 per-frame IR bright-tool bleed 11.8%→6.5% and
+colour background bleed 15.5%→5.8% once fixed by confidence-seeded video propagation; GroundingDINO
+13% IR clip acceptance; reflection seed confidence ~0.50 vs 0.74–0.89. **NOTE: the OWLv2 figure was
+in AGENTS.md but had never been mirrored into this ledger — now recorded here** (artefacts:
+`data/hard_negatives/_detector_verify.json`, `review_decisions.csv`).
+
+### HideAndSeg (arXiv:2511.04426, Nov 2025) — closest prior art, verified against their own tables
+de Aguiar, Andrade, Santos & Gois (UFABC). SAM2 + YOLOv11, 148 videos / 366,514 frames of juvenile
+*O. insularis*, three Brazilian sites, handheld colour GoPro/Canon, natural habitat.
+
+**Their headline DICE 0.9677 / IoU 0.9383 is a single-prompted-frame number, not a video result.**
+Verified directly from their tables, not inferred:
+- Their column header reads **"Supervised Metrics (first frame)"**, and frame 1 is *always* prompted
+  ("uniformly sampled... beginning with the first frame").
+- In their Table 2, DICE and IoU are **bit-identical including standard deviations** (0.9677±0.0191 /
+  0.9383±0.0349) across the 5-, 10- and 20-frame conditions. A 4× change in prompt count cannot leave
+  a genuine video metric unchanged to four decimals. They read this as "saturation"; it is
+  insensitivity — the metric only ever looks at frame 1.
+- In their Table 1, adding a second annotation frame changes DICE/IoU by **exactly zero**
+  (0.9405/0.8965 in both rows), which cannot affect the frame-1 mask.
+- **Not one frame beyond frame 1 is compared to a human mask**, in a paper about video propagation
+  whose own figures show propagation failing three ways.
+- Their unsupervised DICE_t is **anti-correlated with quality on their own data**: the config with the
+  highest DICE_t (0.9747) has the worst supervised DICE (0.6057).
+
+**So 0.9383 vs our 0.6415 is not a like-for-like comparison** — ~17 prompted frames vs 122 human masks
+across five fully held-out videos, clear daylight colour vs dim aquarium IR with glass reflections,
+*O. insularis* juveniles vs adult *O. vulgaris*. v2 states their number openly and explains the
+protocol difference rather than letting a reviewer make the naive comparison.
+
+**Credit where due, and worth citing positively:** their core insight is correct — per-frame
+re-detection breaks the failure mode where a propagation tracker, once contaminated, never recovers.
+Reproduce or contrast that, do not re-derive it.
+
+**They leave our territory open** (verified by full-text search): no aquarium footage, **no infrared at
+all**, no distillation (they deploy ~250M params and hit a compute wall, solved by prompting *less*
+rather than shrinking), no skeleton/pose, and **no behaviour analysis** — they stop at masks and call
+it "the first step towards automating the detection of animal behavior."
