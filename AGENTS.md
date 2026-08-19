@@ -443,6 +443,37 @@ Plan: `src/DATA_PLAN.md`. Running results ledger: `PAPER_NOTES.md`.
   Projected ~6–12 h (probe-first cut it from ~37 h; now bounded by probe-seek latency + the ~5 MB/s cap).
 - **`src/colab_speedtest.py`** — the server bandwidth / stream-scan / parallel-speedup probe.
 
+### cbox — the always-on harvest box (2026-08-19)
+Second harvest campaign runs on **`cbox` = SSH host `claude-box`** (Oracle free-tier A1, `ubuntu@129.158.193.16`,
+key `~/.ssh/oracle_box`). Checkout at **`/home/ubuntu/project/cephalopods`** (same repo/branch `sid-dev`,
+venv at `./venv`, torch 2.12.1 CPU — `cuda False`). Naming pattern: `abox`/`vbox`/`cbox` in `~/.ssh/config`.
+- **Box reality: aarch64, 2 cores, 11 GB RAM, ~13 GB free disk.** Measured **CLIP ViT-B/32 = 7.9 frames/s**,
+  so a full 1,796-frame scan ≈ 227 s of pure CLIP. **Extra workers do NOT multiply scan throughput** (only
+  2 cores — they split it); they only hide probe/network latency. Use `--workers 2` (also respects the
+  server-throttling rule: concurrency 2–3).
+- **`harvest_stream.py` reads creds from ENV, not `.env`** — it does not call `server_creds.py`. Always run as
+  `set -a; . ./.env; set +a; ./venv/bin/python3 -u src/harvest_stream.py ...`. cbox's `.env` holds ONLY
+  `OCTOPUS_USER`/`OCTOPUS_PASS` (0600, gitignored); the OpenRouter/W&B keys were deliberately not copied.
+- **Seed the ledger before running.** Copy the prior `harvest_ledger.json` into the new `--out` dir; the
+  harvester skips any `video_url` already in it, so past work is never redone. Raising `--max-seg-per-daycam`
+  still yields NEW urls on already-visited dates, so deeper sampling stays available.
+- **Run 2 target: `O-vulgaris-Nity-2026-2-20--/`** — the untouched second Nity collection, crawls clean
+  (3 colour cams, **52 dates 2026-02-20 → 2026-04-12**, ~429 videos at 3 seg/day-cam). Extends the record
+  ~5 weeks past the analysed corpus (which stops 2026-03-07). Run **uncapped** (`--max-scan-sec 0`), unlike
+  Modal's 400 s cap — probe-first discards ~59% cheaply and early-exit bounds productive videos, whereas the
+  cap only ever inspects the first 6.7 min of a 30-min video. Launch detached:
+  `tmux new-session -d -s harvest "... > /tmp/harvest_cbox.log 2>&1"`; poll that log.
+- **Still untouched on the server** (exact listing names): `GP11-Heidi-menu/`, `Heidi-additional-videos/`,
+  `O maya 2025-05_2025-06/`, `O vulgaris 2023-10_2024_08/`, `O eledone 2024-10_2024-11/`. These are
+  **different animals** — a cross-animal generalization claim, not an extension of Nity's time-series.
+- **`src/merge_harvest.py` — pull results back.** rsync the run dir home, then merge into the canonical pair
+  `data/harvest_ledger_all.json` + `data/harvest_clips_index.json` (keyed by `video_url`; a record is only
+  overwritten by a strictly more informative one — real status beats `failed`, more clips beats fewer).
+  **It deliberately does NOT pool into `data/octopus_clips_verified.json`** — that index backs the paper's
+  frozen benchmark sets, and harvested clips use a different sampling regime (visibility-only gate, 2/video),
+  so merging would silently change reported denominators. There is no flag to do it — pooling is a
+  deliberate separate step that must be followed by re-running `src/benchmarks.py`.
+
 ## Benchmarks — the frozen suite (READ `BENCHMARKS.md` BEFORE CLAIMING ANY IMPROVEMENT)
 Every improvement claim, and every number in the OCEANS 2026 paper, is measured by **`src/benchmarks.py`**
 on frozen sets; results append to `data/benchmarks.json` keyed by `--tag`, and `--latex` regenerates
