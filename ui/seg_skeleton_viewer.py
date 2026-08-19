@@ -33,12 +33,13 @@ def seg():
     return _S
 
 
-def run_job(job_id, clip, fps):
+def run_job(job_id, clip, fps, refine=False):
     st = JOBS[job_id]
     try:
         def on_stage(s):
             st["stage"] = s
-        r = process_video_3way(clip, CACHE / job_id, S=seg(), fps=fps, on_stage=on_stage)
+        r = process_video_3way(clip, CACHE / job_id, S=seg(), fps=fps, on_stage=on_stage,
+                               refine=refine)
         st.update(r); st["stage"] = "done"; st["done"] = True
     except Exception as exc:
         st["stage"] = f"error: {exc}"; st["done"] = True; st["error"] = str(exc)
@@ -66,7 +67,8 @@ def run(body: dict):
             return JSONResponse({"error": "a job is already running"}, status_code=429)
         job_id = uuid.uuid4().hex[:12]
         JOBS[job_id] = {"stage": "queued", "done": False, "clip": clip}
-        threading.Thread(target=run_job, args=(job_id, clip, float(body.get("fps", 5))), daemon=True).start()
+        threading.Thread(target=run_job, args=(job_id, clip, float(body.get("fps", 5)),
+                                               bool(body.get("refine", False))), daemon=True).start()
     return {"job": job_id}
 
 
@@ -105,6 +107,7 @@ HTML = """<!doctype html><html><head><meta charset=utf-8><title>Seg -> Skeleton<
  <select id=sug><option value="">— pick a clip —</option></select>
  <input id=path placeholder="or paste a local video path" size=42>
  <label class=hint>fps <input id=fps type=number value=5 min=1 max=10 style="width:56px"></label>
+ <label class=hint><input type=checkbox id=refine> SAM2 refine (best quality, ~2 min extra)</label>
  <button onclick="go()">▶ Run pipeline</button>
  <span id=msg></span>
 </div>
@@ -121,8 +124,9 @@ async function go(){
  const clip=document.getElementById('path').value.trim()||document.getElementById('sug').value;
  if(!clip){msg('pick or paste a clip');return;}
  const fps=document.getElementById('fps').value;
+ const refine=document.getElementById('refine').checked;
  msg('starting…');
- const r=await (await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clip,fps})})).json();
+ const r=await (await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clip,fps,refine})})).json();
  if(r.error){msg(r.error);return;}
  const job=r.job; poll(job);
 }

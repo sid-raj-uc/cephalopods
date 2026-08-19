@@ -35,7 +35,9 @@ CAMERAS = ["Right_Front", "Right_Back", "Right_Right"]      # colour dens; not R
 OUT = REPO / "data" / "dataset_seg_human"
 (OUT / "images").mkdir(parents=True, exist_ok=True); (OUT / "masks").mkdir(parents=True, exist_ok=True)
 MANIFEST = OUT / "manifest.jsonl"
+CORRUPT_FILE = OUT / "_corrupt.txt"        # clips ffmpeg can't read (truncated / moov atom not found)
 FPS = 2; MAXSIDE = 1024; N_PER_CLIP = 4    # fps=2 is enough for the motion pre-seed; faster load
+_CORRUPT = set(l.strip() for l in open(CORRUPT_FILE)) if CORRUPT_FILE.exists() else set()
 AREA_MIN, AREA_MAX = 0.0008, 0.6
 
 app = FastAPI()
@@ -92,7 +94,15 @@ def camera_of(p):
 
 
 def all_clips():
-    return sorted(p for p in glob.glob(f"{CLIPS_ROOT}/**/*.mp4", recursive=True) if camera_of(p))
+    return sorted(p for p in glob.glob(f"{CLIPS_ROOT}/**/*.mp4", recursive=True)
+                  if camera_of(p) and p not in _CORRUPT)
+
+
+def mark_corrupt(clip):
+    if clip not in _CORRUPT:
+        _CORRUPT.add(clip)
+        with open(CORRUPT_FILE, "a") as f:
+            f.write(clip + "\n")
 
 
 def done_set():
@@ -147,6 +157,8 @@ def load_clip(index):
                     f"fps={FPS},scale='min({MAXSIDE},iw)':-2", f"{fdir}/%05d.jpg"], check=False)
     files = sorted(glob.glob(f"{fdir}/*.jpg"))
     imgs = [Image.open(f).convert("RGB") for f in files]
+    if not imgs:                          # ffmpeg got no frames (corrupt/unreadable clip) -> skip forever
+        td.cleanup(); mark_corrupt(clip); return None
     ms = motion_seed(imgs) if imgs else None
     seed_idx = ms[0] if ms else (len(imgs) // 2 if imgs else 0)
     box = ms[1] if ms else None
@@ -190,8 +202,18 @@ def api_load(body: dict):
         if not clips:
             return JSONResponse({"error": f"no clips under {CLIPS_ROOT}"}, status_code=404)
         idx = max(0, min(idx, len(clips) - 1))
-        r = load_clip(idx)
-        r["is_done"] = clips[idx] in done_set()
+        step = 1 if int(body.get("dir", 1)) >= 0 else -1
+        r = None
+        for _ in range(min(400, len(clips))):    # skip broken/unreadable clips in the direction of travel
+            if idx < 0 or idx >= len(clips):
+                break
+            r = load_clip(idx)
+            if r is not None:
+                break
+            idx += step
+        if r is None:
+            return JSONResponse({"error": "no loadable clip nearby"}, status_code=404)
+        r["is_done"] = clips[r["index"]] in done_set()
         return r
 
 
@@ -346,7 +368,7 @@ const cv=document.getElementById('cv');
 async function post(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});return r.json();}
 function setImg(d){ if(d.img) cv.src=d.img; if(d.area!==undefined) document.getElementById('area').textContent=(d.area*100).toFixed(1)+'%'; }
 async function refreshState(){const s=await (await fetch('/api/state')).json(); tot=s.total; document.getElementById('tot').textContent=tot; document.getElementById('done').textContent=s.saved; document.getElementById('vids').textContent=s.videos; document.getElementById('pos').textContent=s.pos; document.getElementById('neg').textContent=s.neg;}
-async function load(i){ busy=true; msg('loading…'); const d=await post('/api/load',{index:i}); busy=false;
+async function load(i,dir){ busy=true; msg('loading…'); const d=await post('/api/load',{index:i,dir:(dir||1)}); busy=false;
   if(d.error){msg(d.error);return;} idx=d.index; W=d.W; H=d.H; document.getElementById('idx').textContent=idx+1;
   document.getElementById('cam').textContent=d.camera+(d.is_done?' ✓done':''); setImg(d); msg(d.is_done?'already labeled (re-doing overwrites)':''); refreshState();}
 function msg(t){document.getElementById('msg').textContent=t;}
@@ -365,7 +387,7 @@ document.addEventListener('keydown',async e=>{ if(busy)return;
   else if(e.key==='r'||e.key==='R'){busy=true;await post('/api/reject',{});busy=false;msg('skipped (not saved)');await refreshState();if(idx<tot-1)await load(idx+1);}
   else if(e.key==='j'||e.key==='J'){await jumpNew();}
   else if(e.key==='z'||e.key==='Z'){busy=true;const d=await post('/api/reset',{});busy=false;setImg(d);msg('cleared — click the octopus');}
-  else if(e.key==='ArrowLeft'){load(Math.max(idx-1,0));}});
+  else if(e.key==='ArrowLeft'){load(Math.max(idx-1,0),-1);}});
 (async()=>{await refreshState(); const r=await (await fetch('/api/resume')).json(); await load(r.index); if(r.last_reviewed>=0) msg('resumed after clip '+(r.last_reviewed+1));})();
 </script></body></html>"""
 
