@@ -466,6 +466,28 @@ venv at `./venv`, torch 2.12.1 CPU — `cuda False`). Naming pattern: `abox`/`vb
 - **Still untouched on the server** (exact listing names): `GP11-Heidi-menu/`, `Heidi-additional-videos/`,
   `O maya 2025-05_2025-06/`, `O vulgaris 2023-10_2024_08/`, `O eledone 2024-10_2024-11/`. These are
   **different animals** — a cross-animal generalization claim, not an extension of Nity's time-series.
+- **THREE TRAPS hit on the first cbox launch (2026-08-19) — check all three before any new box/campaign:**
+  1. **`cv2` is imported LAZILY inside `scan_stream` (line ~137), so a missing opencv fails ONLY after a
+     video passes the probe** — i.e. it silently destroys exactly the promising videos while
+     `probed_empty` ones sail through. First run: 3/13 `failed` with `ModuleNotFoundError: No module
+     named 'cv2'`, and all 3 had `probe_max_p >= 0.5`. Nothing imports cv2 at module scope, so the
+     harvester starts up perfectly fine. `opencv-python-headless` is now in `src/requirements.txt`
+     (cbox has cv2 5.0.0). **Always smoke-test a video that PASSES the probe**, not just any video.
+  2. **Resume skips by PRESENCE, not status** (`plan = [it for it in plan if it[3] not in ledger]`), so a
+     `failed` entry is skipped *forever* and its video is never retried. After fixing any crash-type bug,
+     **purge `status=="failed"` from the ledger before restarting** or the losses are permanent.
+  3. **The ledger cannot see the original corpus.** It is keyed by `video_url`, but the 1,117-video
+     original corpus was processed from LOCAL downloads (`data/aquarium/full/<date>/<segment>/<Cam>.mp4`),
+     so those keys are absent and the harvester happily re-scans the same physical recordings. Measured:
+     **48 of the 426 planned videos were the exact same (date, segment, camera) already processed** —
+     the 2026-2-20 collection covers 2026-02-20..04-12 and the corpus covers 2026-02-20..03-07. Fix used:
+     join the plan against `src/octopus_clips_processed.json` on `(date, segment, camera)` and pre-seed
+     those urls into the ledger as `status="skipped_already_analysed"` with a `discard_reason`, which the
+     existing skip logic then honours (38 seeded; the other 10 had already been probed). Re-running them
+     would have produced near-duplicate clips and quietly undermined any "diverse footage" claim.
+- **Measured end-to-end scan rate on cbox: ~2.9 frames/s** (network + decode + CLIP together, vs 7.9 f/s
+  for CLIP alone), so a full 1,796-frame scan is ~10 min, not the ~4 min pure-CLIP arithmetic suggests.
+  A productive video costs less thanks to early-exit (self-test: 2 clips, 256 s scanned, 159 s wall).
 - **`src/merge_harvest.py` — pull results back.** rsync the run dir home, then merge into the canonical pair
   `data/harvest_ledger_all.json` + `data/harvest_clips_index.json` (keyed by `video_url`; a record is only
   overwritten by a strictly more informative one — real status beats `failed`, more clips beats fewer).
