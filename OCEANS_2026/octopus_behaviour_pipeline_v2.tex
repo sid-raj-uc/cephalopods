@@ -13,7 +13,17 @@
 %   - finalise author list / affiliations (placeholder below, mirrors the consortium)
 %   - \cite{hideandseg} author list filled from the arXiv record (de Aguiar, Andrade, Santos,
 %     Gois; all Universidade Federal do ABC, Brazil), verified 2026-08-19.
-% v2 additions and their provenance (all pre-existing measurements, nothing new was run):
+% v2 additions and their provenance:
+%   - Table \ref{tab:teacher} (teacher vs student on human masks) = PAPER_NOTES R19 /
+%     data/teacher_vs_human_masks.json, measured 2026-08-20 by src/eval_teacher_masks.py.
+%     This one IS a new measurement. The frozen set is IMPORTED from benchmarks.py, and the
+%     student reproduced its published 0.6415 exactly, which validates the harness.
+%     Cite it as the PER-FRAME teacher only. The propagated labels the student actually
+%     trained on are better, so 0.374 is a LOWER bound on teacher quality -- do not write it
+%     as "the teacher's mask quality". The propagated-label arm needs 122x40 = 4,880
+%     GroundingDINO calls (~3.4 h) and has NOT been run.
+%     Also: 5 clusters makes the CI wide -- claim the ordering, not the magnitude.
+% Everything below was pre-existing at the time v2 was forked (nothing new was run for these):
 %   - OWLv2 231/232 at thr 0.10 + the 166/232 human outcome: AGENTS.md "Hard-negative mining"
 %     (data/hard_negatives/_detector_verify.json, review_decisions.csv). Logged there, not yet
 %     mirrored into PAPER_NOTES.md's ledger - mirror it when PAPER_NOTES is next editable.
@@ -303,8 +313,10 @@ not, a distinction the detector had not made. Zero-shot CLIP scoring for
 presence was likewise abandoned as unreliable; what works is a \emph{trained}
 probe on frozen CLIP features (Sec.~\ref{sec:detect}), and even that is the
 weaker of our two presence signals. The promptable segmentation teacher is
-usable, but only when gated by seed confidence and propagated through time, and
-it fails outright on one of our cameras (Sec.~\ref{sec:models}). Read together,
+usable, but only when gated by seed confidence and propagated through time---
+prompted per frame it is beaten by our $3.2$\,M-parameter student on the same
+human masks (Table~\ref{tab:teacher})---and it fails outright on one of our
+cameras (Sec.~\ref{sec:models}). Read together,
 these say the same thing: the foundation models here are \emph{gated,
 temporally propagated offline annotators}, not drop-in detectors---which is
 exactly the case for distilling them into a student rather than prompting them
@@ -432,6 +444,43 @@ arms---dominate) $+\,0.5\,$BCE; strong augmentation applied to image and mask in
 lock-step (flip, affine, $\pm25\%$ brightness--contrast, sensor noise); $5{,}143$
 pairs from $183$ source videos, split by source video. Code, frozen benchmark
 definitions and evaluation scripts will be released with the paper.
+
+\begin{table}[t]
+\caption{Per-frame teacher vs.\ the distilled student, scored on the
+\emph{identical} SEG-TEST frames and human masks ($122$ frames, $5$ held-out
+videos). Mask IoU, mean. The teacher is prompted per frame---the arm comparable
+to the single-frame student---so these are a \emph{lower} bound on teacher
+quality: the labels the student trains on are propagated from the most-confident
+frame of a clip and are better.}
+\label{tab:teacher}
+\centering
+\small
+\begin{tabular}{lcc}
+\hline
+subset & teacher & student \\
+\hline
+all frames ($122$)                    & $0.374$          & $\mathbf{0.642}$ \\
+teacher detected nothing ($30$)       & $0.000$          & $\mathbf{0.680}$ \\
+seed confidence $\geq\!0.60$ ($21$)   & $\mathbf{0.726}$ & $0.657$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{What the teacher alone would give.} The gain from distilling rather than
+prompting is measurable, not assumed. Against the same $122$ human masks the
+student is scored on, the per-frame teacher reaches mask IoU $0.374$ versus the
+student's $0.642$---a paired $\Delta$ of $-0.267$, CI95 $[-0.313,-0.136]$
+cluster-bootstrapped by source video---and finds no animal at all on a quarter
+of the frames (Table~\ref{tab:teacher}). The ordering then reverses exactly where
+the recipe predicts: on the $21$ frames where GroundingDINO clears its own $0.60$
+seed gate the teacher is the \emph{better} segmenter ($0.726$ versus $0.657$),
+while $83\%$ of frames fall below that gate. This is the quantitative form of the
+design claim above---the teacher is high-precision and low-recall, so confidence
+gating is load-bearing---and it locates the student's value in dense, uniform
+coverage rather than peak mask quality. It also bounds the headroom: the student
+sits $\approx\!0.08$ below teacher quality at the teacher's own operating point,
+which is why we attribute the mask plateau to label quality rather than corpus
+size (Sec.~\ref{sec:limits}).
 
 \textbf{Mask area as the presence gate.} Mask area doubles as the pipeline's
 presence signal, and works only because the student sees empty-mask negatives: a

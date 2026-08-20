@@ -948,3 +948,18 @@ artifact of those frames being easier.
   (0.782 vs 0.463).
 
 Raw: `data/teacher_vs_human_masks.json` (includes per-frame IoU, conf and areas).
+
+### R19 folded into the paper (v2, 2026-08-20)
+- **v2 is the live draft** (`octopus_behaviour_pipeline_v2.tex`); v1 stays frozen at 7 pages.
+- New `Table \ref{tab:teacher}` in Sec. Segmentation Student: 3 rows (all 122 / teacher-found-nothing 30 /
+  seed-conf>=0.60 21), teacher vs student mask IoU, with the lower-bound caveat in the caption itself.
+- New paragraph **"What the teacher alone would give"** carrying the paired Δ −0.267 [−0.313,−0.136],
+  the 25%-no-detection fact, the reversal at conf>=0.60, and the ~0.08 headroom → plateau attributed to
+  label quality not corpus size.
+- The Sec. III "Why distil rather than prompt" passage now points at the table, upgrading its
+  "usable only when gated" claim from qualitative to measured.
+- **Rebuild: 8 pages, 0 errors, 0 overfull, 0 undefined refs** (unchanged page count — the table fit).
+- NOT added: the OWLv2 / VLM-presence / caption base-vs-LoRA rows as a combined "zero-shot" table. Those
+  arms are scored on DIFFERENT sets, so pooling them into one table would break the identical-set rule.
+  OWLv2 and zero-shot CLIP already appear as prose in "Why distil rather than prompt"; the caption
+  base→LoRA numbers are already prose in Sec. Distillation.
