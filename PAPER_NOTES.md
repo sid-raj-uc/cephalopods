@@ -1028,3 +1028,54 @@ gate, R19) > **0.6415** (our student, unprompted, 122 held-out frames). Read tha
 *corroborates* rather than contradicts them: a confident/prompted foundation model does give excellent
 masks; the unsolved problem is **unprompted, dense, deployable coverage** — which is exactly the gap a
 distilled student fills. This lets us cite their number honestly without conceding a loss.
+
+## R21 — OUT-OF-DOMAIN probe on wild YouTube footage: both presence signals collapse (2026-08-20)
+The paper's biggest external-validity weakness is scope (one animal, one tank). This measures it
+instead of conceding it. `src/eval_ood_youtube.py`, all footage **Creative Commons Attribution
+(reuse allowed)**, verified per video before download; nothing redistributed.
+
+**Data.** 5 positive videos (453 frames @1 fps): `oqj6BMI0qCU` *O. vulgaris* in seagrass (SAME species
+as Nity), `0r1pLGA_cVI` temperate Ireland, `7saS5FPM60s` *O. laqueus* (OIST Reiter Unit),
+`E33VznOE_PY` mimic octopus, `0wacRRF4BO4` wonderpus. 3 reef negatives (521 frames):
+`aCw4GQxNZnY`, `_pLZqfXFuaU`, `E1k5P-E01J4`. Domain shift: daylight colour, open water, camera
+motion, other species, no tank glass, no IR.
+
+### Result — near chance, and the detector is the worse of the two
+| signal | OOD AUC | FP on reef (deployed gate) | fire-rate on positives |
+|---|---|---|---|
+| CLIP+MLP detector `p_visible` (gate 0.60) | **0.565** | **88.5%** | 88.1% |
+| segmenter mask area (gate 0.01) | **0.605** | 34.2% | 41.9% |
+
+**In-domain presence AUC 0.907 (R14) → 0.605 out of domain.** The detector's median `p_visible` on
+**coral-reef footage with no octopus is 1.000** — full confidence, wrong answer. Note the in-domain
+ordering is PRESERVED (mask area > detector, R14/R16): the segmenter degrades less badly.
+
+### The failure mode is mislocation, not silence — verified by eye
+Not asserted; the top-scoring frames were inspected (`data/youtube_ood/_inspect/`):
+- `aCw4GQxNZnY` t=11s: the mask covers **62% of the frame — the entire coral bommie**. Genuine FP.
+- `oqj6BMI0qCU` t=122s: an *O. vulgaris* is clearly visible centre-frame, detector `p=1.00`, and the
+  mask sits on the **surrounding seagrass, missing the animal**.
+- `7saS5FPM60s` t=99s: the animal is the dark shape centre-frame; the mask covers the bright substrate
+  around it and **excludes the octopus** — effectively inverted.
+This is the SAME failure as in-domain ("fails by *mislocating* a right-sized blob",
+SEGMENTATION_LOG), amplified. **Hypothesis (consistent with the evidence, not proven):** the student
+learned a tank-specific figure/ground prior — under IR the animal is the mid-tone textured mass on a
+dark den background; in daylight it is often DARK on BRIGHT sand, so the polarity flips and the model
+selects the background. Testable by a brightness-polarity ablation; not run.
+- `E33VznOE_PY` (mimic octopus): segmenter fires on **0%** of frames — a total miss, not a mislocation.
+
+### Caveats — mandatory with these numbers
+- **NOT a benchmark.** No GT masks, so no IoU. Frame-level presence is unlabelled, so the positive
+  fire-rate is a **lower bound on recall** (the animal is often off-screen), not recall.
+- **Negatives are only PRESUMED octopus-free.** The highest-scoring frames were human-checked (above)
+  and are genuine FPs, but not exhaustively. Same discipline as the 232-frame hard-negative lesson.
+- **5 positive / 3 negative videos** — far too few clusters for a CI; no CIs computed. Claim the
+  direction, never a magnitude.
+- Frame-level AUC across videos is a video-level proxy, biased by how often the animal is visible.
+
+### What it is good for
+The **limitations / external validity** section, upgraded from "generalisation is untested" to
+"generalisation was tested and it fails, in this specific way". It also supports the HideAndSeg
+complementarity claim (R20): they train on wild multi-site footage, and we now have direct evidence
+that a tank-trained student does not transfer there — so the two lines really are addressing
+different problems, not competing on one.
