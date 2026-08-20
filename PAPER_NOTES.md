@@ -963,3 +963,68 @@ Raw: `data/teacher_vs_human_masks.json` (includes per-frame IoU, conf and areas)
   arms are scored on DIFFERENT sets, so pooling them into one table would break the identical-set rule.
   OWLv2 and zero-shot CLIP already appear as prose in "Why distil rather than prompt"; the caption
   base→LoRA numbers are already prose in Sec. Distillation.
+
+## R20 — HideAndSeg read in FULL TEXT (2026-08-20). R18 verified; one correction; the positioning
+Read from arXiv HTML (2511.04426v1), not from the abstract. **All four R18 claims confirmed verbatim.**
+
+### Their numbers, exact (Table 1 = SAM2 alone; Table 2 = full automated pipeline, test set)
+| model / condition | annotated frames | DICE_t | NC_t | DICE | IoU |
+|---|---|---|---|---|---|
+| Small, 1st frame, pos clicks | 1 | **0.9747** | 10.65 | **0.6057** | 0.5330 |
+| Small, 1st frame, pos+neg | 1 | 0.9671 | 4.05 | 0.7990 | 0.7266 |
+| Small, + additional frame | 2 | 0.9667 | 5.86 | **0.7990** | **0.7266** |
+| Large, 1st frame, pos clicks | 1 | 0.9688 | 2.97 | 0.9129 | 0.8592 |
+| Large, 1st frame, pos+neg | 1 | 0.9664 | 2.30 | 0.9405 | 0.8965 |
+| Large, + additional frame | 2 | 0.9672 | 2.17 | **0.9405** | **0.8965** |
+| Manual (pipeline) | 2 | 0.9695 | 2.75 | 0.8997 | 0.8582 |
+| YOLO | 5 | 0.9709 | 2.16 | **0.9677±0.0191** | **0.9383±0.0349** |
+| YOLO | 10 | 0.9709 | 2.23 | **0.9677±0.0191** | **0.9383±0.0349** |
+| YOLO | 20 | 0.9706 | 2.21 | **0.9677±0.0191** | **0.9383±0.0349** |
+
+Confirmed: (1) *"we performed manual segmentation on the initial frame of all videos"* + tables labelled
+**"Supervised Metrics (first frame)"** — supervised DICE/IoU is **frame 1 only, averaged over videos**;
+(2) DICE/IoU **bit-identical to 4 dp incl. SD across 5/10/20** annotated frames; (3) the "+ additional
+frame" rows change DICE/IoU by **exactly zero** in both Small and Large; (4) DICE_t is **anti-correlated**
+with quality — the best DICE_t (0.9747) is the worst DICE (0.6057).
+
+### CORRECTION to R18
+R18 wrote "~17 prompted frames". **The paper never reports the test-set VIDEO count** — it splits by
+FRAMES (train 212,924 / val 56,288 / test 36,079 of 366,514). ~15 videos is an *inference* from the 10%
+frame share, not a stated figure. Say "N unreported (inferable ≈15 videos)" — that is the sharper
+criticism anyway: the denominator of their headline metric is not given.
+
+### Where we are genuinely ahead (all verified, use these)
+1. **Evaluation rigour.** Ours: 122 human masks / **5 fully held-out videos**, split by source video,
+   holdout excluded from every training source, CIs **cluster-bootstrapped by video**, frozen sets,
+   negative types never pooled. Theirs: frame 1 only, no CIs, N unreported, and the headline metric is
+   provably insensitive (unchanged across a 4x prompt change). **Their metric does not measure video
+   propagation — which is what their paper is about.** Their own figures show propagation failing.
+2. **Deployed model size: ~249M (YOLOv11-l 25.3M + SAM2.1-hiera-large 224M) vs our 3.2M — ~78x smaller**,
+   and they make **no inference-speed or real-time claim** at all. Their compute wall is solved by
+   prompting *less*, not by shrinking. Distillation is our axis, uncontested.
+3. **Presence/absence.** They **discard** frames without a visible octopus (366,514 kept of 564,755 =
+   35% dropped) — the pipeline *assumes* presence. We must *decide* it, and we measure it on
+   human-verified negatives (AUC 0.907 empty / 0.906 reflection) incl. a stated null result.
+4. **Modality.** Dim aquarium **IR + glass reflections** (a camera we quantify and reject) vs their
+   natural daylight colour, **no IR at all**.
+5. **Downstream behaviour.** They stop at masks, explicitly *"the first step towards automating the
+   detection of animal behavior."* We have the 7-class ethogram, 3,083 present clips, activity budget,
+   exposure-normalised circadian, stimulus response with day-clustered CIs (R17), skeleton kinematics,
+   and label reliability (R15 kappa 0.552).
+
+### Where THEY are ahead — state it, do not hide it
+1. **External validity.** 148 videos / 366,514 frames / **3 sites / 7 expeditions (2022-24) / wild
+   multi-individual** *O. insularis*. We are **one individual (Nity), one tank**. Their generalisation
+   claim is stronger than ours and no amount of our harvesting fixes single-animal scope.
+2. **Occlusion re-identification** via per-frame re-detection — the correct insight (a contaminated
+   propagation tracker never recovers). Qualitative only (Fig. 5, one video, no numbers), but right.
+   Cite positively; contrast, do not re-derive.
+3. Prompted SAM2-large is genuinely strong (IoU 0.8965 on frame 1).
+
+### The framing that makes all three numbers coherent (use this in the paper)
+The field's numbers differ mainly by **how much prompting is assumed at inference**:
+**0.9383** (theirs, box-prompted, frame 1) > **0.726** (our teacher where it clears its own 0.60 seed
+gate, R19) > **0.6415** (our student, unprompted, 122 held-out frames). Read that way our R19 result
+*corroborates* rather than contradicts them: a confident/prompted foundation model does give excellent
+masks; the unsolved problem is **unprompted, dense, deployable coverage** — which is exactly the gap a
+distilled student fills. This lets us cite their number honestly without conceding a loss.
