@@ -488,6 +488,28 @@ venv at `./venv`, torch 2.12.1 CPU — `cuda False`). Naming pattern: `abox`/`vb
 - **Measured end-to-end scan rate on cbox: ~2.9 frames/s** (network + decode + CLIP together, vs 7.9 f/s
   for CLIP alone), so a full 1,796-frame scan is ~10 min, not the ~4 min pure-CLIP arithmetic suggests.
   A productive video costs less thanks to early-exit (self-test: 2 clips, 256 s scanned, 159 s wall).
+- **Two-box split of ONE collection — `--date-min` / `--date-max` / `--date-reverse` (added 2026-08-19).**
+  The plan is built ONCE at startup, so seeding a ledger mid-run does **not** stop a running box from
+  reaching those videos — the split must be in the plan itself. Give box A `--date-max D` and box B
+  `--date-reverse --date-min D+1` and they work toward each other over provably disjoint footage
+  (unit-tested with the network stubbed: zero overlap, union == unfiltered plan). Dates are ISO so
+  string compare is chronological. Also seed box B's ledger from box A's current ledger, since A may
+  already have covered part of B's window (it iterates **camera-major**: all dates of Right Back, then
+  Right Front, then Right Right — so its frontier is a camera, not a date).
+  Live split 2026-08-19: cbox `--date-max 2026-03-20` (146 videos, 2 workers) + Mac
+  `--date-min 2026-03-21 --date-reverse` (1 worker, MPS), out dir `data/harvest_local`.
+- **Is a second box worth it? Measured, not assumed.** The Mac pulled **1.73 MB/s single-stream while
+  cbox was running**, and cbox did **not** slow down (recent-20 rate 1.07 vs 0.93 videos/min average) —
+  so the server had headroom. But at the ~0.425 MB/s footage bitrate that bandwidth feeds only ~4
+  video-seconds/s, i.e. **~4 frames/s — barely above cbox's 2.9**. A second box is therefore
+  **network-bound, not compute-bound**: expect ~+50%, NOT 2×, and MPS mostly idles. Keep TOTAL streams
+  at 3–4 across all boxes (memory `server-throttling-sustained-load`: the server collapses to ~4 KB/s
+  under sustained multi-worker load), which is why the Mac runs 1 worker, not 2.
+- **`pkill -f harvest_stream` / `pgrep -f harvest_stream` MATCHES YOUR OWN SSH COMMAND LINE.** `pgrep`
+  gives a false "STILL RUNNING"; `pkill` actually killed the shell that was starting the new tmux
+  session, so the relaunch silently died and the old log made it look like nothing happened. Kill by
+  PID, or grep a string that cannot appear in your own command (`ps -eo pid=,args= | grep "venv/bin/
+  python3 -u src/harvest_stream" | grep -v "grep\|bash -c"`), and always verify via `/proc/<pid>`.
 - **`src/merge_harvest.py` — pull results back.** rsync the run dir home, then merge into the canonical pair
   `data/harvest_ledger_all.json` + `data/harvest_clips_index.json` (keyed by `video_url`; a record is only
   overwritten by a strictly more informative one — real status beats `failed`, more clips beats fewer).
