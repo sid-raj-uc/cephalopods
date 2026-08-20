@@ -106,15 +106,27 @@ def list_videos(date_url):
     return [date_url.rstrip("/") + "/" + l for l in links(date_url) if l.lower().endswith(".mp4")]
 
 
-def build_plan(collections, plan_limit=0):
+def build_plan(collections, plan_limit=0, date_min=None, date_max=None, reverse=False):
     """-> list of (collection, camera, date, video_url), sampling up to MAX_SEG_PER_DAYCAM
     segments per (date,camera), spread across the day. plan_limit>0 stops the (slow) crawl
-    early once that many entries are collected — makes small test runs fast."""
+    early once that many entries are collected — makes small test runs fast.
+
+    date_min/date_max (inclusive, "YYYY-MM-DD") restrict the plan to a date window, and
+    reverse=True walks dates newest-first. Together these let two boxes split ONE collection
+    without a shared ledger: give box A `--date-max D` and box B `--date-reverse --date-min D+1`,
+    and they work toward each other over disjoint footage. Dates are ISO so string compare
+    is chronological.
+    """
     plan = []
     for coll in collections:
         cu = BASE + coll
         dates = list_dates(cu)
-        for (cam, date), durl in sorted(dates.items()):
+        items = sorted(dates.items(), key=lambda kv: (kv[0][0], kv[0][1]), reverse=reverse)
+        for (cam, date), durl in items:
+            if date_min and date < date_min:
+                continue
+            if date_max and date > date_max:
+                continue
             try:
                 vids = sorted(list_videos(durl))
             except Exception:
@@ -306,7 +318,7 @@ def process_video(item, M, out_root):
 
 
 def run(out, ckpt, collections=NITY_COLLECTIONS, workers=2, max_seg=3, limit=0,
-        max_scan_sec=0, commit_cb=None):
+        max_scan_sec=0, commit_cb=None, date_min=None, date_max=None, reverse=False):
     """Core harvest loop. commit_cb() (if given) is called after each ledger save — used on
     Modal to persist the Volume periodically (resumability across timeouts/crashes)."""
     global MAX_SEG_PER_DAYCAM, MAX_SCAN_SEC
@@ -319,10 +331,13 @@ def run(out, ckpt, collections=NITY_COLLECTIONS, workers=2, max_seg=3, limit=0,
     ledger = json.load(open(ledger_path)) if ledger_path.exists() else {}
 
     print("building plan (crawling server)...", flush=True)
-    plan = build_plan(collections, plan_limit=(limit * 4 if limit else 0))  # crawl a bit past limit
+    plan = build_plan(collections, plan_limit=(limit * 4 if limit else 0),
+                      date_min=date_min, date_max=date_max, reverse=reverse)
     plan = [it for it in plan if it[3] not in ledger]
     if limit: plan = plan[:limit]
-    print(f"plan: {len(plan)} videos to scan ({len(ledger)} already in ledger)", flush=True)
+    win = f" [dates {date_min or '..'}..{date_max or '..'}{', newest-first' if reverse else ''}]" \
+        if (date_min or date_max or reverse) else ""
+    print(f"plan: {len(plan)} videos to scan ({len(ledger)} already in ledger){win}", flush=True)
 
     M = load_detector(ckpt)
     print(f"detector loaded (dev={M['dev']}).", flush=True)
@@ -364,9 +379,15 @@ def main():
     ap.add_argument("--max-seg-per-daycam", type=int, default=MAX_SEG_PER_DAYCAM)
     ap.add_argument("--max-scan-sec", type=int, default=0)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--date-min", default=None, help="only dates >= this (YYYY-MM-DD, inclusive)")
+    ap.add_argument("--date-max", default=None, help="only dates <= this (YYYY-MM-DD, inclusive)")
+    ap.add_argument("--date-reverse", action="store_true",
+                    help="walk dates newest-first (pair with --date-min to split a collection "
+                         "across two boxes working toward each other)")
     args = ap.parse_args()
     run(args.out, args.ckpt, args.collections, args.workers, args.max_seg_per_daycam,
-        args.limit, args.max_scan_sec)
+        args.limit, args.max_scan_sec, date_min=args.date_min, date_max=args.date_max,
+        reverse=args.date_reverse)
 
 
 if __name__ == "__main__":
