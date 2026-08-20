@@ -23,6 +23,18 @@
 %     as "the teacher's mask quality". The propagated-label arm needs 122x40 = 4,880
 %     GroundingDINO calls (~3.4 h) and has NOT been run.
 %     Also: 5 clusters makes the CI wide -- claim the ordering, not the magnitude.
+%   - HideAndSeg related-work numbers = PAPER_NOTES R20, read from the arXiv HTML full text
+%     (2511.04426v1) on 2026-08-20, verified against their own Tables 1-2:
+%       * DICE/IoU identical to 4dp incl. SD across 5/10/20 annotated frames (0.9677+-0.0191 /
+%         0.9383+-0.0349), and the "+ additional frame" rows move them by EXACTLY zero.
+%       * "manual segmentation on the initial frame of all videos"; tables are labelled
+%         "Supervised Metrics (first frame)".
+%       * 35% presence pre-filter = 366,514 usable of 564,755 raw frames.
+%       * ~249M deployed = YOLOv11-l (25.3M) + SAM2.1-hiera-large (224M); no runtime reported.
+%     DO NOT write "~17 test frames" (an earlier R18 slip): they split by FRAMES (test 36,079)
+%     and never report the test VIDEO count. If a count is needed, say it is unreported.
+%     Their field coverage genuinely exceeds ours (3 sites / 7 expeditions, wild, multi-animal
+%     vs our single individual) -- that concession is deliberate, keep it.
 % Everything below was pre-existing at the time v2 was forked (nothing new was run for these):
 %   - OWLv2 231/232 at thr 0.10 + the 166/232 human outcome: AGENTS.md "Hard-negative mining"
 %     (data/hard_negatives/_detector_verify.json, review_decisions.csv). Logged there, not yet
@@ -219,24 +231,45 @@ pipeline: a human annotates initial frames to prompt SAM2, the resulting masks
 train a YOLOv11 detector, and that detector then auto-prompts SAM2 over the
 remaining footage. On $148$ videos of juvenile \emph{Octopus insularis}
 ($366{,}514$ usable frames) recorded at three Brazilian coastal sites, it reports
-DICE $0.9677$ and IoU $0.9383$.
+DICE $0.9677$ and IoU $0.9383$. Their central insight---re-detecting per frame so
+that a contaminated propagation track can recover---is correct, and our
+seed-confidence gate serves the same purpose. Their field coverage also exceeds
+ours: wild animals at three sites across seven expeditions, against our single
+individual in one tank (Sec.~\ref{sec:limits}).
 
 Those figures are not comparable with the $0.641$ IoU we report, and we would
 rather say so than let the contrast be drawn for us. (i)~\emph{The reference
 differs.} Their ground truth is manual segmentation of the initial frame of each
 video---essentially the frame used to prompt SAM2---while ours is $122$
 human-drawn masks sampled across five source videos held out of \emph{all}
-training. (ii)~\emph{The imaging conditions differ}: natural-habitat colour
-video against dim aquarium footage with infrared cameras, tank-glass reflections
-and clutter. (iii)~\emph{The subject differs}: juvenile \emph{O.\ insularis}
-against an adult \emph{O.\ vulgaris}. (iv)~\emph{The deployment target
-differs}, which is our actual distinction: HideAndSeg runs SAM2 at inference,
-whereas we distil to a $3.2$\,M-parameter student that runs locally with no GPU
-and no API. The two lines are complementary rather than competing---they solve
-automated \emph{prompting} of a large model in the field, we solve
-\emph{distillation to a deployable model} and the behavioural layer built on it.
-That both projects had to manufacture their own labels is the same finding
-reported twice.
+training. Their own tables show the consequence: DICE and IoU are identical to
+four decimal places, standard deviations included, whether the auto-prompting
+detector is trained on $5$, $10$ or $20$ annotated frames, and adding a second
+annotation frame moves them by exactly zero---the supervised metric is
+insensitive to the propagation it is meant to assess. (ii)~\emph{The imaging
+conditions differ}: natural-habitat colour video against dim aquarium footage
+with infrared cameras, tank-glass reflections and clutter. (iii)~\emph{The
+subject differs}: juvenile \emph{O.\ insularis} against an adult
+\emph{O.\ vulgaris}. (iv)~\emph{Presence is given rather than inferred}: frames
+without a visible octopus are removed before their pipeline runs ($35\%$ of the
+raw footage), whereas deciding presence is precisely what our gate must do
+(Table~\ref{tab:presence}). (v)~\emph{The deployment target differs}, which is
+our actual distinction: they run YOLOv11-l plus SAM2-hiera-large,
+$\approx\!249$\,M parameters, at inference and report no runtime, whereas we
+distil to a $3.2$\,M-parameter student---$\approx\!78\times$ smaller---that runs
+locally with no GPU and no API.
+
+Read on a single axis, though, the numbers agree rather than conflict: mask
+quality tracks how much prompting is assumed at inference. Their $0.938$ is
+box-prompted; our teacher reaches $0.726$ on the frames where it clears its own
+seed-confidence gate (Table~\ref{tab:teacher}); our student reaches $0.641$ with
+no prompt at all. The open problem is therefore not prompted mask quality but
+unprompted, dense, deployable coverage---which is what distillation supplies and
+what a behavioural layer running unattended requires. The two lines are
+complementary rather than competing: they solve automated \emph{prompting} of a
+large model in the field, we solve \emph{distillation to a deployable model} and
+the behavioural layer built on it. That both projects had to manufacture their
+own labels is the same finding reported twice.
 
 \section{System and Methods}
 The tank is observed by a multi-camera rig (6 IP cameras, 4K, infrared and colour
