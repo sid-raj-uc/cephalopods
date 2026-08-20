@@ -890,3 +890,61 @@ Reproduce or contrast that, do not re-derive it.
 all**, no distillation (they deploy ~250M params and hit a compute wall, solved by prompting *less*
 rather than shrinking), no skeleton/pose, and **no behaviour analysis** — they stop at masks and call
 it "the first step towards automating the detection of animal behavior."
+
+## R19 — TEACHER vs HUMAN masks: the missing measurement. The student BEATS the per-frame teacher (2026-08-20)
+Every segmentation IoU we had was student-vs-human (SEG-TEST) or student-vs-teacher (agreement). The
+**zero-shot teacher itself was never scored against human masks**, so "the ceiling is teacher-label
+quality" was a hypothesis, not a measurement. `src/eval_teacher_masks.py` closes it. Both arms see the
+SAME single frame and the SAME human mask; the frozen set is *imported* from `benchmarks.py` (not
+re-derived), and the student reproduced its published **0.6415 exactly**, which validates the harness.
+
+Teacher = GroundingDINO-tiny box → SAM2 (box + pos/neg points) → largest blob, **per frame**.
+Student = `octo_seg_thin768_lraspp.pt` (the `paper_current` model). 122 frames / 5 holdout videos.
+
+| arm | IoU mean | IoU median |
+|---|---|---|
+| teacher (zero-shot, per-frame) | **0.3740** | 0.3049 |
+| **student (ours)** | **0.6415** | 0.7193 |
+
+**Paired Δ (teacher − student) = −0.2675, CI95 [−0.313, −0.136]**, bootstrap **clustered by source
+video**, excludes 0. Per-frame wins: student 82 / teacher 35.
+
+### The conditional breakdown is the actual result — the headline alone misleads
+| subset | n | teacher | student |
+|---|---|---|---|
+| all frames | 122 | 0.3740 | **0.6415** |
+| teacher detected something | 92 | 0.4960 | **0.6289** |
+| teacher found NOTHING (scored 0) | 30 (25%) | 0.0000 | **0.6803** |
+| **teacher conf ≥ 0.60 (its own `MIN_SEED_CONF` gate)** | 21 | **0.7259** | 0.6574 |
+| teacher conf < 0.60 (gate would reject) | 101 (83%) | 0.3009 | **0.6382** |
+
+**1. The teacher is high-precision / low-recall; the student is uniformly competent.** When GroundingDINO
+clears its own 0.60 gate the teacher is genuinely BETTER than the student (0.726 vs 0.657) — but that
+happens on only 21 of 122 frames. It finds nothing at all on 25%, and 83% of frames fall below the gate
+(median conf 0.424). Distillation converted a **sparse, high-quality** signal into **dense, reliable**
+coverage. That is the distillation working, not failing.
+
+**2. "Teacher-label quality is the ceiling" SURVIVES, sharpened.** The labels the student actually
+trained on come from confident seed frames (+ propagation), and the teacher at that operating point
+scores **0.726**. The student sits at 0.6415 → **~0.08 of headroom, not a lot**. So the plateau is
+consistent with label quality, and more clips will not move it.
+
+**3. The conf≥0.60 subset is not merely "easy frames".** The student scores 0.657 there vs 0.6415
+overall — essentially flat. So the teacher's 0.726 on that subset is a real quality signal, not an
+artifact of those frames being easier.
+
+### Caveats — state these with the numbers
+- **Per-frame teacher, not propagated-label quality.** The training labels used SAM2 *video propagation*
+  seeded by the clip's most-confident frame, which Phase 0 showed beats per-frame box→SAM. The 0.374 row
+  is the per-frame teacher (the apples-to-apples arm, since the student is per-frame too) and must NOT be
+  quoted as the quality of the labels the student learned from — those are better. Measuring propagated
+  labels on SEG-TEST needs 122 clips × 40 frames = **4,880 GD calls (~3.4 h locally)**; not run yet.
+- **5 clusters is a weak bootstrap.** The CI [−0.313, −0.136] is wide; claim the ordering, not the size.
+- Human-labelled frames were chosen for *labelling*, not for GD confidence, so the low median conf is
+  expected and is not evidence the teacher is broken in its real pipeline.
+- `2026-02-21/183003` is bad for BOTH (teacher 0.296 / student 0.310) — it is also the source of 18 of
+  SEG-TEST's 19 empty-tank negatives.
+- Per camera, the student's lead is smallest on Right_Front (0.553 vs 0.415) and largest on Right_Back
+  (0.782 vs 0.463).
+
+Raw: `data/teacher_vs_human_masks.json` (includes per-frame IoU, conf and areas).

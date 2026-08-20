@@ -374,8 +374,20 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
   symlink-merge). Best model: **`weights/seg/octo_seg_merged_lraspp.pt`**. Full trail in SEGMENTATION_LOG.md.
   **Refined diagnosis: the ceiling is now teacher-label quality, NOT data** — merged val plateaus flat at ~0.49
   with no overfitting (loss keeps falling), so a student can't beat the noisy GD+SAM2 masks it learns from.
-- **Next:** a small **HUMAN-verified mask val set** (measure TRUE IoU vs the noisy-teacher IoU) + cleaner
-  teacher labels — this, not more clips, is the lever now. Also recoverable: the 345 low-conf clips (lower-conf
+- **TEACHER vs HUMAN masks MEASURED (2026-08-20) — `src/eval_teacher_masks.py`, PAPER_NOTES R19.** The
+  gap is closed: on SEG-TEST's 122 human-mask frames the **per-frame zero-shot teacher scores IoU 0.374
+  vs the student's 0.6415** (paired Δ −0.2675 [−0.313, −0.136], clustered by source video). The student
+  reproduced its published 0.6415 exactly, validating the harness. **But the conditional split is the
+  real result:** when GroundingDINO clears its own `MIN_SEED_CONF` 0.60 gate (only 21/122 frames) the
+  **teacher WINS, 0.726 vs 0.657**; it finds nothing at all on 25% of frames and 83% fall below the gate.
+  The teacher is **high-precision/low-recall, the student uniformly competent** — distillation turned a
+  sparse high-quality signal into dense coverage. **So "teacher-label quality is the ceiling" survives and
+  sharpens: the student's 0.6415 sits ~0.08 under the teacher's 0.726 operating-point quality, so more
+  clips will not move the plateau.** Do NOT quote 0.374 as the quality of the labels the student trained
+  on — those used SAM2 propagation from the most-confident frame and are better; measuring those needs
+  122×40 = 4,880 GD calls (~3.4 h locally) and has not been run.
+- **Next:** cleaner teacher labels (raise the seed gate / propagate more aggressively) rather than more
+  clips; and the propagated-label arm above to bound the true ceiling. Also recoverable: the 345 low-conf clips (lower-conf
   pass) + Phase-0 IR fix for the ~1,391 IR clips. Retrain the presence/negatives variant on the merged set;
   then wire the `segment_octopus` area-gate (≥~0.01) into `extract_octopus_clips.py` / `local_pipeline.py`.
 
