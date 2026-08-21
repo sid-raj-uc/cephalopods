@@ -260,15 +260,41 @@ def probe_video(url, M, duration, n=N_PROBES):
     return list(zip(tsk, p))
 
 
-def extract_clip(url, start, end, out_path):
+def extract_clip(url, start, end, out_path, timeout=180):
+    """Byte-range copy one clip. Video-only, and never leaves a broken file behind.
+
+    THREE bugs were found here on 2026-08-21, all silent:
+
+    1. `-c copy` FAILS ON Right_Right. Those cameras record audio as `pcm_alaw`, which MP4 cannot
+       contain: "Could not find tag for codec pcm_alaw in stream #1" -> rc=234, 0-byte output. It had
+       produced **929 zero-byte Right_Right clips**. `-c:v copy -an` fixes it (verified: 8.20 MB,
+       20.034 s) and we never use the audio anyway.
+    2. NO TIMEOUT. One ffmpeg sat blocked on a stalled server connection for 2h11m, which hung the
+       whole refetch batch and stalled the download loop waiting on it.
+    3. A FAILED RUN LEFT ITS OUTPUT FILE. Downstream code globs for *.mp4 and treats any file as a
+       real clip, so 0-byte files were fed to the captioner/ensemble as if they were footage --
+       guaranteed failures that looked like API throttling. Now the file is removed on failure so the
+       clip is simply missing, and the refetcher will try it again.
+    """
     out_path.parent.mkdir(parents=True, exist_ok=True)
     if out_path.exists() and out_path.stat().st_size > 10000:
         return True
-    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y",
-                        "-headers", f"Authorization: {AUTH}\r\n",
-                        "-ss", str(start), "-to", str(end), "-i", url,
-                        "-c", "copy", str(out_path)], capture_output=True)
-    return r.returncode == 0 and out_path.exists() and out_path.stat().st_size > 10000
+    try:
+        r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y",
+                            "-headers", f"Authorization: {AUTH}\r\n",
+                            "-ss", str(start), "-to", str(end), "-i", url,
+                            "-c:v", "copy", "-an", str(out_path)],
+                           capture_output=True, timeout=timeout)
+        rc = r.returncode
+    except subprocess.TimeoutExpired:
+        rc = -1
+    ok = rc == 0 and out_path.exists() and out_path.stat().st_size > 10000
+    if not ok and out_path.exists():
+        try:
+            out_path.unlink()          # never leave a stub that downstream globs will trust
+        except OSError:
+            pass
+    return ok
 
 
 # ── orchestration ────────────────────────────────────────────────────────────────
