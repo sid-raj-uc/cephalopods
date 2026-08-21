@@ -23,6 +23,15 @@
 %     as "the teacher's mask quality". The propagated-label arm needs 122x40 = 4,880
 %     GroundingDINO calls (~3.4 h) and has NOT been run.
 %     Also: 5 clusters makes the CI wide -- claim the ordering, not the magnitude.
+%   - Sec.III-A "What the probe adds over CLIP alone" = PAPER_NOTES R22 /
+%     data/zeroshot_vs_probe.json, measured 2026-08-20 by src/eval_zeroshot_vs_probe.py.
+%     NEW measurement. Set = EMPTY-V2's 120 HUMAN-labelled frames / 60 videos, sampled at uniform
+%     random timestamps over WHOLE source videos, so it is detector-INDEPENDENT, and leak-free
+%     (empty_negatives.py excludes thin768's 142 training videos AND the CLIP detector's sessions).
+%     Both arms share the frozen CLIP ViT-B/32 backbone + letterbox, so the delta isolates the probe.
+%     Zero-shot got a deliberately generous 5+5 prompt ENSEMBLE (prompts stored in the json) so it is
+%     not a strawman. DO NOT quote the probe's 0.745 as comparable to the 96.8% accuracy -- different
+%     metric AND a harder, unbiased set. Only 23 positives: claim the ordering, never the magnitude.
 %   - HideAndSeg related-work numbers = PAPER_NOTES R20, read from the arXiv HTML full text
 %     (2511.04426v1) on 2026-08-20, verified against their own Tables 1-2:
 %       * DICE/IoU identical to 4dp incl. SD across 5/10/20 annotated frames (0.9677+-0.0191 /
@@ -298,6 +307,20 @@ choice was preprocessing: CLIP's default centre-crop discards $33$--$44\%$ of a
 root cause of poor field performance. Aspect-preserving letterbox padding plus
 $\sim$1.7k mined reflection/infrared-noise hard negatives gave a probe reaching
 $96.8\%$ on our internal detection test set.
+
+\textbf{What the probe adds over CLIP alone.} That $96.8\%$ is an internal-split
+accuracy with no baseline, so it cannot attribute performance to the probe rather
+than the backbone. On $120$ human-labelled frames from $60$ recordings, drawn at
+uniform random timestamps over whole source videos---so nothing was selected by
+the model under test---and excluding every session used in training, prompting
+the same frozen encoder instead of the probe (a five-plus-five octopus/empty
+prompt ensemble) scores AUC $0.450$, CI95 $[0.259,0.643]$: chance, with a median
+score \emph{higher} on empty frames than on frames containing the animal. The
+probe reaches $0.745$ $[0.564,0.890]$, a paired $\Delta$AUC of $+0.295$
+$[+0.069,+0.528]$, cluster-bootstrapped by source video and excluding zero. As
+both arms share backbone and preprocessing, the gap isolates the probe: CLIP
+supplies features, and the discriminative ability is essentially all supervised.
+Only $23$ frames contain the animal, so we claim the ordering, not the magnitude.
 
 \subsection{Clip Extraction}
 Per second of source video we compute the probe's visibility probability and an

@@ -1079,3 +1079,48 @@ The **limitations / external validity** section, upgraded from "generalisation i
 complementarity claim (R20): they train on wild multi-site footage, and we now have direct evidence
 that a tank-trained student does not transfer there — so the two lines really are addressing
 different problems, not competing on one.
+
+## R22 — Trained probe vs ZERO-SHOT CLIP: the probe does essentially all the work (2026-08-20)
+The paper reported the detector at $96.8\%$ internal accuracy with **no baseline**, so it could not
+attribute performance to the probe rather than to CLIP's features. `src/eval_zeroshot_vs_probe.py`
+closes that. Detection only — mask area is a separate section's concern.
+
+**The set matters most here.** EMPTY-V2's **120 human-labelled frames / 60 videos** (23
+`octopus_present`, 97 `empty`), sampled at **uniform random timestamps over whole source videos**, so
+it is **detector-INDEPENDENT**, and leak-free (`empty_negatives.py` excludes thin768's 142 training
+videos *and* the CLIP detector's sessions). Contrast the 232 mined hard negatives, which were selected
+at `p_visible >= 0.70` — their p_visible spans only 0.81–1.0, so any detector AUC on them (0.7805) is
+a **selection artifact**, not a measurement. Do not use that set to score the detector.
+
+| arm (identical 120 frames) | AUC | CI95 | FP@R.90 |
+|---|---|---|---|
+| **trained probe** (`clip_mlp_hardneg_v2`) | **0.7450** | [0.564, 0.890] | 0.856 |
+| **zero-shot CLIP** (same backbone, 5+5 prompt ensemble) | **0.4500** | [0.259, 0.643] | 0.959 |
+
+**Paired ΔAUC = +0.2950, CI95 [+0.069, +0.528], clustered by source video — excludes 0.**
+Both arms share the frozen CLIP ViT-B/32 **and** the letterbox preprocessing, so the gap isolates the
+probe. Zero-shot is at chance and its **median score is HIGHER on empty frames (0.182) than on frames
+containing the animal (0.129)**. Zero-shot got a deliberately generous prompt ensemble (5 octopus + 5
+empty, stored in `data/zeroshot_vs_probe.json`) so the margin is not a strawman artefact.
+=> "zero-shot CLIP was abandoned as unreliable" now has a NUMBER behind it.
+
+### Caveats (carry them)
+- **23 positives.** All intervals wide. Claim the ordering, never the magnitude.
+- **Do NOT compare 0.745 to the 96.8%** — different metric AND a harder, unbiased set.
+- Frame-level; the deployed gate acts on 20 s windows (>50% of frames), so this is a per-frame proxy.
+- At the shipped threshold (p>=0.60) the probe's recall on these unbiased positives is **0.609** with
+  FP 0.175 — lower recall than curated-positive evaluations imply. Noted, not yet folded into the paper.
+
+### Deferred, deliberately (belongs to the segmentation/presence section, not detection)
+Mask area on these same 23 unbiased positives scores **0.7064** [0.544, 0.854] vs the **0.907** the
+paper reports. Same negatives, same model, same threshold — only the POSITIVES differ (paper uses
+human-masked "octopus definitely present" frames from extractor-selected clips; these are random
+moments). Not a contradiction, a harder question, and the one deployment actually faces. The probe's
+and mask area's CIs overlap heavily here, so **this set cannot rank them** — it only separates both
+from zero-shot.
+
+### Paper integration
+Added to Sec. III-A "Visibility Detection" as **"What the probe adds over CLIP alone"** (prose, no
+table, to save space). **COST: the paper went 8 -> 9 pages.** 0 errors, 0 overfull. Page 8 was already
+nearly full — even 13 lines tipped it. T2 (demote the activity budget) and T3 (retire the
+enrichment contrast) both REMOVE text, so doing them next would pay the page back.
