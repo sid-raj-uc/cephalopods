@@ -1352,3 +1352,48 @@ F1, or this reads as the best-performing class.
 
 Caveat carried forward: `Human / enrichment interaction` has n=40 test clips on 7 videos; its F1
 (0.31–0.37) is not a reliable per-class figure.
+
+## R28 — the class-weighting bug: rare classes were sinks (2026-08-22)
+
+Chasing "how do we make the 6-class ethogram classifier better", the first real defect was in the
+LOSS, not the architecture. v1 used full inverse-frequency class weights (`1/count`). Train counts
+run 1,419 (`No octopus`) to 141 (`Human`), so rare classes received 6-10x the weight and became
+**sinks**: `Reaching out of water` reached recall 0.81 at **precision 0.35** — 65% of everything it
+predicted was wrong, absorbing 121 `No octopus` and 84 `Exploration` samples.
+
+Note the self-defeat: over-weighting a rare class is meant to protect macro-F1, but macro-F1 charges
+for precision too, so the weighting cost the very metric it was there to defend.
+
+Sweep of the weight exponent `CW_POWER`, rung 3, 3 seeds each:
+
+| CW_POWER | val macro-F1 | TEST macro-F1 | `Reaching` precision |
+|---|---|---|---|
+| 1.0 (v1) | 0.5439 ± 0.005 | 0.5129 ± 0.011 | 0.35 |
+| **0.5 (sqrt)** | **0.5555 ± 0.010** | **0.5298 ± 0.007** | 0.43 |
+| 0.25 | 0.5400 ± 0.005 | 0.5417 ± 0.005 | 0.48 |
+| 0.0 (off) | 0.5381 ± 0.015 | 0.5581 ± 0.014 | 0.53 |
+
+`Reaching` precision rises monotonically as the weighting is removed (0.35 → 0.43 → 0.48 → 0.53),
+which is clean mechanistic confirmation that inverse-frequency weighting created the sink.
+
+**METHODOLOGICAL TRAP, recorded because I nearly walked into it.** `CW_POWER=0.0` gives the best
+TEST macro-F1 (0.5581, +0.045). It is NOT claimable: val does not select it, and picking a
+hyperparameter by test score is test-set selection. **Selecting on val gives 0.5 → TEST 0.5298,
++0.0169 over v1** (stds 0.007/0.011, so ~1.5σ). That is the honest number. The val/test optimum
+disagreeing again is the same video-level-noise signature as the rung ladder (35 val / 34 test
+videos) — and it is exactly why the rule has to be fixed before looking, not after.
+
+Per-class at the selected `CW_POWER=0.5` (rung 3, 3 seeds pooled):
+
+| class | recall | precision | F1 |
+|---|---|---|---|
+| No octopus | 0.73 | 0.86 | 0.79 |
+| Locomotion (crawl/swim) | 0.58 | 0.56 | 0.57 |
+| Reaching out of water | 0.72 | 0.43 | 0.54 |
+| Exploration / manipulation | 0.54 | 0.51 | 0.53 |
+| Resting / stationary | 0.44 | 0.44 | 0.44 |
+| Human / enrichment interaction | 0.27 | 0.37 | 0.31 |
+
+`No octopus` ↔ `Resting` remains the dominant confusion (22.3% of all errors) and is untouched by
+weighting, as expected — it is a label/signal problem (45% of IR `No octopus` labels are wrong
+against the human, R26/R27), not a class-balance problem. Two independent defects, two fixes.

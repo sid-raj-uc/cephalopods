@@ -48,6 +48,10 @@ import torch
 import torch.nn as nn
 
 REPO = Path(__file__).resolve().parents[1]
+CW_POWER = 0.5              # sqrt inverse-freq. SELECTED ON VAL (see R28): p=1.0 made rare classes
+#                             sinks (Reaching precision 0.35). Sweep 1.0/0.5/0.25/0.0 -> val picks
+#                             0.5, test 0.5129 -> 0.5298. p=0.0 scores HIGHER on test (0.5581) but
+#                             val does not pick it, so claiming it would be test-set selection.
 N_SEEDS = 3
 EPOCHS = 120
 PATIENCE = 20
@@ -162,9 +166,15 @@ def run_one(rung, man, X, classes, seed):
     Xtr, Ytr, Htr, Wtr = featurise(tr, X, rung)
     Xva, Yva, Hva, _ = featurise(va, X, rung)
     Xte, Yte, Hte, _ = featurise(te, X, rung)
-    # inverse-frequency class weights: No octopus is ~43% and accuracy would reward collapse
+    # CLASS WEIGHTS, tempered by CW_POWER. p=1 is full inverse-frequency, which is what v1 used and
+    # which measurably OVERSHOOTS: train counts run 1419 (No octopus) to 141 (Human), so p=1 hands the
+    # rare classes 6-10x the weight and they become SINKS -- `Reaching out of water` reached recall
+    # 0.81 at precision 0.35, i.e. 65% of everything it predicted was wrong, absorbing 121 No-octopus
+    # and 84 Exploration samples. Macro-F1 punishes that on the precision side, so over-weighting a
+    # rare class does not even buy the metric it was meant to protect. p=0.5 (sqrt) is the usual
+    # middle ground; p=0 is no weighting at all.
     cnt = collections.Counter(Htr.tolist())
-    cw = np.array([1.0 / max(1, cnt.get(c, 0)) for c in range(n_cls)], np.float32)
+    cw = np.array([(1.0 / max(1, cnt.get(c, 0))) ** CW_POWER for c in range(n_cls)], np.float32)
     cw = cw / cw.sum() * n_cls
     sample_w = Wtr * cw[Htr]
 
