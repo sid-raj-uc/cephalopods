@@ -1301,3 +1301,54 @@ finalize, since resume would otherwise never revisit rows written before the gua
 human_secondary 251 (99). Majority baseline 45.8%. Motion channel validated: Locomotion vs Resting
 AUC **0.714** on `motion_disp` alone, so the two motion columns carry real signal and rungs 2-3 of
 the ladder are worth running. Soft targets: 70.8% unanimous, the rest teach uncertainty.
+
+## R27 — ethogram classifier: the rung ladder (2026-08-22)
+
+Frozen v1 (4,665 clips / 206 videos), splits by source video, 3 seeds per rung, mean ± std.
+Metric is **macro-F1**, never accuracy: the classes run 45.8% to 3%, and accuracy rewards collapse.
+
+| rung | model | params | val macro-F1 | TEST macro-F1 |
+|---|---|---|---|---|
+| — | majority class (`No octopus`) | — | — | **0.1004** |
+| 0 | mean-pooled CLIP → linear | 3,078 | 0.4842 ± 0.0050 | 0.4000 ± 0.0143 |
+| 1 | mean\|std\|max pooling → MLP | 398,086 | 0.5531 ± 0.0090 | 0.4739 ± 0.0373 |
+| 2 | + motion summary stats | 399,634 | 0.5521 ± 0.0115 | 0.4802 ± 0.0300 |
+| 3 | full [10,514] → BiGRU + attention | 266,891 | 0.5439 ± 0.0050 | **0.5129 ± 0.0110** |
+
+**1. The previous classifier's failure mode is gone.** That model hit 45% val accuracy with per-class
+F1 ≈ 0 outside the majority classes — collapse. Here EVERY class scores 0.29–0.75 at every rung,
+including rung 0, which deliberately reproduces the old pooled-CLIP-and-linear recipe. So the fix was
+NOT architecture: it was the 6-class merge, the reliability filtering, soft targets, and 4,665 clips.
+Also note rung 0's 0.400 vs a 0.100 majority baseline — the old "45%" was never the failure it read
+as, because it was compared against an accuracy baseline instead of macro-F1.
+
+**2. Only ONE jump on the ladder is real: rung 0 → 1 (+0.074 test, +0.069 val).** Richer pooling and
+a non-linear head help. Rungs 1 → 2 → 3 differ by 0.006 and 0.033 with stds of 0.030–0.037, i.e.
+within ~1 std, and **val and test disagree on the ordering** (val ranks rung 3 LAST, test ranks it
+first). When the two holdouts disagree, video-level noise dominates at 35 val / 34 test videos. Per
+the interpretation rule fixed before running: **the ceiling is video diversity, not architecture** —
+the same wall segmentation hit at IoU ~0.47 across every model size. Do NOT claim rung 3 wins.
+
+**3. The motion channels bought nothing measurable** (rung 1 → 2: 0.4739 → 0.4802, well inside
+noise), despite scoring AUC 0.714 for Locomotion-vs-Resting in isolation. So the signal is real but
+largely REDUNDANT with what CLIP appearance already encodes. Worth stating plainly since the motion
+channels were added specifically to fix the pooled-feature critique — the critique was right about
+pooling (rung 0 → 1) and wrong about needing explicit motion.
+
+**4. Rung 3's variance is 3× lower (±0.011 vs ±0.037).** Not a headline win but the reason to prefer
+it if one model must be picked: sequence modelling makes the result reproducible across seeds.
+
+**5. The dominant error is the two STATIC classes collapsing into each other.**
+Confusion matrix (rung 3, 3 seeds pooled): `Resting → No octopus` 16.2%, `No octopus → Resting`
+13.7%. **That single confusion is 20.2% of ALL errors.** Physically sensible: a motionless animal in
+a den and an empty tank differ only in appearance, and both motion channels read ~0 (medians are
+identical, 0.0198 vs 0.0198 — the one place the motion feature CANNOT help). This is the concrete
+target for the next iteration, and it argues the segmentation area-gate would help more than any
+classifier change, since a mask distinguishes them directly.
+
+**6. `Reaching out of water` behaves as a sink class:** recall 0.81 but precision 0.35 — it absorbs
+121 `No octopus` and 84 `Exploration` samples. Per-class precision/recall must be reported, not just
+F1, or this reads as the best-performing class.
+
+Caveat carried forward: `Human / enrichment interaction` has n=40 test clips on 7 videos; its F1
+(0.31–0.37) is not a reliable per-class figure.
