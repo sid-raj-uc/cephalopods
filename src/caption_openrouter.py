@@ -157,6 +157,9 @@ def parse(text):
     return cap, (etho or "uncertain")
 
 
+REQUEST_TIMEOUT = 120     # seconds; callers may raise this (the ensemble does -- see below)
+
+
 def call_openrouter(image_urls, prompt, retries=4):
     content = [{"type": "image_url", "image_url": {"url": u}} for u in image_urls]
     content.append({"type": "text", "text": prompt})
@@ -165,7 +168,7 @@ def call_openrouter(image_urls, prompt, retries=4):
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json",
                "X-Title": "octopus-clip-captioner"}
     for attempt in range(retries):
-        r = requests.post(OR_URL, headers=headers, json=body, timeout=120)
+        r = requests.post(OR_URL, headers=headers, json=body, timeout=REQUEST_TIMEOUT)
         if r.status_code == 200:
             return r.json()["choices"][0]["message"]["content"].strip()
         if r.status_code in (429, 500, 502, 503):

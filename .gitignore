@@ -42,3 +42,10 @@ weights/
 
 # notes/ holds credentials in plaintext (resources.md / resources.txt) — never commit
 notes/
+
+# Human ground truth + frozen eval sets: small, irreplaceable, and BENCHMARKS.md requires frozen
+# sets to be committed ("the frame/clip lists are committed and must not be regenerated").
+# data/ is ignored wholesale above, so these need explicit exceptions.
+!data/human_eval_sample_v*.json
+!data/human_behaviour_labels*.json
+!data/human_vs_ensemble_results.json

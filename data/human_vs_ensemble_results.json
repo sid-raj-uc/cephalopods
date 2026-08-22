@@ -1,0 +1,271 @@
+{
+ "_meta": {
+  "note": "assisted=True labels measure AGREEMENT (the model's answer was on screen); assisted=False measure ACCURACY. Never pool them.",
+  "rounds": [
+   "v1",
+   "v2"
+  ]
+ },
+ "v1": {
+  "round": "v1",
+  "n_labelled": 98,
+  "n_sample": 98,
+  "n_source_videos": 40,
+  "n_blind": 0,
+  "n_assisted": 98,
+  "median_seconds_per_clip": 8.5,
+  "human_label_distribution": {
+   "NO OCTOPUS": 48,
+   "Resting / stationary": 12,
+   "Reaching out of water": 10,
+   "Human / enrichment interaction": 10,
+   "Exploration / manipulation": 9,
+   "Crawling": 6,
+   "Swimming / jetting": 3
+  },
+  "AGREEMENT_assisted": {
+   "n": 98,
+   "presence": {
+    "human_present_model_present": 50,
+    "human_present_model_absent": 0,
+    "human_absent_model_present": 18,
+    "human_absent_model_absent": 30,
+    "agreement": 0.8163,
+    "kappa": 0.6297,
+    "model_false_positives": 18,
+    "model_fp_rate_of_model_present": 0.2647,
+    "model_false_negatives": 0,
+    "by_camera": {
+     "Right_Left": {
+      "model_present": 28,
+      "human_says_absent": 11,
+      "fp_rate": 0.3929
+     },
+     "Right_Right": {
+      "model_present": 19,
+      "human_says_absent": 1,
+      "fp_rate": 0.0526
+     },
+     "Right_Front": {
+      "model_present": 16,
+      "human_says_absent": 6,
+      "fp_rate": 0.375
+     },
+     "Right_Top": {
+      "model_present": 3,
+      "human_says_absent": 0,
+      "fp_rate": 0.0
+     },
+     "Right_Back": {
+      "model_present": 2,
+      "human_says_absent": 0,
+      "fp_rate": 0.0
+     }
+    }
+   },
+   "behaviour": {
+    "n_both_present": 50,
+    "exact_match": 38,
+    "exact_match_rate": 0.76,
+    "confusions_human_to_model": [
+     {
+      "human": "Resting / stationary",
+      "model": "Reaching out of water",
+      "n": 4
+     },
+     {
+      "human": "Reaching out of water",
+      "model": "Swimming / jetting",
+      "n": 2
+     },
+     {
+      "human": "Human / enrichment interaction",
+      "model": "Resting / stationary",
+      "n": 1
+     },
+     {
+      "human": "Reaching out of water",
+      "model": "Crawling",
+      "n": 1
+     },
+     {
+      "human": "Resting / stationary",
+      "model": "Exploration / manipulation",
+      "n": 1
+     },
+     {
+      "human": "Exploration / manipulation",
+      "model": "Crawling",
+      "n": 1
+     },
+     {
+      "human": "Human / enrichment interaction",
+      "model": "Reaching out of water",
+      "n": 1
+     },
+     {
+      "human": "Exploration / manipulation",
+      "model": "Swimming / jetting",
+      "n": 1
+     }
+    ],
+    "by_vote_margin": {
+     "unanimous_5of5": {
+      "n": 23,
+      "agree_rate": 0.7391
+     },
+     "margin_0.8": {
+      "n": 8,
+      "agree_rate": 0.875
+     },
+     "margin_le_0.6": {
+      "n": 19,
+      "agree_rate": 0.7368
+     }
+    }
+   }
+  },
+  "ACCURACY_blind": null
+ },
+ "v2": {
+  "round": "v2",
+  "n_labelled": 200,
+  "n_sample": 200,
+  "n_source_videos": 88,
+  "n_blind": 0,
+  "n_assisted": 200,
+  "median_seconds_per_clip": 4.9,
+  "human_label_distribution": {
+   "NO OCTOPUS": 68,
+   "Resting / stationary": 45,
+   "Human / enrichment interaction": 23,
+   "Swimming / jetting": 21,
+   "Exploration / manipulation": 20,
+   "Crawling": 13,
+   "Reaching out of water": 10
+  },
+  "AGREEMENT_assisted": {
+   "n": 200,
+   "presence": {
+    "human_present_model_present": 120,
+    "human_present_model_absent": 12,
+    "human_absent_model_present": 18,
+    "human_absent_model_absent": 50,
+    "agreement": 0.85,
+    "kappa": 0.6585,
+    "model_false_positives": 18,
+    "model_fp_rate_of_model_present": 0.1304,
+    "model_false_negatives": 12,
+    "by_camera": {
+     "Right_Top": {
+      "model_present": 40,
+      "human_says_absent": 3,
+      "fp_rate": 0.075
+     },
+     "Right_Back": {
+      "model_present": 34,
+      "human_says_absent": 5,
+      "fp_rate": 0.1471
+     },
+     "Right_Front": {
+      "model_present": 30,
+      "human_says_absent": 1,
+      "fp_rate": 0.0333
+     },
+     "Right_Left": {
+      "model_present": 20,
+      "human_says_absent": 9,
+      "fp_rate": 0.45
+     },
+     "Right_Right": {
+      "model_present": 14,
+      "human_says_absent": 0,
+      "fp_rate": 0.0
+     }
+    }
+   },
+   "behaviour": {
+    "n_both_present": 120,
+    "exact_match": 76,
+    "exact_match_rate": 0.6333,
+    "confusions_human_to_model": [
+     {
+      "human": "Human / enrichment interaction",
+      "model": "Reaching out of water",
+      "n": 8
+     },
+     {
+      "human": "Swimming / jetting",
+      "model": "Crawling",
+      "n": 5
+     },
+     {
+      "human": "Exploration / manipulation",
+      "model": "Reaching out of water",
+      "n": 5
+     },
+     {
+      "human": "Resting / stationary",
+      "model": "Exploration / manipulation",
+      "n": 4
+     },
+     {
+      "human": "Resting / stationary",
+      "model": "Reaching out of water",
+      "n": 3
+     },
+     {
+      "human": "Swimming / jetting",
+      "model": "Exploration / manipulation",
+      "n": 3
+     },
+     {
+      "human": "Exploration / manipulation",
+      "model": "Crawling",
+      "n": 3
+     },
+     {
+      "human": "Resting / stationary",
+      "model": "Crawling",
+      "n": 3
+     },
+     {
+      "human": "Human / enrichment interaction",
+      "model": "Exploration / manipulation",
+      "n": 2
+     },
+     {
+      "human": "Reaching out of water",
+      "model": "Crawling",
+      "n": 2
+     },
+     {
+      "human": "Exploration / manipulation",
+      "model": "Swimming / jetting",
+      "n": 1
+     },
+     {
+      "human": "Crawling",
+      "model": "Exploration / manipulation",
+      "n": 1
+     }
+    ],
+    "by_vote_margin": {
+     "unanimous_5of5": {
+      "n": 51,
+      "agree_rate": 0.7255
+     },
+     "margin_0.8": {
+      "n": 22,
+      "agree_rate": 0.8636
+     },
+     "margin_le_0.6": {
+      "n": 47,
+      "agree_rate": 0.4255
+     }
+    }
+   }
+  },
+  "ACCURACY_blind": null
+ }
+}

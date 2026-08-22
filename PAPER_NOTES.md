@@ -1124,3 +1124,72 @@ Added to Sec. III-A "Visibility Detection" as **"What the probe adds over CLIP a
 table, to save space). **COST: the paper went 8 -> 9 pages.** 0 errors, 0 overfull. Page 8 was already
 nearly full — even 13 lines tipped it. T2 (demote the activity budget) and T3 (retire the
 enrichment contrast) both REMOVE text, so doing them next would pay the page back.
+
+## R23 — 235B frame-draw ENSEMBLE, and the first human comparison (2026-08-21)
+Two artefacts: an ensemble that removes frame-sampling variance, and 298 human labels scoring it.
+
+### The ensemble — `src/ensemble_235b.py` + `src/ensemble_235b_vote.py`
+5 independent passes per clip, interleaved-uniform sampling: frames at `DENSE_FPS=2.5`, pass *p*
+takes `step=n/10, offset=(p-1)*step/5`, i.e. **10 frames exactly 2 s apart**, the 5 passes tiling the
+2 s gap (0.0/0.4/0.8/1.2/1.6 s) and **disjoint by construction**. Verified: 5/5 distinct draws,
+union = all 50 candidate frames.
+- **Why not the old top-6-by-p_visible:** measured on 33 clips it covers a median 0.79 of the clip
+  but leaves a **median 7-frame (7 s) gap** between adjacent frames sent, inside which a whole crawl
+  or jet happens unobserved (7/33 clips saw <50%). Uniform 2 s spacing caps the gap at ~3 frames.
+- **No CLIP scoring**: frame choice is purely temporal, so the detector no longer decides what the
+  VLM sees (removing that confound). The `PRESENT_MIN` veto went with it — it never fired anyway
+  (`absent=0` across 2,818 single-pass calls).
+- Cost/latency measured: `tokens ~= 290 + 386n`; 6 frames $0.000603/call, 10 frames $0.001043 (1.73x).
+
+### INTER-PASS AGREEMENT (1,144 clips with all 5 passes)
+| field | mean pairwise agreement | Fleiss kappa | pairwise Cohen kappa (10 pairs) |
+|---|---|---|---|
+| ethogram (9 values) | 0.729 | **0.634** | 0.634 (0.617–0.653) |
+| presence (binary) | 0.910 | **0.818** | 0.818 (0.803–0.837) |
+**The passes are exchangeable** — Cohen kappa spans only 0.617–0.653 across all 10 pairs, which is
+the precondition for majority voting to reduce variance rather than bias it.
+**The argument for ensembling is that a single pass is an arbitrary draw**: 38% of clips split, and
+the vote differs from pass 1 on ~15%. Do NOT frame the 0.552->0.634 change as an ensembling gain —
+frame count, frame rate and selection rule all changed at once, so it is not a controlled comparison.
+
+### Voting rules (learned the hard way)
+`uncertain` is an **abstention**, discarded from both tallies but the clip is **never dropped** — it
+previously counted as PRESENT, because per-pass presence is derived as `"not present" not in label`
+and "uncertain" does not contain that string (230 of 5,671 passes). Ties are broken **deterministically**
+(prefer pass 1, else sorted) and flagged: `Counter.most_common(1)` had been resolving 49 clips by
+FILE-READ ORDER. Low-vote and tied clips are marked `low_confidence`, not discarded.
+
+### HUMAN COMPARISON — `src/eval_human_vs_ensemble.py` -> `data/human_vs_ensemble_results.json`
+Two frozen rounds, blind-capable UI (`ui/label_ethogram.py`, port 8021). **Both rounds came back
+100% `assisted`** (the model's verdict was on screen), so **these are AGREEMENT, not accuracy** —
+anchoring inflates them and the paper's "validation against a human ethologist" gap stays OPEN.
+
+| | v1 | v2 |
+|---|---|---|
+| clips / source videos | 98 / 40 | **200 / 88** |
+| median s per clip | 8.8 | 4.9 |
+| presence agreement / kappa | 0.816 / 0.630 | **0.850 / 0.659** |
+| model false positives | 18 (26.5% of model-present) | **18 (13.0%)** |
+| model false negatives | **0** | **12** |
+| behaviour exact match | 38/50 = 76.0% | 76/120 = **63.3%** |
+
+**1. Presence errors are mostly but NOT only one-directional.** v1 showed 18 FP / 0 FN; v2's larger,
+more camera-diverse sample found **12 FN**, so "the model never misses a visible animal" is withdrawn.
+
+**2. The false positives are almost entirely ONE CAMERA** (v2): Right_Left **45%** FP, Right_Back 15%,
+**Right_Top (IR) 8%**, Right_Front 3%, Right_Right 0%. IR was unmeasurable in v1 (3 clips available)
+and is FINE. The presence problem is reflections, not a general failure.
+
+**3. CORRECTION to an earlier read — the vote margin DOES predict correctness.** v1 looked flat
+(0.739 unanimous vs 0.737 at <=3/5) on n=19; v2 with n=47 gives **0.726 unanimous / 0.864 at 4-of-5 /
+0.426 at <=3/5**. So `low_confidence` is a usable gate on which labels enter an aggregate.
+
+**4. The model over-calls "Reaching out of water"** — 16 of v2's 44 behaviour errors point into it
+(from Human-interaction 8, Exploration 5, Resting 3). v1 had suggested a Resting<->Reaching confusion;
+the larger sample localises it to Reaching as a sink.
+
+### Caveats to carry
+- 100% assisted => agreement only. A blind round is still needed for an accuracy claim.
+- Both samples over-sample rare classes and contested clips, so the raw rates are NOT corpus rates;
+  per-class and per-margin figures are the valid ones until post-stratified.
+- Effective sample size is the VIDEO count (40 and 88), not the clip count.
