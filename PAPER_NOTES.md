@@ -1226,3 +1226,38 @@ frames. That is not a fair comparison in the probe's favour — the set is *by c
 confident false positives, i.e. maximally adversarial to it — so it must not be quoted as
 "OWLv2 beats our probe". It is quoted here only to note that OWLv2's ranking is not the weakest
 signal on this set, which is itself an argument against the old "never separated" phrasing.
+
+## R25 — the ethogram training set was 36% smaller than the data we had paid for (2026-08-22)
+
+Caught by the question "why are we not using all the clips that we completely processed?".
+
+`ensemble_235b_vote.py` was run ONCE, when the 5-pass ensemble was ~3,444 clips in, and never
+re-run as the ensemble continued to ~5,222. Every downstream consumer reads the voted file, so the
+dataset builder was training on a stale snapshot.
+
+| | clips |
+|---|---|
+| clips the ensemble touched | 5,222 |
+| clips with all 5 passes complete | 5,003 |
+| clips in the voted file | 3,444 |
+| **fully processed but never voted** | **1,568** |
+
+Re-running the vote: **3,444 → 5,222 records (+52%)**; trainable after filters **2,978 → 4,673
+(+57%)**. Cameras lost worst were `Right_Top` (652), `Right_Front` (442), `Right_Back` (356) — i.e.
+the three real den angles, not the reflection camera.
+
+**Cost of the miss, had it shipped:** the model would have trained on 64% of the labels the 235B
+passes were paid for, and the paper would have reported a training-set size that understated the
+data. With ~60 source videos the plateau diagnosis (see the segmentation arc, R19) turns on whether
+the ceiling is data or label quality — reporting a data-limited result on 36% less data than
+available would have pointed that diagnosis the wrong way.
+
+**Generalisable defect, worth stating as a rule:** any *derived* artifact of a long resumable job
+(vote files, merged indices, snapshots) is stale the moment the job advances. The ensemble was
+correctly resumable; the vote was not re-derived. Fix applied: the builder now re-runs the vote
+itself rather than trusting an existing file, so the two cannot drift.
+
+Vote-quality figures on the full set (5,218 clips with genuine sampling variation, ≥5 votes):
+unanimous on ethogram 3,330 (63.8%), split 1,888 (36.2%); the majority vote differs from the
+single pass-1 label on **705 clips (13.5%)** — which is the direct measurement of what the
+5-pass ensemble buys over one pass.
