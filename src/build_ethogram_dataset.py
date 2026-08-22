@@ -192,15 +192,56 @@ def video_split(by_video, rng):
     return assign
 
 
+def check_vote_fresh(strict=True):
+    """Refuse to build from a vote file that lags the completed ensemble passes.
+
+    This exists because it already happened. The 5-pass ensemble is resumable and ran for days;
+    ensemble_235b_vote.py was run ONCE early, at ~3,444 clips, and never re-derived as the ensemble
+    reached ~5,222. Every consumer reads the vote file, so the dataset was silently built from 64%
+    of the labels we had already paid the 235B API for -- 1,568 fully-processed clips unused, the
+    losses concentrated in Right_Top/Front/Back, the three real den angles.
+
+    Nothing errored. The build printed a plausible clip count and ran to completion. That is the
+    danger: a DERIVED artifact of a long resumable job goes stale the moment the job advances, and
+    staleness looks exactly like a smaller dataset. Cheap to check, invisible if you don't.
+    """
+    pd = REPO / "data" / "ensemble_235b"
+    if not pd.exists() or not VOTED.exists():
+        return
+    passes = {}
+    for p in range(1, 6):
+        f = pd / f"pass{p}.jsonl"
+        if not f.exists():
+            return
+        passes[p] = {json.loads(l)["key"] for l in f.open() if l.strip()}
+    complete = {k for k in set().union(*passes.values()) if all(k in passes[p] for p in passes)}
+    voted = set(json.load(open(VOTED)))
+    missed = complete - voted
+    if not missed:
+        print(f"vote is current: {len(complete)} clips with all 5 passes, all voted")
+        return
+    msg = (f"STALE VOTE: {len(missed)} clips have all 5 ensemble passes but are absent from\n"
+           f"  {VOTED.name} ({len(voted)} voted vs {len(complete)} complete).\n"
+           f"  These labels are already paid for. Re-derive before building:\n"
+           f"    venv/bin/python3 src/ensemble_235b_vote.py --min-passes 5")
+    if strict:
+        sys.exit("\n" + msg + "\n  (--allow-stale-vote to override deliberately)")
+    print("WARNING " + msg)
+
+
 def main():
+    """Build the frozen ethogram dataset. See check_vote_fresh for why it runs first."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--version", default="v1")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--allow-stale-vote", action="store_true",
+                    help="proceed even if the vote file lags the completed ensemble passes")
     a = ap.parse_args()
     out = OUTROOT / a.version
     out.mkdir(parents=True, exist_ok=True)
     rng = random.Random(SEED)
 
+    check_vote_fresh(strict=not a.allow_stale_vote)
     voted = json.load(open(VOTED))
     idx = json.load(open(INDEX))
     idx = idx if isinstance(idx, list) else idx.get("clips", [])
