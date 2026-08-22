@@ -159,7 +159,7 @@ def macro_f1(pred, true, n_cls):
     return float(np.mean(f1s)), per
 
 
-def run_one(rung, man, X, classes, seed):
+def run_one(rung, man, X, classes, seed, extra_rows=None):
     torch.manual_seed(seed); np.random.seed(seed)
     n_cls = len(classes)
     tr, va, te = (split_rows(man, s) for s in ("train", "val", "test"))
@@ -208,8 +208,17 @@ def run_one(rung, man, X, classes, seed):
         pt = model(t(Xte)).argmax(-1).numpy()
     f1_te, per = macro_f1(pt, Hte, n_cls)
     n_params = sum(p.numel() for p in model.parameters())
-    return {"val_f1": best, "test_f1": f1_te, "per_class": per, "n_params": n_params,
-            "pred": pt.tolist(), "true": Hte.tolist()}
+    out = {"val_f1": best, "test_f1": f1_te, "per_class": per, "n_params": n_params,
+           "pred": pt.tolist(), "true": Hte.tolist()}
+    # Optional extra rows to predict (e.g. the human-labelled clips, which span several splits).
+    # Softmax rather than argmax so a caller can average over seeds before deciding -- averaging
+    # argmaxes would let one seed's confident error outvote two seeds' correct uncertainty.
+    if extra_rows:
+        Xex, *_ = featurise(extra_rows, X, rung)
+        with torch.no_grad():
+            out["extra_probs"] = torch.softmax(model(t(Xex)), -1).numpy().tolist()
+        out["extra_clips"] = [r["clip"] for r in extra_rows]
+    return out
 
 
 def main():
