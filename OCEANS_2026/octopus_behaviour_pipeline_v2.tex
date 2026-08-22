@@ -362,10 +362,15 @@ in-situ inference is feasible on commodity hardware.
 argument: we measured the off-the-shelf alternatives on this footage and none of
 them worked as a detector. Asked to verify $232$ mined hard-negative frames, an
 open-vocabulary detector (OWLv2~\cite{owlv2}) reported an octopus in $231$ of
-them at a $0.10$ threshold and its scores never separated the two classes---no
-operating point existed, so it was useless as an auto-filter. Human review of
-the same frames found that $166$ genuinely contained the animal and $66$ did
-not, a distinction the detector had not made. Zero-shot CLIP scoring for
+them at a $0.10$ threshold. Human review of the same frames found that $166$
+genuinely contained the animal and $66$ did not. Its scores are not
+uninformative---they rank the two classes at AUC $0.759$---but the
+distributions overlap so heavily that no threshold yields a usable filter: at
+its own best operating point ($0.23$, Youden $J=0.378$) it still passes $30$\%
+of the frames we wanted removed while discarding $32$\% of the real animals,
+and any threshold retaining $\geq\!95$\% of the animals passes $70$\% of the
+negatives. A weak ranking signal with no viable operating point is not a
+detector. Zero-shot CLIP scoring for
 presence was likewise abandoned as unreliable; what works is a \emph{trained}
 probe on frozen CLIP features (Sec.~\ref{sec:detect}), and even that is the
 weaker of our two presence signals. The promptable segmentation teacher is

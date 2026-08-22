@@ -179,7 +179,12 @@ false positives as hard negatives. Workflow:
 2. **Did NOT assume they were octopus-free.** Ran independent verification:
    - OWLv2 (`google/owlv2-base-patch16-ensemble`, CPU) → `data/hard_negatives/_detector_verify.json`.
      **OWLv2 was useless as an auto-filter**: at thr 0.10 it "detected" octopus in 231/232 frames;
-     scores never separated the classes. Do not trust OWLv2 alone for this.
+     Its scores are NOT uninformative (AUC **0.759** vs the human labels, measured 2026-08-22 from
+     `review_decisions.csv`) — but the overlap leaves no usable operating point: at its own best
+     threshold (0.23) it still passes 30% of the negatives while losing 32% of the real animals, and
+     any threshold keeping ≥95% of animals passes 70% of negatives. Do not trust OWLv2 alone for
+     this, and do NOT repeat the older claim that "scores never separated the classes" — that was
+     wrong; the correct claim is "weak ranking signal, no viable operating point".
    - Human review UI: `ui/review_hardneg.py` (port 8004, one image at a time, keyboard bindings
      O/1=octopus, N/0=no-octopus, Space/→ skip, ← back, U clear, F full-res). Decisions →
      `data/hard_negatives/review_decisions.csv`.

@@ -1193,3 +1193,36 @@ the larger sample localises it to Reaching as a sink.
 - Both samples over-sample rare classes and contested clips, so the raw rates are NOT corpus rates;
   per-class and per-margin figures are the valid ones until post-stratified.
 - Effective sample size is the VIDEO count (40 and 88), not the clip count.
+
+## R24 — OWLv2 as a presence filter: the paper's stated REASON was wrong (2026-08-22)
+
+Re-measured from `data/hard_negatives/review_decisions.csv` (232 frames the CLIP+MLP probe called
+confident-visible, human-adjudicated: 166 octopus / 66 genuine hard negatives).
+
+| quantity | value |
+|---|---|
+| OWLv2 max-score AUC, octopus vs verified hardneg | **0.759** |
+| octopus score median (IQR) | 0.255 (0.209–0.367) |
+| hardneg score median (IQR) | 0.193 (0.140–0.243) |
+| frames scoring ≥0.10 | 231/232 (99.6%) |
+| best Youden J | 0.378 @ thr 0.230 → recall 68.1%, negatives passed 30.3% |
+| thr for ≥95% octopus recall | 0.155 → passes 69.7% of negatives (46/66) |
+
+**The correction.** v2 of the paper said OWLv2's "scores never separated the two classes---no
+operating point existed". The first half is FALSE: AUC 0.759 is well above chance. The conclusion
+("useless as an auto-filter") is correct and now quantified: the distributions overlap so heavily
+that no threshold is usable — at its own optimum it still passes 30% of the negatives while
+discarding 32% of the real animals. Paper text fixed; AGENTS.md fixed with a do-not-repeat note.
+
+**Why this matters beyond the one sentence.** It is the same shape as R19 (teacher vs human masks):
+a foundation model that is *informative but badly calibrated for this footage* reads as "useless"
+if you only ever check its default threshold. In both cases the honest finding is about the
+**operating point**, not the model's blindness — and in both cases stating it as blindness makes a
+claim a reviewer can trivially refute by running the model themselves. Reported the weaker,
+survivable version.
+
+Also measured, and worth keeping: the CLIP+MLP probe scores only AUC **0.653** on these same
+frames. That is not a fair comparison in the probe's favour — the set is *by construction* its own
+confident false positives, i.e. maximally adversarial to it — so it must not be quoted as
+"OWLv2 beats our probe". It is quoted here only to note that OWLv2's ranking is not the weakest
+signal on this set, which is itself an argument against the old "never separated" phrasing.
