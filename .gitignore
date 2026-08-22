@@ -49,3 +49,10 @@ notes/
 !data/human_eval_sample_v*.json
 !data/human_behaviour_labels*.json
 !data/human_vs_ensemble_results.json
+
+# harvest clip trees (large binaries; ledger+index are tracked, clips are not)
+data/harvest_all/
+data/harvest_rr_dl/
+data/harvest_modal_dl/
+data/harvest_cbox_dl/
+data/harvest_local/
