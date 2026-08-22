@@ -71,6 +71,7 @@ Usage:  venv/bin/python3 src/build_ethogram_dataset.py --version v1
 import argparse, collections, json, random, sys, tempfile
 from pathlib import Path
 
+import cv2
 import numpy as np
 import torch
 from PIL import Image
@@ -103,6 +104,48 @@ def vid_of(clip):
 
 def merged(label):
     return MERGE.get(label, label)
+
+
+def motion_features(frame_paths, pick, pix_thresh=25):
+    """Per-timestep MOTION, aligned to the sampled CLIP frames. Two channels:
+
+      inst : changed-pixel fraction vs the frame 0.4 s earlier -> instantaneous movement
+      disp : changed-pixel fraction vs the previous SAMPLED frame (2 s) -> displacement over the gap
+
+    CLIP cannot supply this. It is trained on static image-text pairs, so its embedding encodes
+    appearance: an octopus crawling slowly produces nearly IDENTICAL embeddings 2 s apart because the
+    content ("an octopus on sand") has not changed, while an infrared lamp flicker can move the
+    embedding more than the animal does. Every class here except Resting is defined by HOW the animal
+    moves, so appearance-change is the wrong signal. This is the same absolute changed-pixel measure
+    the extraction gate uses (motion_detector.scan_motion_area), including its timestamp mask, so it
+    is a physical measurement rather than a learned proxy.
+
+    Computed on the already-decoded JPEGs, so it costs cv2 ops only -- no extra ffmpeg pass.
+    """
+    grey = {}
+
+    def g(i):
+        if i not in grey:
+            im = cv2.imread(frame_paths[i], cv2.IMREAD_GRAYSCALE)
+            if im is None:
+                return None
+            h, w = im.shape
+            im = im.copy()
+            im[int(h * 0.88):, int(w * 0.60):] = 0        # mask the burned-in datetime
+            grey[i] = im.astype(np.float32)
+        return grey[i]
+
+    def frac(a, b):
+        A, B = g(a), g(b)
+        if A is None or B is None or A.shape != B.shape:
+            return 0.0
+        return float((np.abs(A - B) > pix_thresh).mean())
+
+    out = np.zeros((len(pick), 2), np.float32)
+    for j, i in enumerate(pick):
+        out[j, 0] = frac(i, i - 1) if i - 1 >= 0 else 0.0
+        out[j, 1] = frac(i, pick[j - 1]) if j > 0 else 0.0
+    return out
 
 
 def resolve(clip):
@@ -199,10 +242,27 @@ def main():
         by_video[vid_of(k)].append(l)
     assign = video_split(by_video, rng)
 
+    # RESUMABLE: features go to one .npy per clip and the manifest is appended line by line, so an
+    # interruption costs a single clip. The previous version held everything in memory and wrote only
+    # at the very end -- it was killed at 250/2978 and produced nothing.
+    fdir = out / "feats"; fdir.mkdir(exist_ok=True)
+    mpath = out / "manifest.jsonl"
+    done = set()
+    if mpath.exists():
+        for line in open(mpath):
+            line = line.strip()
+            if line:
+                try: done.add(json.loads(line)["clip"])
+                except Exception: pass
+        print(f"resuming: {len(done)} clips already featurised")
+
     det = C.load_detector()
     cm, pre, clf, vis, dev = det
-    feats, manifest, secondary = {}, [], []
+    manifest, secondary = [], []
+    mf = open(mpath, "a")
     for n, (k, v, label, w) in enumerate(rows, 1):
+        if k in done:
+            continue
         soft = np.zeros(len(classes), np.float32)
         if label == ABSENT:
             # presence votes give the soft target for the absent class
@@ -234,7 +294,10 @@ def main():
             with torch.no_grad():
                 f = cm.encode_image(batch.to(dev)).float()
                 f = f / f.norm(dim=-1, keepdim=True)
-            feats[k] = f.cpu().numpy().astype(np.float32)       # [10, 512] -- a SEQUENCE
+            appearance = f.cpu().numpy().astype(np.float32)     # [10, 512] APPEARANCE sequence
+            mot = motion_features(fr, pick)                     # [10, 2]   MOTION sequence
+            np.save(fdir / (k.replace("/", "__") + ".npy"),
+                    np.concatenate([appearance, mot], axis=1))  # [10, 514]
 
         split = "human_secondary" if k in human else assign[vid_of(k)]
         rec = {"clip": k, "video": vid_of(k), "split": split,
@@ -243,8 +306,13 @@ def main():
                "margin": v.get("ethogram_margin"), "present_votes": v.get("present_votes"),
                "unanimous_after_merge": bool(float(soft.max()) == 1.0),
                "camera": v.get("camera"), "date": v.get("date"),
-               "mean_motion": motion.get(k), "n_frames_available": len(fr), "frames_used": pick}
+               "mean_motion": motion.get(k), "n_frames_available": len(fr), "frames_used": pick,
+               "motion_inst_mean": round(float(mot[:, 0].mean()), 5),
+               "motion_disp_mean": round(float(mot[:, 1].mean()), 5),
+               "motion_inst_std": round(float(mot[:, 0].std()), 5),
+               "feat_dim": 514, "feat_layout": "0:512 CLIP appearance | 512 motion_inst | 513 motion_disp"}
         manifest.append(rec)
+        mf.write(json.dumps(rec) + "\n"); mf.flush()
         if k in human:
             h = human[k]
             secondary.append({**rec, "human_present": h.get("present"),
@@ -255,13 +323,19 @@ def main():
         if n % 250 == 0:
             print(f"  featurised {n}/{len(rows)}", flush=True)
 
-    with open(out / "manifest.jsonl", "w") as fh:
-        for r in manifest:
-            fh.write(json.dumps(r) + "\n")
+    mf.close()
     with open(out / "human_secondary.jsonl", "w") as fh:
         for r in secondary:
             fh.write(json.dumps(r) + "\n")
+    # re-read the manifest so a resumed run consolidates everything, not just this session's rows
+    manifest = [json.loads(l) for l in open(mpath) if l.strip()]
+    feats = {}
+    for r in manifest:
+        fp = fdir / (r["clip"].replace("/", "__") + ".npy")
+        if fp.exists():
+            feats[r["clip"]] = np.load(fp)
     np.savez_compressed(out / "features.npz", **feats)
+    print(f"consolidated {len(feats)} feature arrays -> features.npz")
 
     trainable = [r for r in manifest if r["split"] in SPLIT_FRACS]
     maj = (max(collections.Counter(r["label"] for r in trainable).values()) / len(trainable)) if trainable else 0

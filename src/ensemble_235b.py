@@ -84,6 +84,19 @@ io_lock = threading.Lock()
 att_lock = threading.Lock()
 state = collections.Counter()
 
+# Credit exhaustion is not a per-clip failure and must not be treated as one. Three times in one day
+# the balance ran out and the runner kept going: every call returned HTTP 402 in under a second, each
+# one counted as a clip failure, and the attempt counter climbed until cells hit MAX_ATTEMPTS and were
+# skipped PERMANENTLY. The last occurrence burned 2,955 cells that way (ok=0, fail=2850, usage frozen)
+# while the supervisor dutifully restarted it. So a 402 now aborts the whole run instead: nothing is
+# retried, no attempts are spent, and the work resumes untouched once credits are topped up.
+CREDITS_EXHAUSTED = threading.Event()
+
+
+def is_credit_error(exc):
+    s = str(exc)
+    return "402" in s or "requires more credits" in s.lower()
+
 
 def rel3(p):
     return "/".join(str(p).strip("/").split("/")[-3:])
@@ -176,7 +189,9 @@ def run_one(key, meta, p, n_passes, prompt):
         imgs = [C.b64_image(frames[i]) for i in pick]
         try:
             raw = C.call_openrouter(imgs, prompt)
-        except Exception:
+        except Exception as ex:
+            if is_credit_error(ex):
+                CREDITS_EXHAUSTED.set()          # abort the run; do not spend an attempt
             return None
     cap, etho = C.parse(raw)
     return {"key": key, "pass": p, "camera": meta["camera"], "date": meta["date"],
@@ -221,6 +236,8 @@ def main():
 
         def work(item):
             k, m, p = item
+            if CREDITS_EXHAUSTED.is_set():
+                return                            # no attempt spent, no failure recorded
             with att_lock:
                 attempts[f"{k}|{p}"] = attempts.get(f"{k}|{p}", 0) + 1
             rec = run_one(k, m, p, args.passes, prompt)
@@ -240,6 +257,10 @@ def main():
         with ThreadPoolExecutor(max_workers=args.workers) as ex:
             list(ex.map(work, todo))
         atomic_write(ATTEMPTS, attempts)
+        if CREDITS_EXHAUSTED.is_set():
+            print("\nCREDITS EXHAUSTED (HTTP 402) -- stopping. No attempts were spent on the "
+                  "remaining cells; top up and re-run to resume exactly here.", flush=True)
+            sys.exit(3)
 
         after = sum(len(read_jsonl(OUTDIR / f"pass{p}.jsonl")) for p in range(1, args.passes + 1))
         if after <= before:
