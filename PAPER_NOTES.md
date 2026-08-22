@@ -1261,3 +1261,43 @@ Vote-quality figures on the full set (5,218 clips with genuine sampling variatio
 unanimous on ethogram 3,330 (63.8%), split 1,888 (36.2%); the majority vote differs from the
 single pass-1 label on **705 clips (13.5%)** — which is the direct measurement of what the
 5-pass ensemble buys over one pass.
+
+## R26 — the validator caught two dataset bugs before training (2026-08-22)
+
+Ran `validate_ethogram_dataset.py` on the frozen v1 set. It failed, twice, and both would have
+produced a publishable-looking but wrong result.
+
+**(a) 29 source videos spanned two trainable splits — a video-level leak.**
+Not a bug in the split function: `video_split()` assigns one split per video and each run was
+internally clean. The leak came from RESUMABILITY. Features are cached per clip and `manifest.jsonl`
+is append-only, so the re-run after the re-vote (R25) appended rows for the new clips and kept the
+old ones — but the split is a GLOBAL greedy decision over the whole clip set. Run 1 saw 2,978 clips,
+run 2 saw 4,673, so **29 of the 58 videos present in both runs were assigned to a different split**.
+Only the concatenation was broken, which is why nothing errored.
+
+Rule extracted: *resume the expensive per-clip work, never a global decision.* Splits are now
+recomputed from scratch every run and the manifest rewritten atomically (ms, leak-free by
+construction), with an in-code assertion that no video spans two splits. Same bug class also
+silently truncated `human_secondary.jsonl` to only the current session's rows — fixed by rebuilding
+it from the full manifest.
+
+**(b) 147 of 6,945 clips on disk (2.1%) are truncated to under 15s.**
+Byte-range extraction failures that `extract_clip` accepted because it validates FILE SIZE (>10 KB)
+— and one truncated clip is 3.6 MB at 0.49s, so size is simply the wrong test. This is the fifth
+variant of the `pcm_alaw` failure. **8 had reached the training set, 4 carrying a behaviour label,
+and one of those was in TEST**: a 0.4s clip labelled `Exploration / manipulation`, which the model
+could never get right and which would have been reported as a genuine failure.
+
+My first pass at this audit prefiltered by file size and found 98; that undercount was the same
+error I was auditing. A full ffprobe sweep of all 6,945 gives 147. Distribution: 95 unreadable /
+13 <1s / 20 1-5s / 19 5-15s. By camera: Right_Top 60, Right_Right 56, Right_Front 24.
+
+Fix: `MIN_FRAMES=37` (≈15s at DENSE_FPS 2.5). The corpus is cleanly bimodal — 4,665 clips have 46+
+frames, the 8 bad ones have <37, nothing in between — so the threshold isolates exactly the
+truncated files at a cost of 0.17%. Enforced both in the feature loop and retroactively at
+finalize, since resume would otherwise never revisit rows written before the guard existed.
+
+**Frozen v1: 4,665 clips / 206 videos.** train 3,019 (133 vid) / val 655 (35) / test 740 (34) /
+human_secondary 251 (99). Majority baseline 45.8%. Motion channel validated: Locomotion vs Resting
+AUC **0.714** on `motion_disp` alone, so the two motion columns carry real signal and rungs 2-3 of
+the ladder are worth running. Soft targets: 70.8% unanimous, the rest teach uncertainty.

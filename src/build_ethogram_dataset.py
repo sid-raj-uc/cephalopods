@@ -68,7 +68,7 @@ sequence.
 Output: src/dataset_etho/<version>/{manifest.jsonl, features.npz, human_secondary.jsonl, snapshot.json}
 Usage:  venv/bin/python3 src/build_ethogram_dataset.py --version v1
 """
-import argparse, collections, json, random, sys, tempfile
+import argparse, collections, json, os, random, sys, tempfile
 from pathlib import Path
 
 import cv2
@@ -95,6 +95,15 @@ MERGE = {"Crawling": "Locomotion (crawl/swim)", "Swimming / jetting": "Locomotio
 DROP_LABELS = {"Colour change / defensive"}
 IR_ABSENT_WEIGHT = 0.5      # Right_Top absent labels agree with the human only 55% of the time
 SPLIT_FRACS = {"train": 0.70, "val": 0.15, "test": 0.15}
+MIN_FRAMES = 37             # >=~15s of real footage (20s at DENSE_FPS 2.5 gives ~50 frames).
+#                             A full-corpus ffprobe sweep found 147/6945 clips (2.1%) truncated to
+#                             under 15s -- byte-range extraction failures that extract_clip accepted
+#                             because it validates FILE SIZE, and one of them is 3.6 MB but 0.49s.
+#                             8 had reached this dataset, 4 carrying a BEHAVIOUR label and one of
+#                             those in TEST, where a 0.4s clip labelled "Exploration / manipulation"
+#                             would have scored as a real model failure. The corpus is cleanly
+#                             bimodal -- 4665 clips have 46+ frames, the 8 bad ones have <37, nothing
+#                             sits in between -- so this threshold drops exactly the truncated files.
 SEED = 20260822
 
 
@@ -190,6 +199,65 @@ def video_split(by_video, rng):
         for l in by_video[v]:
             counts[best][l] += 1
     return assign
+
+
+def assign_splits_globally(manifest, human, mpath, rng):
+    """Recompute the train/val/test assignment over the WHOLE manifest and rewrite it.
+
+    THE BUG THIS FIXES (found by validate_ethogram_dataset.py, 2026-08-22). Features are resumable
+    per clip, and manifest.jsonl is append-only, so a resumed run appends rows for the new clips and
+    keeps the old ones. But the split is not a per-clip property -- video_split() is a GLOBAL greedy
+    decision over the whole clip set. Run 1 saw 2,978 clips, run 2 saw 4,673, so the greedy order
+    differed and 29 of the 58 videos present in both runs were assigned to a DIFFERENT split. The
+    combined manifest then had 29 source videos spanning two of train/val/test, i.e. exactly the
+    video-level leak the split exists to prevent. Each run was internally clean; only the
+    concatenation was broken, which is why nothing errored.
+
+    The rule: resume the EXPENSIVE per-clip work (CLIP features, minutes each), never a GLOBAL
+    decision. Splits are recomputed from scratch on every run and the manifest is rewritten, which
+    costs milliseconds and is leak-free by construction rather than by luck.
+
+    Rewritten atomically (tmp + os.replace) so an interrupt cannot leave a half-written manifest --
+    the file is the resume state, and a truncated one would silently shrink the dataset.
+    """
+    # PRUNE retroactively. The resume path skips any clip already in the manifest, so a guard added
+    # in the feature loop can never remove rows written by an earlier run. Enforce it here too, where
+    # every row is visible, or the 8 truncated clips that predate MIN_FRAMES would live forever.
+    keep, pruned = [], []
+    for r in manifest:
+        (pruned if (r.get("n_frames_available") or 0) < MIN_FRAMES else keep).append(r)
+    if pruned:
+        for r in pruned:
+            fp = mpath.parent / "feats" / (r["clip"].replace("/", "__") + ".npy")
+            if fp.exists():
+                fp.unlink()
+        print(f"pruned {len(pruned)} truncated clips already in the manifest "
+              f"(<{MIN_FRAMES} frames): " + ", ".join(sorted(r["split"] for r in pruned)))
+        manifest = keep
+
+    by_video = collections.defaultdict(list)
+    for r in manifest:
+        if r["clip"] not in human:          # human clips are held out regardless; they do not vote
+            by_video[r["video"]].append(r["label"])
+    assign = video_split(by_video, rng)
+    moved = 0
+    for r in manifest:
+        want = "human_secondary" if r["clip"] in human else assign.get(r["video"], r["split"])
+        if r["split"] != want:
+            r["split"] = want; moved += 1
+    tmp = Path(str(mpath) + ".tmp")
+    with open(tmp, "w") as f:
+        for r in manifest:
+            f.write(json.dumps(r) + "\n")
+    os.replace(tmp, mpath)
+    vs = collections.defaultdict(set)
+    for r in manifest:
+        vs[r["video"]].add(r["split"])
+    leaks = sum(1 for s in vs.values() if len({"train", "val", "test"} & s) > 1)
+    print(f"splits recomputed over all {len(manifest)} rows ({moved} reassigned); "
+          f"videos spanning >1 trainable split: {leaks}")
+    assert leaks == 0, f"video-level leak survived the global reassignment ({leaks} videos)"
+    return manifest
 
 
 def check_vote_fresh(strict=True):
@@ -330,6 +398,17 @@ def main():
             fr = extract_frames_at(resolve(k), td, DENSE_FPS)
             if not fr:
                 drop["no_frames"] += 1; continue
+            # TRUNCATED-CLIP GUARD. 4 clips yielded 1 frame instead of 10: the source mp4s are
+            # 0.25-0.49 s long, not 20 s. They are byte-range extraction failures that extract_clip
+            # accepted because it validates FILE SIZE (>10 KB) and a 213 KB file with a valid header
+            # passes -- the same shape as the pcm_alaw bug, one layer down. A 1-frame sample has no
+            # motion signal at all (both channels are 0), so it is not a degraded example, it is a
+            # different kind of object; one was in the TEST split, where it would have silently
+            # scored as a real failure.
+            if len(fr) < MIN_FRAMES:
+                drop["truncated_clip"] += 1
+                print(f"  DROP truncated: {k} ({len(fr)} frames, expected ~{int(20*DENSE_FPS)})")
+                continue
             pick = interleaved_draw(len(fr), N_DRAW, 1, 5)     # pass-1 grid: deterministic
             batch = torch.stack([pre(C.letterbox(Image.open(fr[i]).convert("RGB"))) for i in pick])
             with torch.no_grad():
@@ -365,11 +444,25 @@ def main():
             print(f"  featurised {n}/{len(rows)}", flush=True)
 
     mf.close()
+    # re-read the manifest so a resumed run consolidates everything, not just this session's rows
+    manifest = [json.loads(l) for l in open(mpath) if l.strip()]
+    manifest = assign_splits_globally(manifest, human, mpath, rng)
+    # Rebuild the human-secondary file from the FULL manifest, not this session's `secondary` list.
+    # Opening it "w" with only the current session's rows silently truncated away every human clip
+    # that had been featurised in an earlier run -- the same append-vs-global bug as the splits.
+    secondary = [{**r, "human_present": human[r["clip"]].get("present"),
+                  "human_ethogram": (merged(human[r["clip"]]["ethogram"])
+                                     if human[r["clip"]].get("ethogram") else None),
+                  "human_label": (ABSENT if human[r["clip"]].get("present") is False
+                                  else (merged(human[r["clip"]]["ethogram"])
+                                        if human[r["clip"]].get("ethogram") else None)),
+                  "human_assisted": human[r["clip"]].get("assisted"),
+                  "human_seconds": human[r["clip"]].get("seconds")}
+                 for r in manifest if r["clip"] in human]
     with open(out / "human_secondary.jsonl", "w") as fh:
         for r in secondary:
             fh.write(json.dumps(r) + "\n")
-    # re-read the manifest so a resumed run consolidates everything, not just this session's rows
-    manifest = [json.loads(l) for l in open(mpath) if l.strip()]
+    print(f"human_secondary rows: {len(secondary)}")
     feats = {}
     for r in manifest:
         fp = fdir / (r["clip"].replace("/", "__") + ".npy")
