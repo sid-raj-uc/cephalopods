@@ -1474,3 +1474,107 @@ backbone** and the wrong conclusion about whether time helps. Patched (24 tensor
 layers) after verifying the attention WEIGHTS load bitwise-identical, so only biases were affected.
 
 Status 2026-08-22: DINOv2 761/4,665 (0 failures), ~22 clips/min on MPS, ETA ~3 h; VideoMAE queued.
+
+## R31 — the representation WAS the constraint: three frozen backbones compared (2026-08-22)
+
+`src/extract_backbone_feats.py` + `src/train_ethogram.py --backbone`. Same clips, same frames (the
+manifest's recorded `frames_used`), same motion channels, same splits/seeds/rungs, `CW_POWER=0.5`.
+The refactor was regression-tested first: the CLIP path reproduces R28's 0.5298 exactly.
+
+| backbone | rung 1 | rung 2 | rung 3 |
+|---|---|---|---|
+| CLIP ViT-B/32 (512d) | 0.5096 ±0.030 | 0.5368 ±0.015 | 0.5298 ±0.007 |
+| DINOv2-base (768d) | 0.6006 ±0.004 | 0.5772 ±0.014 | 0.5781 ±0.001 |
+| VideoMAE-base (768d) | 0.5883 ±0.005 | 0.6057 ±0.011 | 0.6016 ±0.022 |
+
+Val-selected: CLIP rung3 → **0.5298**; DINOv2 rung2 → **0.5772 (+0.047)**; VideoMAE rung1 →
+**0.5883 (+0.059)**.
+
+**Robust to the selection rule** — the WORST rung of either new backbone beats the BEST rung of CLIP
+(DINOv2 0.577-0.601, VideoMAE 0.588-0.606 vs CLIP 0.510-0.537; no overlap). That is what the R27 rung
+ladder lacked, and it confirms R29's diagnosis with a fix rather than a diagnosis.
+
+**But the win is NOT clearly about time.** VideoMAE leads, yet DINOv2 -- an image model -- is within
+noise of it, and VideoMAE's best rung is 1, which pools over time and discards order. So the gain
+reads as "a better self-supervised representation", not "a video model sees motion". Weaker than the
+hypothesis, and it is the claim the data supports.
+
+## R32 — combining backbones: ensemble beats fusion (2026-08-22)
+
+`src/train_ethogram_fusion.py`.
+
+| approach | params | val | TEST macro-F1 |
+|---|---|---|---|
+| best single (DINOv2 rung2) | 598K | 0.5784 | 0.5772 |
+| FUSION (concat all 3 → one MLP, width 6150) | 1.59M | 0.5784 | 0.5960 ±0.028 |
+| ensemble, val-selected rungs, soft | 3×~600K | 0.5969 | 0.6177 |
+| **ensemble, ALL-MLP (rung 2), hard** | 3×598K | **0.6039** | **0.6172** |
+| ensemble, ALL-MLP, soft | 3×598K | 0.6025 | 0.6183 |
+
+Val-selected winner: the all-MLP ensemble. Val margin over the best single backbone **+0.0255 vs seed
+std 0.0081** — clears noise, unlike the head sweep.
+
+**Fusion lost**, as predicted: 6,150-wide input and 1.59M params against 133 training videos landed at
+val 0.5784, identical to the best single backbone, with the worst test variance. More capacity keeps
+losing on this data. **Homogeneous all-MLP members beat each backbone's individually-best rung**
+(0.6039 vs 0.5969 val) and are simpler to deploy. Members agree on only **60% of test clips** — that
+disagreement is why voting helps.
+
+**ACCURACY vs MACRO-F1, since the two are easily confused:** the ensemble is **71.4% accuracy**
+(528/740) at macro-F1 0.6183. Majority baseline is 43.1% accuracy / 0.1004 macro-F1. Accuracy is
+reported only alongside — a model predicting `No octopus` always scores 43% accuracy and 0.10 macro-F1,
+which is exactly the collapse macro-F1 exists to catch.
+
+Per class (soft vote): No octopus 0.88 · Exploration 0.67 · Locomotion 0.65 · Resting 0.58 ·
+Reaching 0.56 · Human interaction 0.37. `Resting` improved from 0.44 (R28) — the No-octopus↔Resting
+confusion that was 22% of all errors is genuinely better with stronger representations.
+
+## R33 — four things that did NOT help, measured (2026-08-22)
+
+Recorded because negative results are what stop the same ideas being retried.
+
+1. **Head capacity/architecture: ≈0.** `src/sweep_ethogram_head.py`, hidden {256,512,1024} ×
+   dropout {0.3,0.5}. VideoMAE: val gain +0.0017 vs seed std 0.0040. DINOv2: the frozen 256/0.4 head
+   IS the val-best. Test spread across the grid is 0.033 while val resolves 0.002 — val cannot
+   distinguish these configs, so any "winner" is luck. **More capacity actively hurts**: 1024 hidden is
+   the worst config on both backbones.
+2. **Upsampling ≈ loss weighting.** `BALANCE` ∈ {none, weight, upsample, both}. Upsample val 0.5775 vs
+   weight 0.5753 — margin +0.0023 vs seed std 0.0026, inside noise.
+3. **Less balancing keeps winning.** `BALANCE=none` gives the best TEST macro-F1 (0.6103), best
+   accuracy (70.4%) AND the best F1 on the weakest class (`Human` 0.44 vs 0.37 weighted) — balancing
+   hurt the class it was meant to protect. Consistent with the CW_POWER sweep (1.0→0.5→0 all improved
+   test). NOT adopted: val ranks `none` WORST (0.5648), so taking it would be test-set selection. Val
+   and test disagree systematically on this axis across three experiments — a limitation to report.
+4. **Feature-space augmentation is NEGATIVE.** mixup {0.2,0.4}, Gaussian noise {0.05,0.1}, and the
+   combination all lose, monotonically with strength, and val/test AGREE for once (baseline val 0.5753
+   / test 0.6057; mixup 0.4 → 0.5667/0.5896; noise 0.1 → 0.5450/0.5481). The model is not
+   overfitting-limited, so a regulariser only corrupts frozen features. mixup does lift the weakest
+   class slightly (0.37→0.39 as alpha rises) at everyone else's expense — the same recall-for-precision
+   trade class weighting made.
+
+**The pattern across R31-R33: everything that adds real information helps; everything that reshuffles
+existing information does not.** representation +0.087 › class-weight tempering +0.017 › head ≈ 0 ›
+upsampling ≈ 0 › augmentation negative.
+
+## R34 — has the ensemble closed the gap to its teacher? Half of it (2026-08-22)
+
+R29 re-run with the 3-backbone ensemble, same populations, same protocol.
+
+| | agreement | macro-F1 vs human |
+|---|---|---|
+| Teacher (5-pass 235B) | 72.5% | 0.6569 |
+| Student, single CLIP (R29) | 60.6% | 0.4917 |
+| **Student, 3-backbone ensemble** | **66.9%** | **0.5755** |
+
+On `human_secondary` (251 clips / 99 videos). Disagreement split improved from **49:19** in the
+teacher's favour to **36:22**. So the representation work closed roughly half the gap, and **headroom
+remains against labels already in hand** — we are not at the label ceiling, which is why more
+teacher-labelled clips is still not the first lever.
+
+Same anchoring confound as R29 (all human labels `assisted`, hint = the teacher's verdict), so
+teacher-vs-human is inflated and the true gap is smaller. `test`/`val` populations (30/25 clips) show
+the ensemble worse; macro-F1 over 6 classes at that n is dominated by classes with 1-3 examples and
+should not be acted on.
+
+**Next, running:** V-JEPA-2 (ViT-L, 326M, 1024d) as a fourth ensemble member — the cheapest test of
+the only lever that has worked.

@@ -52,29 +52,83 @@ CW_POWER = 0.5              # sqrt inverse-freq. SELECTED ON VAL (see R28): p=1.
 #                             sinks (Reaching precision 0.35). Sweep 1.0/0.5/0.25/0.0 -> val picks
 #                             0.5, test 0.5129 -> 0.5298. p=0.0 scores HIGHER on test (0.5581) but
 #                             val does not pick it, so claiming it would be test-set selection.
+N_MOTION = 2                # motion channels appended after the backbone dim
+# HEAD CAPACITY. Held at 256/0.4 through the whole backbone comparison so the only free variable was
+# the representation -- correct for that experiment, but it means the head was sized for CLIP's
+# 512-dim features and never re-tuned. Rung 1 on a 768-dim backbone feeds it 2304 inputs squeezed
+# into 256 units. Sweepable now that the backbone question is settled.
+# CLASS BALANCE MECHANISM. "weight" rescales the per-sample loss (what everything up to R30 used);
+# "upsample" replicates minority-class TRAINING ROWS instead, changing the distribution the model
+# sees rather than the gradient scale; "both" does each at half strength; "none" is the control.
+# These are NOT equivalent under dropout/early-stopping/minibatching even though they match in
+# expectation for a linear model -- upsampling shows the same clip more often per epoch, which with
+# only 24 videos in the weakest class risks memorising those videos rather than the behaviour.
+BALANCE = "weight"
+# AUGMENTATION, in FEATURE space. The backbone is frozen and its features are cached, so image-space
+# augmentation would mean re-extracting every view (~2h/pass/backbone) -- and since the head sweep
+# showed the head is not the bottleneck, that is a lot of compute for a regulariser. What is nearly
+# free:
+#   mixup  -- convex-combine two clips' features AND their soft targets. Native here rather than
+#             bolted on: the loss is already KL against a soft distribution, so an interpolated
+#             target is exactly the right supervision, and 29% of clips already carry a split vote.
+#   noise  -- Gaussian jitter on the features; a crude stand-in for view variation.
+#   tdrop  -- drop random timesteps before pooling (rungs 1-2) or zero them (rung 3), so the model
+#             cannot rely on one decisive frame. This is the only one that uses the time axis.
+MIXUP_ALPHA = 0.0           # 0 disables; 0.2-0.4 typical
+NOISE_STD = 0.0
+TDROP = 0.0                 # fraction of timesteps dropped per sample
+UPSAMPLE_CAP = 4.0          # never replicate a class more than this many times
+MLP_HIDDEN = 256
+MLP_DROPOUT = 0.4
+MLP_DEPTH = 1
 N_SEEDS = 3
 EPOCHS = 120
 PATIENCE = 20
 
 
 # ----------------------------------------------------------------------------- data
-def load(version):
+def load(version, backbone="clip"):
+    """Load features for one backbone. `clip` is the original [10, 514] build.
+
+    The feature dim and the sequence length both legitimately vary by backbone -- DINOv2-base is 768,
+    and video models emit one token per temporal position rather than per sampled frame. So neither is
+    hardcoded: D comes from feats_<backbone>/meta.json and T from the arrays. What IS asserted is that
+    every clip agrees on the shape, because a silent mix of two shapes would train on garbage.
+    """
     d = REPO / "src" / "dataset_etho" / version
     man = [json.loads(l) for l in open(d / "manifest.jsonl") if l.strip()]
     snap = json.load(open(d / "snapshot.json"))
     classes = snap["classes"]
-    npz = np.load(d / "features.npz") if (d / "features.npz").exists() else None
-    X, keep = {}, []
+    if backbone == "clip":
+        fdir, D = d / "feats", 512
+        npz = np.load(d / "features.npz") if (d / "features.npz").exists() else None
+    else:
+        fdir = d / f"feats_{backbone}"
+        meta = json.load(open(fdir / "meta.json")) if (fdir / "meta.json").exists() else {}
+        D = meta.get("feat_dim")
+        npz = None
+        if D is None:                      # meta not written yet (extraction still running)
+            any_arr = next(iter(sorted(fdir.glob("*.npy"))), None)
+            if any_arr is None:
+                sys.exit(f"no features in {fdir}")
+            D = int(np.load(any_arr).shape[-1]) - N_MOTION
+    X, keep, shapes = {}, [], collections.Counter()
     for r in man:
         k = r["clip"]
         arr = npz[k] if (npz is not None and k in npz) else None
         if arr is None:
-            fp = d / "feats" / (k.replace("/", "__") + ".npy")
+            fp = fdir / (k.replace("/", "__") + ".npy")
             arr = np.load(fp) if fp.exists() else None
-        if arr is not None and arr.shape == (10, 514) and np.isfinite(arr).all():
-            X[k] = arr.astype(np.float32); keep.append(r)
-    print(f"loaded {len(keep)}/{len(man)} clips with valid features | classes {len(classes)}")
-    return keep, X, classes
+        if arr is None or arr.ndim != 2 or arr.shape[-1] != D + N_MOTION or not np.isfinite(arr).all():
+            continue
+        shapes[arr.shape] += 1
+        X[k] = arr.astype(np.float32); keep.append(r)
+    if len(shapes) > 1:
+        sys.exit(f"inconsistent feature shapes in {fdir}: {dict(shapes)} -- refusing to train")
+    T = next(iter(shapes))[0] if shapes else 0
+    print(f"loaded {len(keep)}/{len(man)} clips | backbone={backbone} D={D} T={T} | "
+          f"classes {len(classes)}")
+    return keep, X, classes, D
 
 
 def split_rows(man, split):
@@ -82,10 +136,16 @@ def split_rows(man, split):
 
 
 # ----------------------------------------------------------------------------- rungs
-def featurise(rows, X, rung):
-    """-> (inputs, soft_targets, hard_labels, weights). Rungs 0-2 are vectors; rung3 is a sequence."""
-    seq = np.stack([X[r["clip"]] for r in rows])            # [N, 10, 514]
-    clip, mot = seq[:, :, :512], seq[:, :, 512:]
+def featurise(rows, X, rung, D=512):
+    """-> (inputs, soft_targets, hard_labels, weights). Rungs 0-2 are vectors; rung3 is a sequence.
+
+    D is the backbone dim, so the same rung definitions apply unchanged to CLIP (512), DINOv2 (768)
+    or a video backbone. Rungs 0-2 pool over time and rung 3 is a GRU, so all of them are also
+    agnostic to the sequence length -- which is what keeps the backbone comparison architecturally
+    identical rather than merely similar.
+    """
+    seq = np.stack([X[r["clip"]] for r in rows])            # [N, T, D + N_MOTION]
+    clip, mot = seq[:, :, :D], seq[:, :, D:]
     if rung == 0:
         f = clip.mean(1)                                     # the old failure: pooling destroys time
     elif rung == 1:
@@ -102,10 +162,16 @@ def featurise(rows, X, rung):
 
 
 class MLP(nn.Module):
-    def __init__(self, d_in, n_cls, hidden=256, p=0.4):
+    def __init__(self, d_in, n_cls, hidden=None, p=None, depth=None):
         super().__init__()
-        self.net = nn.Sequential(nn.LayerNorm(d_in), nn.Linear(d_in, hidden), nn.GELU(),
-                                 nn.Dropout(p), nn.Linear(hidden, n_cls))
+        hidden = MLP_HIDDEN if hidden is None else hidden
+        p = MLP_DROPOUT if p is None else p
+        depth = MLP_DEPTH if depth is None else depth
+        layers = [nn.LayerNorm(d_in), nn.Linear(d_in, hidden), nn.GELU(), nn.Dropout(p)]
+        for _ in range(max(0, depth - 1)):
+            layers += [nn.Linear(hidden, hidden), nn.GELU(), nn.Dropout(p)]
+        layers.append(nn.Linear(hidden, n_cls))
+        self.net = nn.Sequential(*layers)
 
     def forward(self, x):
         return self.net(x)
@@ -142,7 +208,7 @@ def build_model(rung, d_in, n_cls):
         return Linear(d_in, n_cls)
     if rung in (1, 2):
         return MLP(d_in, n_cls)
-    return SeqModel(n_cls)
+    return SeqModel(n_cls, d_in=d_in)   # d_in varies by backbone; never assume 514
 
 
 # ----------------------------------------------------------------------------- metrics
@@ -159,13 +225,13 @@ def macro_f1(pred, true, n_cls):
     return float(np.mean(f1s)), per
 
 
-def run_one(rung, man, X, classes, seed, extra_rows=None):
+def run_one(rung, man, X, classes, seed, extra_rows=None, D=512):
     torch.manual_seed(seed); np.random.seed(seed)
     n_cls = len(classes)
     tr, va, te = (split_rows(man, s) for s in ("train", "val", "test"))
-    Xtr, Ytr, Htr, Wtr = featurise(tr, X, rung)
-    Xva, Yva, Hva, _ = featurise(va, X, rung)
-    Xte, Yte, Hte, _ = featurise(te, X, rung)
+    Xtr, Ytr, Htr, Wtr = featurise(tr, X, rung, D)
+    Xva, Yva, Hva, _ = featurise(va, X, rung, D)
+    Xte, Yte, Hte, _ = featurise(te, X, rung, D)
     # CLASS WEIGHTS, tempered by CW_POWER. p=1 is full inverse-frequency, which is what v1 used and
     # which measurably OVERSHOOTS: train counts run 1419 (No octopus) to 141 (Human), so p=1 hands the
     # rare classes 6-10x the weight and they become SINKS -- `Reaching out of water` reached recall
@@ -174,9 +240,28 @@ def run_one(rung, man, X, classes, seed, extra_rows=None):
     # rare class does not even buy the metric it was meant to protect. p=0.5 (sqrt) is the usual
     # middle ground; p=0 is no weighting at all.
     cnt = collections.Counter(Htr.tolist())
-    cw = np.array([(1.0 / max(1, cnt.get(c, 0))) ** CW_POWER for c in range(n_cls)], np.float32)
+    p_eff = CW_POWER if BALANCE in ("weight", "both") else 0.0
+    if BALANCE == "both":
+        p_eff = CW_POWER / 2
+    cw = np.array([(1.0 / max(1, cnt.get(c, 0))) ** p_eff for c in range(n_cls)], np.float32)
     cw = cw / cw.sum() * n_cls
     sample_w = Wtr * cw[Htr]
+    if BALANCE in ("upsample", "both"):
+        # Replicate minority rows toward the majority count, capped. Applied AFTER the weights so the
+        # two mechanisms compose rather than silently double-count.
+        target = max(cnt.values())
+        pw = CW_POWER if BALANCE == "upsample" else CW_POWER / 2
+        idx = []
+        for c in range(n_cls):
+            rows_c = np.flatnonzero(Htr == c)
+            if not len(rows_c):
+                continue
+            reps = min(UPSAMPLE_CAP, (target / len(rows_c)) ** pw)
+            n_take = int(round(len(rows_c) * reps))
+            extra = np.random.RandomState(seed).choice(rows_c, max(0, n_take - len(rows_c)), replace=True)
+            idx.append(np.concatenate([rows_c, extra]))
+        idx = np.concatenate(idx)
+        Xtr, Ytr, Htr, sample_w = Xtr[idx], Ytr[idx], Htr[idx], sample_w[idx]
 
     model = build_model(rung, Xtr.shape[-1], n_cls)
     opt = torch.optim.AdamW(model.parameters(), lr=2e-3, weight_decay=1e-2)
@@ -188,9 +273,25 @@ def run_one(rung, man, X, classes, seed, extra_rows=None):
         perm = torch.randperm(len(xtr))
         for i in range(0, len(xtr), 64):
             b = perm[i:i + 64]
-            logp = torch.log_softmax(model(xtr[b]), -1)
+            xb, yb, wb = xtr[b], ytr[b], wtr[b]
+            if TDROP > 0 and xb.dim() == 3:
+                # keep at least 2 timesteps; zero rather than remove so the batch stays square
+                m = (torch.rand(xb.shape[0], xb.shape[1], 1) >= TDROP).float()
+                m = torch.where(m.sum(1, keepdim=True) >= 2, m, torch.ones_like(m))
+                xb = xb * m
+            if NOISE_STD > 0:
+                xb = xb + torch.randn_like(xb) * NOISE_STD
+            if MIXUP_ALPHA > 0:
+                lam = float(np.random.beta(MIXUP_ALPHA, MIXUP_ALPHA))
+                j = torch.randperm(xb.shape[0])
+                # mix the SOFT targets too: the loss is already KL against a distribution, so an
+                # interpolated target is the correct supervision rather than an approximation
+                xb = lam * xb + (1 - lam) * xb[j]
+                yb = lam * yb + (1 - lam) * yb[j]
+                wb = lam * wb + (1 - lam) * wb[j]
+            logp = torch.log_softmax(model(xb), -1)
             # KL(target || pred), per-sample, then weighted -- soft targets carry the vote spread
-            loss = ((ytr[b] * (torch.log(ytr[b].clamp_min(1e-8)) - logp)).sum(-1) * wtr[b]).mean()
+            loss = ((yb * (torch.log(yb.clamp_min(1e-8)) - logp)).sum(-1) * wb).mean()
             opt.zero_grad(); loss.backward(); opt.step()
         model.eval()
         with torch.no_grad():
@@ -214,7 +315,7 @@ def run_one(rung, man, X, classes, seed, extra_rows=None):
     # Softmax rather than argmax so a caller can average over seeds before deciding -- averaging
     # argmaxes would let one seed's confident error outvote two seeds' correct uncertainty.
     if extra_rows:
-        Xex, *_ = featurise(extra_rows, X, rung)
+        Xex, *_ = featurise(extra_rows, X, rung, D)
         with torch.no_grad():
             out["extra_probs"] = torch.softmax(model(t(Xex)), -1).numpy().tolist()
         out["extra_clips"] = [r["clip"] for r in extra_rows]
@@ -225,9 +326,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--version", default="v1")
     ap.add_argument("--rungs", nargs="*", type=int, default=[0, 1, 2, 3])
+    ap.add_argument("--backbone", default="clip",
+                    help="clip | dinov2 | videomae -- reads src/dataset_etho/<v>/feats_<backbone>/")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
-    man, X, classes = load(a.version)
+    man, X, classes, D = load(a.version, a.backbone)
     n_cls = len(classes)
     te = split_rows(man, "test")
     if not te:
@@ -248,7 +351,7 @@ def main():
                "n_test_clips": len(te), "n_test_videos": len({r["video"] for r in te}),
                "test_class_counts": dict(te_cnt), "rungs": {}}
     for rung in a.rungs:
-        runs = [run_one(rung, man, X, classes, s) for s in range(N_SEEDS)]
+        runs = [run_one(rung, man, X, classes, s, D=D) for s in range(N_SEEDS)]
         tf = np.array([r["test_f1"] for r in runs]); vf = np.array([r["val_f1"] for r in runs])
         print(f"\n--- rung {rung} ---  params {runs[0]['n_params']:,}")
         print(f"  val  macro-F1 {vf.mean():.4f} +/- {vf.std():.4f}")

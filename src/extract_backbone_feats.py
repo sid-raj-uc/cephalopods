@@ -36,7 +36,7 @@ Usage:
   venv/bin/python3 src/extract_backbone_feats.py --backbone dinov2
   venv/bin/python3 src/extract_backbone_feats.py --backbone videomae --limit 50
 """
-import argparse, json, os, sys, tempfile
+import argparse, json, os, queue, shutil, sys, tempfile, threading, time
 from pathlib import Path
 
 import numpy as np
@@ -170,76 +170,164 @@ def feats_video(paths, proc, model, dev, n_frames):
     return h.mean(0, keepdim=True).float().cpu().numpy()
 
 
+def prefetch(rows, q, stop):
+    """Producer: ffmpeg-decode clips into temp dirs and queue them for the model thread.
+
+    PROFILED FIRST, then optimised. Per clip: ffmpeg 1.35s (61%), model 0.68s (31%), motion 0.17s
+    (8%). The obvious fix -- extract only the 10 needed frames instead of the dense 50 -- gives just
+    1.1x, because the cost is DECODING the clip, not writing JPEGs; the fps filter walks the whole
+    video either way. (Verified separately that a select-filter extraction is byte-identical to the
+    dense one, so that route was correct, just not worth much.)
+
+    What actually helps: decode is CPU-bound and the model runs on MPS, so they should overlap. A
+    small thread pool of ffmpeg subprocesses keeps the GPU fed while cores decode. Subprocesses hold
+    no GIL, so threads are enough. The queue is BOUNDED -- an unbounded one would let the producers
+    run ahead and fill the disk with tens of thousands of JPEGs.
+    """
+    for r in rows:
+        if stop.is_set():
+            break
+        src = resolve(r["clip"])
+        if src is None:
+            q.put((r, None, None)); continue
+        td = tempfile.mkdtemp(prefix="bbf_")
+        try:
+            fr = extract_frames_at(src, td, DENSE_FPS)
+            q.put((r, fr, td)) if fr else (shutil.rmtree(td, ignore_errors=True), q.put((r, None, None)))
+        except Exception:
+            shutil.rmtree(td, ignore_errors=True)
+            q.put((r, None, None))
+    q.put(None)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--backbone", required=True, choices=sorted(BACKBONES))
+    ap.add_argument("--backbone", required=True,
+                    help="one name, or a comma-separated list to run in ONE pass over the frames")
     ap.add_argument("--version", default="v1")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--workers", type=int, default=3, help="parallel ffmpeg decoders")
+    ap.add_argument("--no-reuse-motion", action="store_true",
+                    help="recompute the motion channels instead of copying them from the CLIP build")
     a = ap.parse_args()
+    names = [n.strip() for n in a.backbone.split(",") if n.strip()]
+    for n in names:
+        if n not in BACKBONES:
+            sys.exit(f"unknown backbone {n!r}; choose from {sorted(BACKBONES)}")
 
     d = REPO / "src" / "dataset_etho" / a.version
     man = [json.loads(l) for l in open(d / "manifest.jsonl") if l.strip()]
     if a.limit:
         man = man[:a.limit]
-    out = d / f"feats_{a.backbone}"
-    out.mkdir(parents=True, exist_ok=True)
     dev = device()
-    proc, model, kind, nfr = load_backbone(a.backbone, dev)
-    npar = sum(p.numel() for p in model.parameters())
-    print(f"{a.backbone} ({BACKBONES[a.backbone][0]}) {kind} | {npar/1e6:.0f}M params | device {dev}")
+    # Every requested backbone shares ONE decode of each clip. Decoding is 61% of the per-clip cost,
+    # so running two backbones in separate passes pays it twice for nothing.
+    B = {}
+    for nm in names:
+        proc, model, kind, nfr = load_backbone(nm, dev)
+        o = d / f"feats_{nm}"; o.mkdir(parents=True, exist_ok=True)
+        B[nm] = {"proc": proc, "model": model, "kind": kind, "nfr": nfr, "out": o,
+                 "params": sum(p.numel() for p in model.parameters()),
+                 "done": {p.stem for p in o.glob("*.npy")}, "D": None, "ok": 0, "fail": 0}
+        print(f"{nm} ({BACKBONES[nm][0]}) {kind} | {B[nm]['params']/1e6:.0f}M params | "
+              f"already done {len(B[nm]['done'])}")
 
-    done = {p.stem for p in out.glob("*.npy")}
-    print(f"clips: {len(man)}   already done: {len(done)}")
-    D = None
-    ok = fail = 0
-    for n, r in enumerate(man, 1):
-        k = r["clip"]
-        stem = k.replace("/", "__")
-        fp = out / (stem + ".npy")
-        if stem in done:
-            if D is None:
-                D = int(np.load(fp).shape[-1]) - 2
-            continue
-        src = resolve(k)
-        if src is None:
-            fail += 1; continue
-        try:
-            with tempfile.TemporaryDirectory() as td:
-                fr = extract_frames_at(src, td, DENSE_FPS)
+    # Motion channels are IDENTICAL by construction to the CLIP build's, so copy them from
+    # feats/*.npy columns -2: instead of re-running cv2 over the frames. Not an approximation --
+    # the same numbers, and it also removes the last reason to touch every dense frame.
+    clip_feats = d / "feats"
+    reuse = not a.no_reuse_motion and clip_feats.exists()
+
+    todo = [r for r in man if any(r["clip"].replace("/", "__") not in B[nm]["done"] for nm in names)]
+    print(f"clips: {len(man)}   needing work: {len(todo)}   decoders: {a.workers}   "
+          f"motion: {'copied from the CLIP build' if reuse else 'recomputed'}")
+    if not todo:
+        print("nothing to do"); return
+
+    q, stop = queue.Queue(maxsize=a.workers * 2), threading.Event()
+    chunks = [todo[i::a.workers] for i in range(a.workers)]
+    threads = [threading.Thread(target=prefetch, args=(c, q, stop), daemon=True) for c in chunks]
+    for t in threads:
+        t.start()
+
+    t0, seen, live = time.time(), 0, len(threads)
+    try:
+        while live:
+            item = q.get()
+            if item is None:
+                live -= 1; continue
+            r, fr, td = item
+            seen += 1
+            try:
                 if not fr:
-                    fail += 1; continue
+                    for nm in names:
+                        B[nm]["fail"] += 1
+                    continue
                 pick = [i for i in (r.get("frames_used") or []) if i < len(fr)]
                 if not pick:
-                    fail += 1; continue
-                if kind == "image":
-                    emb = feats_image([fr[i] for i in pick], proc, model, dev)
-                    mot = motion_features(fr, pick)                       # identical to the CLIP build
-                else:
-                    emb = feats_video(fr, proc, model, dev, nfr)
-                    # motion at the same count as the emitted temporal positions
-                    tp = np.linspace(0, len(pick) - 1, emb.shape[0]).round().astype(int)
-                    m10 = motion_features(fr, pick)
-                    mot = m10[tp]
-                arr = np.concatenate([emb, mot], axis=1).astype(np.float32)
-                np.save(fp, arr)
-                D = arr.shape[-1] - 2
-                ok += 1
-        except Exception as e:
-            fail += 1
-            if fail <= 3:
-                print(f"  FAIL {k}: {type(e).__name__}: {e}")
-        if n % 250 == 0:
-            print(f"  {n}/{len(man)}  ok={ok} fail={fail}", flush=True)
+                    for nm in names:
+                        B[nm]["fail"] += 1
+                    continue
+                mot10 = None
+                if reuse:
+                    cf = clip_feats / (r["clip"].replace("/", "__") + ".npy")
+                    if cf.exists():
+                        mot10 = np.load(cf)[:, -2:]
+                if mot10 is None or len(mot10) != len(pick):
+                    mot10 = motion_features(fr, pick)
+                for nm in names:
+                    b = B[nm]
+                    stem = r["clip"].replace("/", "__")
+                    if stem in b["done"]:
+                        continue
+                    try:
+                        if b["kind"] == "image":
+                            emb = feats_image([fr[i] for i in pick], b["proc"], b["model"], dev)
+                            mot = mot10
+                        else:
+                            emb = feats_video(fr, b["proc"], b["model"], dev, b["nfr"])
+                            tp = np.linspace(0, len(mot10) - 1, emb.shape[0]).round().astype(int)
+                            mot = mot10[tp]
+                        arr = np.concatenate([emb, mot], axis=1).astype(np.float32)
+                        np.save(b["out"] / (stem + ".npy"), arr)
+                        b["D"] = arr.shape[-1] - 2; b["ok"] += 1
+                    except Exception as e:
+                        b["fail"] += 1
+                        if b["fail"] <= 3:
+                            print(f"  FAIL[{nm}] {r['clip']}: {type(e).__name__}: {e}")
+            finally:
+                if td:
+                    shutil.rmtree(td, ignore_errors=True)
+            if seen % 250 == 0:
+                rate = seen / max(time.time() - t0, 1e-9) * 60
+                eta = (len(todo) - seen) / max(rate, 1e-9)
+                print(f"  {seen}/{len(todo)}  {rate:.0f} clips/min  eta {eta:.0f} min  "
+                      + " ".join(f"{nm}:ok={B[nm]['ok']},fail={B[nm]['fail']}" for nm in names),
+                      flush=True)
+    except KeyboardInterrupt:
+        stop.set(); print("\ninterrupted -- resumable, rerun to continue")
 
-    if D is None:
-        sys.exit(f"no features produced ({fail} failures) -- fix the backbone path before writing meta")
-    meta = {"backbone": a.backbone, "model_id": BACKBONES[a.backbone][0], "kind": kind,
-            "feat_dim": D, "n_motion": 2, "params_millions": round(npar / 1e6, 1),
-            "n_clips": len(list(out.glob("*.npy"))), "n_failed": fail,
+    for nm in names:
+        b = B[nm]
+        if b["D"] is None:
+            existing = sorted(b["out"].glob("*.npy"))
+            if existing:
+                b["D"] = int(np.load(existing[0]).shape[-1]) - 2
+        if b["D"] is None:
+            print(f"  {nm}: no features produced ({b['fail']} failures) -- meta not written")
+            continue
+        D = b["D"]
+        (b["out"] / "meta.json").write_text(json.dumps({
+            "backbone": nm, "model_id": BACKBONES[nm][0], "kind": b["kind"], "feat_dim": D,
+            "n_motion": 2, "params_millions": round(b["params"] / 1e6, 1),
+            "n_clips": len(list(b["out"].glob("*.npy"))), "n_failed": b["fail"],
             "layout": f"0:{D} backbone | {D} motion_inst | {D+1} motion_disp",
-            "frames": "same dense extraction + same frames_used indices as the CLIP build"}
-    (out / "meta.json").write_text(json.dumps(meta, indent=1))
-    print(f"\nwrote {out}  dim={D}  arrays={meta['n_clips']}  failed={fail}")
+            "frames": "same dense extraction + same frames_used indices as the CLIP build",
+            "motion": "copied from the CLIP build" if reuse else "recomputed"}, indent=1))
+        print(f"wrote {b['out']}  dim={D}  arrays={len(list(b['out'].glob('*.npy')))}  "
+              f"failed={b['fail']}")
+    print(f"\ntotal {seen} clips in {(time.time()-t0)/60:.1f} min "
+          f"({seen/max(time.time()-t0,1e-9)*60:.0f} clips/min)")
 
 
 if __name__ == "__main__":

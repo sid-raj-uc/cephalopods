@@ -1,0 +1,78 @@
+{
+ "version": "v1",
+ "cw_power": 0.5,
+ "n_clips": 4665,
+ "arms": {
+  "fusion": {
+   "val": 0.5783990588603221,
+   "val_std": 0.008076323553860947,
+   "test": 0.5959723300677933,
+   "test_std": 0.027693855603318638,
+   "n_params": 1588498,
+   "width": 6150
+  },
+  "ensemble_selected": {
+   "per_backbone": {
+    "clip": {
+     "rung": 3,
+     "val": 0.5555,
+     "test": 0.5298
+    },
+    "dinov2": {
+     "rung": 2,
+     "val": 0.5784,
+     "test": 0.5772
+    },
+    "videomae": {
+     "rung": 1,
+     "val": 0.5755,
+     "test": 0.5883
+    }
+   },
+   "soft": {
+    "val": 0.5969,
+    "test": 0.6177
+   },
+   "hard": {
+    "val": 0.5938,
+    "test": 0.607
+   },
+   "unanimous_frac": 0.5838,
+   "n_params": 0
+  },
+  "ensemble_mlp": {
+   "per_backbone": {
+    "clip": {
+     "rung": 2,
+     "val": 0.5527,
+     "test": 0.5368
+    },
+    "dinov2": {
+     "rung": 2,
+     "val": 0.5784,
+     "test": 0.5772
+    },
+    "videomae": {
+     "rung": 2,
+     "val": 0.5753,
+     "test": 0.6057
+    }
+   },
+   "soft": {
+    "val": 0.6025,
+    "test": 0.6183
+   },
+   "hard": {
+    "val": 0.6039,
+    "test": 0.6172
+   },
+   "unanimous_frac": 0.5986,
+   "n_params": 0
+  }
+ },
+ "best_single": {
+  "rung": 2,
+  "val": 0.5784,
+  "test": 0.5772
+ }
+}

@@ -1,0 +1,98 @@
+{
+ "backbone": "videomae",
+ "rung": 1,
+ "cw_power": 0.5,
+ "grid": {
+  "hidden": [
+   256,
+   512,
+   1024
+  ],
+  "dropout": [
+   0.3,
+   0.5
+  ],
+  "depth": [
+   1
+  ]
+ },
+ "rows": [
+  {
+   "hidden": 256,
+   "dropout": 0.4,
+   "depth": 1,
+   "params": 596230,
+   "val": 0.5754937912298036,
+   "val_std": 0.007921945667526725,
+   "test": 0.5883364734630964,
+   "test_std": 0.005173248703899922,
+   "is_frozen_head": true
+  },
+  {
+   "hidden": 256,
+   "dropout": 0.3,
+   "depth": 1,
+   "params": 596230,
+   "val": 0.5747868460954932,
+   "val_std": 0.004631880707162213,
+   "test": 0.593737520738761,
+   "test_std": 0.00830338513548376,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 256,
+   "dropout": 0.5,
+   "depth": 1,
+   "params": 596230,
+   "val": 0.5772066591118991,
+   "val_std": 0.0040114682332165,
+   "test": 0.6007318978318826,
+   "test_std": 0.018771966123032897,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 512,
+   "dropout": 0.3,
+   "depth": 1,
+   "params": 1187846,
+   "val": 0.5704142028693965,
+   "val_std": 0.006016430016842071,
+   "test": 0.5964077234950521,
+   "test_std": 0.006206311498448002,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 512,
+   "dropout": 0.5,
+   "depth": 1,
+   "params": 1187846,
+   "val": 0.5530793576934508,
+   "val_std": 0.0034607893396165234,
+   "test": 0.5980226895705726,
+   "test_std": 0.019693023588332203,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 1024,
+   "dropout": 0.3,
+   "depth": 1,
+   "params": 2371078,
+   "val": 0.5713529783390424,
+   "val_std": 0.004880489627930341,
+   "test": 0.5882146420879797,
+   "test_std": 0.015791097035416545,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 1024,
+   "dropout": 0.5,
+   "depth": 1,
+   "params": 2371078,
+   "val": 0.5703155861127485,
+   "val_std": 0.02048714070760098,
+   "test": 0.5675850755611321,
+   "test_std": 0.019307471568747944,
+   "is_frozen_head": false
+  }
+ ]
+}

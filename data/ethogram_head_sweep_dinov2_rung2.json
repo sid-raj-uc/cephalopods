@@ -1,0 +1,98 @@
+{
+ "backbone": "dinov2",
+ "rung": 2,
+ "cw_power": 0.5,
+ "grid": {
+  "hidden": [
+   256,
+   512,
+   1024
+  ],
+  "dropout": [
+   0.3,
+   0.5
+  ],
+  "depth": [
+   1
+  ]
+ },
+ "rows": [
+  {
+   "hidden": 256,
+   "dropout": 0.4,
+   "depth": 1,
+   "params": 597778,
+   "val": 0.5784052053516557,
+   "val_std": 0.0006406510249844755,
+   "test": 0.5772009477892155,
+   "test_std": 0.013566452250849662,
+   "is_frozen_head": true
+  },
+  {
+   "hidden": 256,
+   "dropout": 0.3,
+   "depth": 1,
+   "params": 597778,
+   "val": 0.5581125792251499,
+   "val_std": 0.0028914401090955207,
+   "test": 0.5859908201862771,
+   "test_std": 0.015701960072828456,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 256,
+   "dropout": 0.5,
+   "depth": 1,
+   "params": 597778,
+   "val": 0.5722270357238363,
+   "val_std": 0.0034488547299564142,
+   "test": 0.5694091780503564,
+   "test_std": 0.027486228257511576,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 512,
+   "dropout": 0.3,
+   "depth": 1,
+   "params": 1190930,
+   "val": 0.574770702623978,
+   "val_std": 0.008693354070103547,
+   "test": 0.5867829441428647,
+   "test_std": 0.00765266342761796,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 512,
+   "dropout": 0.5,
+   "depth": 1,
+   "params": 1190930,
+   "val": 0.5629449489092221,
+   "val_std": 0.005837858506747317,
+   "test": 0.5941887651090237,
+   "test_std": 0.011842095171573919,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 1024,
+   "dropout": 0.3,
+   "depth": 1,
+   "params": 2377234,
+   "val": 0.5745476619965184,
+   "val_std": 0.009753020412694368,
+   "test": 0.5750145569101689,
+   "test_std": 0.013878547159996289,
+   "is_frozen_head": false
+  },
+  {
+   "hidden": 1024,
+   "dropout": 0.5,
+   "depth": 1,
+   "params": 2377234,
+   "val": 0.5695943885498433,
+   "val_std": 0.00148455140857112,
+   "test": 0.5616995411716209,
+   "test_std": 0.009574336586262763,
+   "is_frozen_head": false
+  }
+ ]
+}

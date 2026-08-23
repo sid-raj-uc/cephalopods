@@ -86,10 +86,11 @@ def main():
     ap.add_argument("--version", default="v1")
     ap.add_argument("--rung", type=int, default=3)
     ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--backbone", default="clip")
     ap.add_argument("--out", default=str(REPO / "data" / "ethogram_human_eval.json"))
     a = ap.parse_args()
 
-    man, X, classes = T.load(a.version)
+    man, X, classes, D = T.load(a.version, a.backbone)
     cidx = {c: i for i, c in enumerate(classes)}
     hum = human_labels(set(classes))
     by_clip = {r["clip"]: r for r in man}
@@ -113,7 +114,7 @@ def main():
     extra = [r for _, _, r in sum(pops.values(), [])]
     acc_p, clips_order = None, None
     for s in range(a.seeds):
-        out = T.run_one(a.rung, man, X, classes, seed=s, extra_rows=extra)
+        out = T.run_one(a.rung, man, X, classes, seed=s, extra_rows=extra, D=D)
         p = np.asarray(out["extra_probs"], np.float32)
         acc_p = p if acc_p is None else acc_p + p
         clips_order = out["extra_clips"]
