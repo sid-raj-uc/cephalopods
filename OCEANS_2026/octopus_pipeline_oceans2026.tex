@@ -254,7 +254,7 @@ helps.
 \textbf{Segmentation.} A $3.2$\,M-parameter LR-ASPP student distilled from
 Grounding DINO$+$SAM2 reaches IoU $0.642$ mean / $0.719$ median against $122$
 human-drawn masks on five videos held out of all training, with mean area error
-${\approx}1\%$. It does not meet the $0.85$ IoU we set out to reach; we report it
+${\approx}1\%$ (Fig.~\ref{fig:seg}). It does not meet the $0.85$ IoU we set out to reach; we report it
 because the shortfall is informative. Everything downstream---presence, body
 area as a posture proxy, motion inside the mask---is area-based, and area is
 accurate to $1\%$ while boundary quality is what IoU penalises. Two levers
@@ -360,9 +360,10 @@ favour them.
 \section{What the Pipeline Reveals}
 \label{sec:findings}
 Running the pipeline over the corpus yields a behavioural record, which is the
-reason to build it. Across $3{,}083$ clips with a visible animal, the activity
-budget is $41\%$ exploration/manipulation, $33\%$ resting, $14\%$
-human/enrichment interaction, $9\%$ reaching out of water and $3\%$ locomotion.
+reason to build it (Fig.~\ref{fig:findings}). Across $3{,}083$ clips with a
+visible animal, the activity budget is $41\%$ exploration/manipulation, $33\%$
+resting, $14\%$ human/enrichment interaction, $9\%$ reaching out of water and
+$3\%$ locomotion.
 
 \begin{figure}[t]\centering
   \includegraphics[width=0.48\textwidth]{assets/behaviour_findings.pdf}
@@ -419,9 +420,9 @@ The mask student also supports a finer representation than a class label. We
 skeletonise the silhouette into an anatomical graph---mantle, head and eight
 arms---by thinning and shortest-path tracing, tracking it across frames with an
 optical-flow prior and marking every node \emph{detected}, \emph{fitted} or
-\emph{occluded} so that kinematics use only evidence-backed samples. On $50$
-human-annotated frames the arm-tip F1 is $0.539$ (precision $0.72$) at $3.68$
-arms recovered per frame; seeding propagation from the best-resolved frame rather
+\emph{occluded} so that kinematics use only evidence-backed samples
+(Fig.~\ref{fig:skel}). On $50$ human-annotated frames the arm-tip F1 is $0.539$
+(precision $0.72$) at $3.68$ arms recovered per frame; seeding propagation from the best-resolved frame rather
 than the first was worth $+3.67$ arms. Speeds are in pixels per second in crop
 space, uncalibrated, and arm counts are silhouette-limited.
 
