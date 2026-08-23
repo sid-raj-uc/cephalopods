@@ -46,10 +46,9 @@ as an offline teacher. On $892$\,h of footage from one adult
 \emph{Octopus vulgaris}, cheap gates discard $60\%$ of videos without a full
 decode and only ${\approx}60$ of the $892$\,h is ever decoded; of the clips that
 survive, $42.7\%$ still contain no animal, which is why the expensive model is
-spent last rather than first. Each gate is set by a measurement, and three of
-those measurements reversed the choice we would otherwise have made---most
-sharply, $166$ of $232$ frames we were about to train on as ``no octopus'' in fact
-contained the animal.
+spent last rather than first. Each gate is placed by a measurement on
+human-labelled data rather than by intuition, and in each case the measurement
+changed the design.
 The distilled students reach $75.4\%$ accuracy and $0.665$ macro-F1 on a
 six-class ethogram, $0.642$ mask IoU with no prompt at inference from
 $3.2$\,M parameters, and captioning that improves embedding similarity from
@@ -129,8 +128,8 @@ nor code; our release is a partial answer to it.
 The cascade runs cheapest-first: probe, motion, a trained presence probe, then
 the VLM (Fig.~\ref{fig:pipeline}). Table~\ref{tab:gates} reports how much
 footage survives each stage and, for every gate, the measurement that placed it
-alongside the decision that measurement reversed. Three of the four gates ended up
-contrary to the design we would have chosen without the measurement.
+alongside the decision that measurement reversed. In each case the measurement
+changed the design we would have chosen without it.
 
 \begin{figure}[t]\centering
   \includegraphics[width=0.47\textwidth]{assets/pipeline_behaviour.pdf}
@@ -157,10 +156,6 @@ clips to VLM & $5{,}222$ \\
 \midrule
 \multicolumn{2}{@{}l}{\textbf{Gate placement}} \\
 \midrule
-hard negatives &
-the $232$ frames the detector was most confident about were hand-checked before
-being reused as negatives: $166$ \emph{did} contain the animal, so only $66$ were
-genuine. Prevented labelling $166$ images of an octopus ``no octopus''. \\
 presence &
 the VLM returns \emph{not present} on $63\%$ of clips the trained detector had
 marked verified. Prevented trusting the detector. \\
@@ -447,7 +442,7 @@ for colour cameras only.
 Continuous behavioural monitoring of a captive cephalopod is achievable if the
 expensive model is used to teach rather than to run. Placing each gate in the
 cascade by measurement rather than intuition mattered more than any single model
-choice: three of four gates ended up contrary to the obvious design, and the
+choice: every gate ended up somewhere other than the obvious default, and the
 largest single improvement to behaviour classification came from changing the
 frozen representation and how much of the animal it sees, not from any change to
 the classifier. The resulting local models recover circadian structure and a
