@@ -74,8 +74,9 @@ $892$\,h of colour-camera footage we hold for a single animal is
 ${\approx}160{,}000$ twenty-second clips; at the throughput we measured against
 a hosted $235$B model ($13$--$36$ clips/min sustained), a five-pass labelling
 run is $372$--$1{,}030$\,h of wall-clock, and it requires an API the aquarium
-does not have. The server holds roughly three times more footage again, for four
-further animals.
+does not have. That figure is for \emph{one} animal: the same archive holds
+recordings of four others, about three times as much footage again, so the cost
+scales with every animal a facility monitors.
 
 The waste is also structural, not merely large. Cephalopods spend most of their
 time hidden or motionless: after the extraction gates described below,
@@ -89,7 +90,8 @@ architecture---teacher--student distillation is standard---but that every gate i
 it is placed by a measurement on human-labelled data, and that several of those
 measurements contradicted the intuitive choice. We then show the pipeline
 produces behavioural findings, which is the point of building it, and release the
-labels and benchmarks so the measurements can be checked.
+labels, captions and benchmarks as a resource for future work on octopus
+behaviour---a field with no public annotated corpus to build on.
 
 \section{Related Work}
 Our own prior work established the recording setup and the framing of
