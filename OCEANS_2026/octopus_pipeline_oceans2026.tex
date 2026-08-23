@@ -127,8 +127,17 @@ nor code; our release is a partial answer to it.
 
 \section{Pipeline and the Measurements That Set It}
 \label{sec:pipeline}
-The cascade runs cheapest-first: probe, motion, a trained presence probe, then
-the VLM (Fig.~\ref{fig:pipeline}). Table~\ref{tab:gates} reports how much
+The pipeline has two halves (Fig.~\ref{fig:pipeline}). A \emph{selection}
+cascade decides what is worth looking at closely, running cheapest-first: a
+frame-level probe over sparsely seeked frames, an absolute-motion gate, a trained
+presence probe over the surviving windows, and only then the teacher VLM. An
+\emph{extraction} stage then runs the distilled students over what survives---a
+six-class ethogram label, a one-sentence caption, and a pixel mask
+(Sec.~\ref{sec:models})---and the mask in turn supports an anatomical
+mantle--head--arm graph and per-arm kinematics (Sec.~\ref{sec:skel}). The
+behavioural time series in Sec.~\ref{sec:findings} is assembled from those
+outputs. Only the selection half has gates, and it is where the measurements
+below apply. Table~\ref{tab:gates} reports how much
 footage survives each stage and, for every gate, the measurement that placed it
 alongside the decision that measurement reversed. In each case the measurement
 changed the design we would have chosen without it.
@@ -394,6 +403,7 @@ are never pooled; and holdout videos are excluded from \emph{every} training
 source, not merely the final stage.
 
 \section{Toward Limb-Level Ethograms}
+\label{sec:skel}
 The mask student also supports a finer representation than a class label. We
 convert a silhouette into an anatomical graph---mantle, head and eight
 arms---by thinning and shortest-path tracing, tracking it across frames with an
