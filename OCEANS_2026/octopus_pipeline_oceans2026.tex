@@ -44,7 +44,7 @@ present a pipeline that turns raw aquarium video into a behavioural time series
 using a cascade of small local models, with a $235$B-parameter VLM employed only
 as an offline teacher. On $892$\,h of footage from one adult
 \emph{Octopus vulgaris}, cheap gates discard $60\%$ of videos without a full
-decode and only $6.7\%$ of the footage is ever decoded; of the clips that
+decode and only ${\approx}60$ of the $892$\,h is ever decoded; of the clips that
 survive, $42.7\%$ still contain no animal, which is why the expensive model is
 spent last rather than first. Each gate is set by a measurement, and three of
 those measurements reversed the choice we would otherwise have made---most
@@ -149,7 +149,7 @@ contrary to the design we would have chosen without the measurement.
 \multicolumn{2}{@{}l}{\textbf{Funnel} (1{,}769 videos, $892.5$\,h)} \\
 \midrule
 probe & $1{,}054$ videos ($60\%$) discarded on ${\approx}10$ seek frames, with no full decode \\
-decoded at all & $59.9$\,h $=\mathbf{6.7\%}$ of the footage \\
+decoded at all & $\mathbf{{\approx}60}$\,h \\
 clips to VLM & $5{,}222$ \\
 \quad no animal & $42.7\%$ \\
 \quad stationary & $16.7\%$ \\
