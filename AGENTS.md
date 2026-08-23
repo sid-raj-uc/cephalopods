@@ -358,10 +358,14 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
   **4,412 (image,mask) pairs / 77 videos** (`data/dataset_seg/v1`). Trained the tiny segmenter (sweep +
   aug + IR + negatives). Full trail in **`src/SEGMENTATION_LOG.md`**; logs/overlays in `results/segmentation/`;
   weights in `weights/seg/` (local, gitignored). Headline results:
-  - **Mask pixel-IoU bar (0.85) NOT met — plateaus ~0.47** across TinyUNet(ch8/16/32), LR-ASPP(pretrained),
-    strong augmentation, and +IR. Diagnosed as a **video-diversity generalization gap** (only 62 train
-    videos; train IoU 0.68 / val 0.47; fails by *mislocating* a right-sized blob). Not fixable by
-    architecture/aug — needs more distinct verified videos.
+  - **Mask pixel-IoU bar (0.85) NOT met.** At this point it plateaued **~0.47** across
+    TinyUNet(ch8/16/32), LR-ASPP(pretrained), strong augmentation, and +IR, and was diagnosed as a
+    video-diversity gap (62 train videos; train 0.68 / val 0.47; fails by *mislocating* a right-sized
+    blob). **⚠️ DO NOT QUOTE 0.47 AS THE CURRENT RESULT — it is ~0.15 stale.** That number is a
+    *training-time val IoU against auto-labelled TEACHER masks*. The current model scores
+    **IoU 0.6415 mean / 0.7193 median against HUMAN masks** on the frozen SEG-TEST suite
+    (`data/benchmarks.json` tag `paper_current`, ckpt `octo_seg_thin768_lraspp.pt`). Always quote the
+    frozen-suite number; see the "Current segmentation results" block below.
   - **IR (`Right_Top`) unusable as-is:** GroundingDINO low-confidence on greyscale (13% clip acceptance) +
     SAM2 over-segments bright tools (mask area median 8.5% vs colour 2.9%). Needs the Phase-0 IR fix first.
   - **DEPLOYMENT WIN — the presence gate works once you train with NEGATIVES.** v1 (positives-only) was a
@@ -374,7 +378,8 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
   videos) with the diverse-footage harvest: **530 clips / 276 videos / 149 dates** on the Modal volume →
   auto-labeled on an A10G (**178 accepted / 732 pairs**, 345 low-conf recoverable) → merged with old v1 and
   retrained. **old(62 vid)=0.468 → new-only(100 vid, 732 pairs)=0.245 (overfits, too few frames) →
-  merged(176 vid, 5,144 pairs)=0.494** (best, on a HARDER diverse-date val). New app **`src/modal_seg_train.py`**
+  merged(176 vid, 5,144 pairs)=0.494** (best, on a HARDER diverse-date val -- again a TEACHER-mask val
+  number, not comparable to the 0.6415 human-mask figure above). New app **`src/modal_seg_train.py`**
   (A10G; `autolabel`+`train`, computes on the volume so no clip transfer; `--ds` accepts a comma-sep list →
   symlink-merge). Best model: **`weights/seg/octo_seg_merged_lraspp.pt`**. Full trail in SEGMENTATION_LOG.md.
   **Refined diagnosis: the ceiling is now teacher-label quality, NOT data** — merged val plateaus flat at ~0.49
@@ -391,10 +396,40 @@ input; GroundingDINO/SAM2 are the *teacher/auto-labeler ONLY*, never deployed.
   clips will not move the plateau.** Do NOT quote 0.374 as the quality of the labels the student trained
   on — those used SAM2 propagation from the most-confident frame and are better; measuring those needs
   122×40 = 4,880 GD calls (~3.4 h locally) and has not been run.
-- **Next:** cleaner teacher labels (raise the seed gate / propagate more aggressively) rather than more
-  clips; and the propagated-label arm above to bound the true ceiling. Also recoverable: the 345 low-conf clips (lower-conf
-  pass) + Phase-0 IR fix for the ~1,391 IR clips. Retrain the presence/negatives variant on the merged set;
-  then wire the `segment_octopus` area-gate (≥~0.01) into `extract_octopus_clips.py` / `local_pipeline.py`.
+### Current segmentation results — QUOTE THESE, from the frozen suite (`data/benchmarks.json`)
+SEG-TEST = 122 human-drawn mask frames / 5 held-out videos + 19 empty-tank negatives.
+
+| tag / ckpt | mask IoU mean | median | area err | presence AUC |
+|---|---|---|---|---|
+| `paper_current` / **`octo_seg_thin768_lraspp.pt`** (headline) | **0.6415** | **0.7193** | 1.05% | 0.794 |
+| `clean512tv` / `octo_seg_clean512tv_lraspp.pt` | 0.6075 | 0.6661 | 1.07% | 0.718 |
+| temporal fusion EMA (`fuse_ema`) | 0.5471 | 0.600 | 1.00% | **0.9685** |
+| temporal fusion flow (`fuse_flow`) | 0.5109 | 0.5505 | 1.06% | 0.9495 |
+
+SKEL-50 (50 frozen frames / 20 videos): tip-F1 **0.539** (precision 0.722, recall 0.502), 3.68 arms/frame.
+
+- **The 0.85 bar is unmet but pixel-IoU may be the wrong metric for the goal.** AREA ERROR IS ~1%, and
+  the downstream needs are presence + body-area (posture) + masked motion — all area-based. Boundary
+  quality (thin tentacles) is the weak axis and nothing downstream reads boundaries.
+- **Temporal fusion trades mask for presence:** EMA costs 0.10 IoU and buys **+0.17 presence AUC**
+  (0.794 → 0.9685). Optical flow is worse on both, so plain smoothing — not motion compensation — is
+  the mechanism. Use EMA when the output is a presence gate, single-frame when it is a mask.
+- **RETRACTED — "teacher-label quality is the ceiling" was WRONG** (2026-08-08). The evidence for it
+  (0.49 → 0.70 with HQ labels) was **train leakage**: those frames were in the model's train set. Clean
+  held-out is FLAT across teacher quality: tiny 0.494 → 14%-HQ 0.508 → 100%-HQ 0.506. Upgrading the
+  teacher (GroundingDINO-base + SAM2-large) bought nothing. Do not restart that chain.
+- **What actually worked, measured leak-free:** input resolution **256² → 512²** (at 256² the median
+  octopus is ~40×40 px and tentacles are 1–2 px, i.e. unrepresentable) plus **Focal-Tversky loss**
+  (β>α punishes the under-segmentation that symmetric Dice+BCE ignores) → **0.466 → 0.608**, then 768²
+  → 0.6415. Also: **volume beat purity** — 290 clean human frames give 0.505, a blend of 8% human +
+  92% auto over 3,450 frames gives 0.608.
+- **Leakage guard:** `--holdout-videos` forces the test videos out of ALL training sources. The first
+  human-val comparison was contaminated because `old_hq` shared source videos with the human labels.
+- **Next:** wire the `segment_octopus` area-gate (≥~0.01) into `extract_octopus_clips.py` /
+  `local_pipeline.py` — it beats the CLIP gate on reflections and is still not deployed. Phase-0 IR fix
+  for the ~1,391 IR clips (the colour-trained model over-segments bright tools on IR, so IR is
+  currently excluded downstream). A temporal student, since per-frame mislocalisation is the failure
+  mode. NOT more teacher labels or more clips — both exhausted and measured.
 
 ## Skeleton / pose pipeline — mask → anatomical graph → kinematics (2026-08-13)
 Downstream of segmentation: **`src/skeleton/`** (adapted from the external Skeleton repo; critical
