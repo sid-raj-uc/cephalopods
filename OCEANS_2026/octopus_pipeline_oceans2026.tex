@@ -1,0 +1,501 @@
+% OCEANS 2026 Monterey -- 4-6 pages incl. figures, references excluded.
+% Framing: a PIPELINE that turns raw aquarium video into BEHAVIOURAL UNDERSTANDING.
+% Long-form source: octopus_behaviour_pipeline_v2.tex (9pp) + PAPER_NOTES.md R1-R35.
+% Every number here traces to a committed script; see paper-plan.md for provenance.
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.85}
+\begin{document}
+
+\title{From Footage to Ethogram: A Deployable Pipeline for Continuous
+Behavioural Monitoring of a Captive Octopus}
+
+\author{
+\IEEEauthorblockN{
+Siddharth Raj\IEEEauthorrefmark{1},
+Harald Burgsteiner\IEEEauthorrefmark{2},
+Wolfgang Slany\IEEEauthorrefmark{3}
+}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}
+Research and Development, Arishna IoT Solutions, Bangalore, India}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}
+Institute for Digital Media Education, University of Teacher Education Styria, Graz, Austria}
+\IEEEauthorblockA{\IEEEauthorrefmark{3}
+Institute of Software Engineering and Artificial Intelligence, Graz University of Technology, Graz, Austria}
+}
+\maketitle
+
+\begin{abstract}
+Continuous behavioural monitoring is what an aquarium actually wants from its
+cameras, and it is out of reach: manual ethogram scoring does not scale, and
+prompting a large vision--language model (VLM) on every clip of a single
+animal's footage costs hundreds of hours of API time and cannot run on site. We
+present a pipeline that turns raw aquarium video into a behavioural time series
+using a cascade of small local models, with a $235$B-parameter VLM employed only
+as an offline teacher. On $892$\,h of footage from one adult
+\emph{Octopus vulgaris}, cheap gates discard $60\%$ of videos without a full
+decode and only $6.7\%$ of the footage is ever decoded; of the clips that
+survive, $42.7\%$ still contain no animal, which is why the expensive model is
+spent last rather than first. Each gate is set by a measurement, and four of
+those measurements reversed the choice we would otherwise have made---most
+sharply, $166$ of $232$ mined ``hard negatives'' in fact contained the animal.
+The distilled students reach $75.4\%$ accuracy and $0.665$ macro-F1 on a
+six-class ethogram, $0.642$ mask IoU with no prompt at inference from
+$3.2$\,M parameters, and captioning that improves embedding similarity from
+$0.702$ to $0.834$ over its own base model. Applied to the corpus, the pipeline
+recovers a circadian activity profile peaking at $45\%$ visible activity at
+$17{:}00$ against $1$--$5\%$ overnight, and shows that human presence nearly
+doubles movement. We release $5{,}222$ VLM-labelled clips with their full vote
+distributions, ${\approx}25{,}000$ captions, $969$ human labels and masks, and
+three frozen video-level benchmarks.
+\end{abstract}
+
+\begin{IEEEkeywords}
+animal behaviour, cephalopods, ethogram, knowledge distillation, video
+segmentation, vision--language models
+\end{IEEEkeywords}
+
+\section{Introduction}
+An aquarium camera produces footage continuously; turning it into behavioural
+knowledge does not scale the same way. Manual ethogram scoring is the accepted
+standard and is bounded by expert hours. The obvious modern substitute---prompt
+a large VLM on every clip---fails on arithmetic rather than on accuracy. The
+$892$\,h of colour-camera footage we hold for a single animal is
+${\approx}160{,}000$ twenty-second clips; at the throughput we measured against
+a hosted $235$B model ($13$--$36$ clips/min sustained), a five-pass labelling
+run is $372$--$1{,}030$\,h of wall-clock, and it requires an API the aquarium
+does not have. The server holds roughly three times more footage again, for four
+further animals.
+
+The waste is also structural, not merely large. Cephalopods spend most of their
+time hidden or motionless: after the extraction gates described below,
+$42.7\%$ of surviving clips still contain no visible animal and a further
+$16.7\%$ show it stationary. Prompting a frontier model uniformly spends most of
+its budget confirming that nothing is happening.
+
+We therefore treat the VLM as an \emph{offline teacher} and build a cascade of
+small models that runs locally. The contribution is not the cascade as an
+architecture---teacher--student distillation is standard---but that every gate in
+it is placed by a measurement on human-labelled data, and that several of those
+measurements contradicted the intuitive choice. We then show the pipeline
+produces behavioural findings, which is the point of building it, and release the
+labels and benchmarks so the measurements can be checked.
+
+\section{Related Work}
+Our own prior work established the recording setup and the framing of
+inter-species communication with octopodes~\cite{disc_o}. For perception we use
+CLIP~\cite{clip} features, Grounding DINO~\cite{groundingdino} and
+SAM2~\cite{sam2} as annotators, LoRA~\cite{lora} for adaptation,
+MobileNetV3~\cite{mobilenetv3} as a deployable backbone, and
+Qwen3-VL~\cite{qwenvl} as the teacher.
+
+\textbf{Foundation models as teachers, not detectors.} Open-vocabulary detection
+is attractive here because no octopus detector exists off the shelf. In practice
+OWLv2~\cite{owlv2} reported an octopus in $231$ of $232$ frames at its default
+threshold. Its scores are not uninformative---they rank the two classes at AUC
+$0.759$ against human adjudication---but the distributions overlap so heavily
+that no threshold is usable: at its own optimum it still passes $30\%$ of the
+frames we wanted removed while discarding $32\%$ of the real animals. A weak
+ranking signal with no viable operating point is not a detector, which is the
+case for distillation rather than prompting.
+
+\textbf{Octopus segmentation.} The closest work is
+HideAndSeg~\cite{hideandseg}, a concurrent annotation-light pipeline: a human
+annotates initial frames to prompt SAM2, the resulting masks train a YOLOv11
+detector, and that detector auto-prompts SAM2 over the remaining footage. Its
+central insight---re-detecting per frame so a contaminated propagation track can
+recover---is correct, and our seed-confidence gate serves the same purpose. Its
+field coverage substantially exceeds ours: $148$ videos and $366{,}514$ frames of
+wild juvenile \emph{O.\ insularis} across three Brazilian sites, against our
+single individual in one tank. We compare against it in
+Table~\ref{tab:sidebyside}, where the condition rows matter more than the metric
+row. Notably, its stated motivation---the absence of publicly available
+annotated octopus video---holds after publication, since it releases neither data
+nor code; our release is a partial answer to it.
+
+\section{Pipeline and the Measurements That Set It}
+\label{sec:pipeline}
+The cascade runs cheapest-first: probe, motion, a trained presence probe, then
+the VLM (Fig.~\ref{fig:pipeline}). Table~\ref{tab:gates} gives the funnel and,
+for each gate, the measurement that placed it and what that measurement
+prevented.
+
+\begin{figure}[t]\centering
+  \includegraphics[width=0.47\textwidth]{assets/pipeline_behaviour.pdf}
+  \caption{The pipeline. Cheap local gates run first; the teacher VLM is reached
+  only by clips that survive them, and is used offline to train the students that
+  are actually deployed.}
+  \label{fig:pipeline}
+\end{figure}
+
+\begin{table}[t]\centering
+\caption{The cascade. Upper block: how much footage survives each stage.
+Lower block: the measurement that set each gate, and the decision it reversed.
+Four of five gates were placed against intuition.}
+\label{tab:gates}
+\small
+\begin{tabular}{@{}p{0.30\columnwidth}p{0.62\columnwidth}@{}}
+\toprule
+\multicolumn{2}{@{}l}{\textbf{Funnel} (1{,}769 videos, $892.5$\,h)} \\
+\midrule
+probe, ${\approx}10$ seek frames & $1{,}054$ videos ($60\%$) discarded with no full decode \\
+decoded at all              & $59.9$\,h $=\mathbf{6.7\%}$ of the footage \\
+clips reaching the VLM      & $5{,}222$ \\
+\quad no animal             & $42.7\%$ \\
+\quad stationary            & $16.7\%$ \\
+\quad behaviourally active  & $\mathbf{40.6\%}$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textbf{Gate placement}} \\
+\midrule
+hard negatives &
+$166$ of $232$ mined detector false positives \emph{contained} the animal; only
+$66$ were true negatives. Prevented training on ``negatives'' that were $72\%$
+animal. \\
+camera direction &
+one camera is wrong $45\%$ of the time when it reports \textsc{present} but
+$100\%$ correct when it reports \textsc{absent}. Prevented excluding it, and
+with it the corpus's most reliable negatives. \\
+presence &
+the VLM returns \emph{not present} on $63\%$ of clips the trained detector had
+marked verified. Prevented trusting the detector. \\
+label confidence &
+human agreement tracks the five-vote margin: $0.73$ unanimous, $0.86$ at
+four-of-five, $0.43$ at $\leq$three-of-five. Prevented arg-max labels teaching
+false confidence; targets are the vote distribution. \\
+motion &
+per-video \emph{normalised} motion passes static scenes---a flickering lamp
+normalises up to ``motion''. Absolute changed-pixel fraction used instead. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Labelling with five disjoint views.} Each surviving clip is sent to the
+teacher five times. Pass $p$ offsets its uniform frame grid by
+$(p-1)\,\mathrm{step}/5$, so the five samplings are disjoint and their union
+tiles every dense frame; a clip therefore receives five independent presence
+votes, ethogram votes and captions. This is not redundancy for its own sake: the
+majority vote differs from a single pass on $705$ clips ($13.5\%$), $36.2\%$ of
+clips are split rather than unanimous, and---per Table~\ref{tab:gates}---the
+margin predicts human agreement, which is what licenses training on soft targets.
+
+\section{Local Models}
+\label{sec:models}
+Three students consume the teacher's output. All are trained with splits
+\emph{by source video}; a held-out clip from a training video is not held out in
+any useful sense.
+
+\textbf{Ethogram classifier.} Six classes in one head---\emph{no octopus},
+resting, exploration/manipulation, locomotion, reaching out of water,
+human/enrichment interaction---because that is how it is deployed: a clip
+arrives and the question is what is happening, with ``no animal'' a legitimate
+answer. Inputs are frozen per-frame features plus two changed-pixel motion
+channels; the head is a $0.6$\,M-parameter MLP over pooled statistics. A
+previous attempt at this task collapsed onto the majority classes ($45\%$
+accuracy, per-class F1 ${\approx}0$). Table~\ref{tab:etho} shows the current
+model and the one change that mattered.
+
+\begin{table}[t]\centering
+\caption{Ethogram classification, $740$ test clips from $34$ held-out videos,
+three seeds. Macro-F1 is the headline because the classes run $43\%$ to $5\%$
+and accuracy rewards collapse.}
+\label{tab:etho}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+model & macro-F1 & accuracy \\
+\midrule
+majority class                              & $0.100$ & $43.1\%$ \\
+pooled CLIP $\rightarrow$ linear            & $0.400$ & -- \\
+CLIP $\rightarrow$ BiGRU                    & $0.530$ & -- \\
+three self-supervised backbones, ensembled  & $0.617$ & $71.4\%$ \\
+\textbf{$+$ mask-guided crop (five members)}& $\mathbf{0.665}$ & $\mathbf{75.4\%}$ \\
+\midrule
+\multicolumn{3}{@{}l}{\emph{per class} (precision / recall)} \\
+no octopus                    & \multicolumn{2}{l}{$0.93$ / $0.90$} \\
+resting                       & \multicolumn{2}{l}{$0.71$ / $0.60$} \\
+exploration/manipulation      & \multicolumn{2}{l}{$0.66$ / $0.67$} \\
+locomotion                    & \multicolumn{2}{l}{$0.64$ / $0.73$} \\
+reaching out of water         & \multicolumn{2}{l}{$0.57$ / $0.75$} \\
+human/enrichment interaction  & \multicolumn{2}{l}{$0.44$ / $0.43$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The gain came from the \emph{representation}, not the head. Replacing CLIP with a
+self-supervised image backbone or a video backbone moved test macro-F1 by
+$+0.047$ and $+0.059$; the worst configuration of either beat the best CLIP
+configuration, with no overlap in range. Head capacity, by contrast, did nothing:
+sweeping hidden width $256$--$1024$ moved validation by $+0.0017$ against a seed
+standard deviation of $0.0040$, and the widest head was the worst on both
+backbones.
+
+A second representation effect isolates \emph{animal pixel resolution} as the
+operative variable. The median animal occupies a bounding box $0.216$ of the
+frame across, so a backbone at $224^2$ sees it at ${\approx}48\times48$ pixels.
+Three preprocessing variants separate the causes: the default centre crop retains
+$43\%$ of the frame but preserves animal scale ($0.578$ validation);
+letterboxing retains all of it but shrinks the animal ($0.574$); cropping to the
+segmentation mask magnifies the animal ${\approx}3\times$ and reaches $0.618$.
+Field of view and animal scale trade off almost exactly---only magnification
+helps.
+
+\textbf{Segmentation.} A $3.2$\,M-parameter LR-ASPP student distilled from
+Grounding DINO$+$SAM2 reaches IoU $0.642$ mean / $0.719$ median against $122$
+human-drawn masks on five videos held out of all training, with mean area error
+${\approx}1\%$. It does not meet the $0.85$ IoU we set out to reach; we report it
+because the shortfall is informative. Everything downstream---presence, body
+area as a posture proxy, motion inside the mask---is area-based, and area is
+accurate to $1\%$ while boundary quality is what IoU penalises. Two levers
+produced the gain, both mundane and both measured leak-free: raising input
+resolution from $256^2$ to $512^2$ (at $256^2$ the median animal is
+${\approx}40\times40$ pixels and an arm is $1$--$2$ pixels wide, i.e.\
+unrepresentable) and replacing symmetric Dice$+$BCE with Focal--Tversky, which
+penalises the under-segmentation the symmetric loss ignores.
+
+\begin{figure}[t]\centering
+  \includegraphics[width=0.42\textwidth]{assets/segmentation_demo.pdf}
+  \caption{Mask student output. Per-frame prompting alone bleeds into bright
+  metal tools under infrared and into background clutter on colour cameras;
+  confidence-seeded temporal propagation with a largest-blob constraint removes
+  both, and correctly rejects the reflection camera.}
+  \label{fig:seg}
+\end{figure}
+
+\textbf{Captioning.} A $2$B VLM adapted with LoRA on teacher captions improves
+held-out embedding similarity from $0.702$ to $0.834$ and ROUGE-L from $0.269$ to
+$0.455$ over its own base model. Quantised to four bits it is $1.7$\,GB and
+captions a clip in ${\approx}3$\,s on a $16$\,GB laptop with no GPU.
+
+\textbf{What did not work.} Recorded because each is a natural next thing to try.
+Feature-space augmentation (mixup, Gaussian noise) is \emph{negative} and
+monotonically worse with strength; the model is not overfitting-limited, so a
+regulariser only corrupts frozen features. Class rebalancing hurt the class it
+was meant to protect---removing it improved the weakest class from F1 $0.37$ to
+$0.44$. And our own hypothesis that teacher-label quality was the segmentation
+ceiling was wrong: the evidence for it turned out to be train leakage, and on a
+clean holdout, mask IoU is flat across teacher quality ($0.494$, $0.508$,
+$0.506$).
+
+\begin{table}[t]\centering
+\caption{Against zero-shot foundation models on identical held-out human labels.
+Paired differences bootstrapped clustered by source video; both intervals exclude
+zero. Presence arms share the frozen backbone \emph{and} preprocessing, so the
+gap isolates the trained probe.}
+\label{tab:zeroshot}
+\small
+\begin{tabular}{@{}llc@{}}
+\toprule
+task & system & metric \\
+\midrule
+\multirow{2}{*}{mask} & GD$+$SAM2, zero-shot, per frame & IoU $0.374$ \\
+ & \textbf{ours}, $3.2$\,M, no prompt & IoU $\mathbf{0.642}$ \\
+\multicolumn{3}{@{}l}{\quad paired $\Delta=-0.268$, CI$_{95}$ $[-0.313,-0.136]$} \\
+\midrule
+\multirow{2}{*}{presence} & zero-shot CLIP, $5{+}5$ prompts & AUC $0.450$ \\
+ & \textbf{ours}, trained probe & AUC $\mathbf{0.745}$ \\
+\multicolumn{3}{@{}l}{\quad paired $\Delta=+0.295$, CI$_{95}$ $[+0.069,+0.528]$} \\
+\midrule
+\multirow{2}{*}{caption} & base $2$B VLM & emb-sim $0.702$ \\
+ & \textbf{ours}, LoRA & emb-sim $\mathbf{0.834}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:zeroshot} sets the students against the zero-shot models they were
+distilled from, on identical labels. One caveat travels with the mask row: on the
+$21$ of $122$ frames where Grounding DINO clears its own confidence gate the
+teacher \emph{wins}, $0.726$ against $0.657$. The teacher is high-precision and
+low-recall---it finds nothing at all on a quarter of frames---and distillation
+converted a sparse, high-quality signal into dense coverage. That is a better
+argument for distilling than a flat win would have been.
+
+\begin{table}[t]\centering
+\caption{Side by side with HideAndSeg~\cite{hideandseg}. Reported mask quality
+tracks how much prompting is assumed at inference; every other row differs, so
+the IoU row is not a ranking.}
+\label{tab:sidebyside}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & \cite{hideandseg} & our teacher & \textbf{our student} \\
+\midrule
+mask IoU              & $0.938$             & $0.726^{a}$ & $\mathbf{0.642}$ \\
+reference             & init.\ frame        & human masks & human masks \\
+prompt at inference   & auto               & gated       & \textbf{none} \\
+presence              & given               & inferred    & \textbf{inferred} \\
+params                & ${\approx}249$\,M   & ${\approx}230$\,M & $\mathbf{3.2}$\,M \\
+data/code released    & no                  & --          & \textbf{yes} \\
+setting               & wild, 3 sites       & 1 tank      & 1 tank \\
+scale                 & $148$ vid.          & --          & $4{,}665$ clips \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:sidebyside} places us beside that work. We claim the unprompted,
+presence-inferring and ${\approx}78\times$-smaller columns, and the release; we do
+not claim the IoU column, since neither method has been run on the other's data
+and the two lower rows favour them.
+
+\section{What the Pipeline Reveals}
+\label{sec:findings}
+Running the pipeline over the corpus yields a behavioural record, which is the
+reason to build it. Across $3{,}083$ clips with a visible animal, the activity
+budget is $41\%$ exploration/manipulation, $33\%$ resting, $14\%$
+human/enrichment interaction, $9\%$ reaching out of water and $3\%$ locomotion.
+
+\begin{figure}[t]\centering
+  \includegraphics[width=0.48\textwidth]{assets/behaviour_findings.pdf}
+  \caption{Behaviour recovered from the corpus: activity budget, and
+  exposure-normalised visible activity by hour of day. Normalising by the number
+  of windows examined per hour is essential---without it the profile tracks
+  recording coverage rather than the animal.}
+  \label{fig:findings}
+\end{figure}
+
+\textbf{Circadian structure.} Normalising visible activity by the number of
+windows actually examined in each hour---without which the profile simply tracks
+recording coverage---gives a strongly diurnal animal: $1$--$5\%$ visible activity
+overnight rising to a $45\%$ peak at $17{:}00$, with a plateau from $13{:}00$ to
+$19{:}00$ and a smaller rise at dawn.
+
+\textbf{Response to human presence.} Clips the extractor labels as containing a
+human show nearly double the absolute motion of baseline clips ($0.095$ against
+$0.045$) and a higher score on a transparent arousal rubric ($0.68$ against
+$0.46$). On the colour cameras, the most common body colour at baseline
+(dark red-brown, $16\%$ of clips) is markedly less frequent during human
+interaction ($6\%$).
+
+Two caveats bound these. The tank contains permanent enrichment objects, so a
+context label of ``enrichment object present'' fires on ${\approx}66\%$ of clips
+and means only that---not active enrichment; the clean contrast is human present
+against absent. And the upstream presence gate is imperfect, so absolute levels
+will shift with a better detector while the \emph{rate contrasts} above, which
+are ratios within the same gate, are robust to it.
+
+\section{Released Data and Benchmarks}
+\label{sec:data}
+No public annotated octopus behaviour corpus exists. We release:
+$5{,}222$ clips with five-pass teacher labels \emph{including the full vote
+distribution} rather than only the majority; ${\approx}25{,}000$ captions
+($5{,}160$ clips $\times$ five disjoint frame samplings), which additionally
+permits measuring how a VLM's description of one behaviour varies with which
+frames it happens to see; a frozen six-class ethogram dataset of $4{,}665$ clips
+over $204$ videos with video-level splits and per-clip reliability weights;
+$456$ human behaviour labels; $513$ human masks; and $3{,}205$ structured
+behavioural records of nine fields each. Three benchmarks are frozen: $122$ human
+masks on five held-out videos plus $19$ empty-tank negatives; $50$ human
+arm-keypoint frames over $20$ videos; and a reflection-rejection set.
+
+Four protocol rules are part of the release, because the pipeline broke each of
+them at least once during development: splits are by source video, never by clip;
+frozen sets are never regenerated to suit a result; negatives of different kinds
+are never pooled; and holdout videos are excluded from \emph{every} training
+source, not merely the final stage.
+
+\section{Toward Limb-Level Ethograms}
+The mask student also supports a finer representation than a class label. We
+convert a silhouette into an anatomical graph---mantle, head and eight
+arms---by thinning and shortest-path tracing, tracking it across frames with an
+optical-flow prior and marking every node \emph{detected}, \emph{fitted} or
+\emph{occluded} so that kinematics use only evidence-backed samples. On $50$
+human-annotated frames the arm-tip F1 is $0.539$ (precision $0.72$) at $3.68$
+arms recovered per frame; seeding propagation from the best-resolved frame rather
+than the first was worth $+3.67$ arms. Speeds are in pixels per second in crop
+space, uncalibrated, and arm counts are silhouette-limited.
+
+\begin{figure}[t]\centering
+  \includegraphics[width=0.44\textwidth]{assets/skeleton_example.pdf}
+  \caption{Silhouette to anatomical graph: mantle, head and eight arms, with each
+  node marked detected, fitted or occluded so that kinematics are computed only
+  from evidence-backed samples.}
+  \label{fig:skel}
+\end{figure}
+
+This is released as a capability rather than a result. Its purpose is the obvious
+next question: a six-class sheet cannot distinguish exploration with one arm from
+whole-body exploration, and per-limb usage statistics would make
+\emph{limb-aware} ethograms possible. That is the direction we intend to take.
+
+\section{Limitations}
+\label{sec:limits}
+\textbf{One animal, one tank.} Every measurement is from a single adult
+\emph{O.\ vulgaris}. Footage for four further animals, including $155$ days of a
+second individual, is available and unprocessed; cross-animal generalisation is
+untested, and this is the paper's principal limitation.
+
+\textbf{Agreement, not accuracy.} All $456$ human behaviour labels were collected
+with the model's suggestion visible, so they measure agreement with the model, not
+independent accuracy. On the subset where the two disagree, the human sides with
+the teacher over the student roughly $3{:}2$. A blind round on the reserved test
+videos is specified but not yet run, and until it is, the ethogram figures should
+be read as teacher reproduction.
+
+\textbf{Selection on a small validation set.} Roughly six design choices were
+made on $35$ validation videos, and validation and test disagreed on three of
+them. Reported margins are softer than their seed variance suggests; we report
+the validation-selected configuration throughout rather than the best test score.
+
+\textbf{Infrared.} The colour-trained mask student is unusable on the infrared
+camera, which is $35\%$ of the corpus, so mask-derived quantities are available
+for colour cameras only.
+
+\section{Conclusion}
+Continuous behavioural monitoring of a captive cephalopod is achievable if the
+expensive model is used to teach rather than to run. Placing each gate in the
+cascade by measurement rather than intuition mattered more than any single model
+choice: four of five gates ended up contrary to the obvious design, and the
+largest single improvement to behaviour classification came from changing the
+frozen representation and how much of the animal it sees, not from any change to
+the classifier. The resulting local models recover circadian structure and a
+clear response to human presence from footage that no one scored by hand. Data,
+benchmarks and code are released; the immediate next steps are a blind human
+round on the reserved videos and the second animal.
+
+\section*{Ethical Statement and Data Availability}
+All footage is observational, from cameras already installed for husbandry, with
+no intervention or manipulation of the animal. Datasets, frozen benchmarks,
+weights and an extended technical report are available at the project
+repository.
+
+\begin{thebibliography}{00}
+\bibitem{disc_o}
+K.\ Patel, A.\ Sharma, H.\ Kumar, P.\ Kurundodi, H.\ Burgsteiner, and W.\ Slany,
+``A Novel Framework for Decoding Inter-Species Communication with Octopodes
+(DISC-O),'' in \textit{OCEANS 2025}, pp.\ 1--9, Sep.\ 2025,
+doi: 10.23919/OCEANS59106.2025.11244956.
+\bibitem{clip}
+A.\ Radford \textit{et al.}, ``Learning Transferable Visual Models from Natural
+Language Supervision,'' in \textit{ICML}, 2021.
+\bibitem{groundingdino}
+S.\ Liu \textit{et al.}, ``Grounding DINO: Marrying DINO with Grounded Pre-Training
+for Open-Set Object Detection,'' \textit{arXiv:2303.05499}, 2023.
+\bibitem{sam2}
+N.\ Ravi \textit{et al.}, ``SAM 2: Segment Anything in Images and Videos,''
+\textit{arXiv:2408.00714}, 2024.
+\bibitem{lora}
+E.\ J.\ Hu \textit{et al.}, ``LoRA: Low-Rank Adaptation of Large Language Models,''
+in \textit{ICLR}, 2022.
+\bibitem{mobilenetv3}
+A.\ Howard \textit{et al.}, ``Searching for MobileNetV3,'' in \textit{ICCV}, 2019.
+\bibitem{qwenvl}
+Qwen Team, ``Qwen3-VL,'' 2025.
+\bibitem{owlv2}
+M.\ Minderer, A.\ Gritsenko, and N.\ Houlsby, ``Scaling Open-Vocabulary Object
+Detection,'' in \textit{NeurIPS}, 2023.
+\bibitem{hideandseg}
+A.\ de Aguiar, M.\ P.\ Andrade, C.\ M.\ D.\ Santos, and J.\ P.\ Gois,
+``HideAndSeg: an AI-based tool with automated prompting for octopus segmentation
+in natural habitats,'' \textit{arXiv:2511.04426}, Nov.\ 2025.
+\end{thebibliography}
+
+\end{document}
