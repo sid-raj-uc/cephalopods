@@ -13,18 +13,37 @@ Working document. **Stage 1 (now): put everything in.** Stage 2: crop to the har
 **Current state:** `octopus_behaviour_pipeline_v2.tex` = **9 pages**, bibliography only ~30 lines, so
 the body must lose ~35%. This is a restructure, not a trim.
 
-## Framing decision
+## Framing decision — SETTLED
 
-Two candidate spines:
+Rejected:
+- ~~(A) A measured cascade that makes continuous monitoring tractable, with released data.~~ — reads as
+  cost/throughput engineering. The funnel is *why the pipeline is possible*, not what the paper is about.
+- ~~(B) A labelled dataset + benchmarks, and the pipeline that produced it.~~ — makes the pipeline read
+  as plumbing and the science as a by-product.
 
-- **(A) A measured cascade that makes continuous monitoring tractable, with released data.**
-- (B) A labelled cephalopod behaviour dataset + benchmarks, and the pipeline that produced it.
+**CHOSEN: a PIPELINE that turns raw aquarium video into BEHAVIOURAL UNDERSTANDING of the animal.**
 
-**Chosen: (A)**, with datasets as contribution #3. The cascade is the reusable idea and the funnel
-numbers are what a reviewer remembers; the dataset framing makes the pipeline read as plumbing.
+The arc, and every section serves it:
 
-**Overflow goes to an arXiv companion / tech report** (full `PAPER_NOTES.md` R1–R35 + behavioural
-findings + all ablations). The 6-page paper cites it. Nothing measured gets thrown away.
+1. **Problem** — continuous cephalopod behavioural monitoring is what a facility actually wants, and it
+   is out of reach: manual scoring does not scale, and a VLM on everything is 372–1,030 h of wall-clock
+   per animal and cannot run on-site.
+2. **Pipeline** — a cascade of small local models with the 235B VLM as an *offline teacher only*. The
+   funnel (6.7% of footage decoded) is the enabling fact, stated once, not the thesis.
+3. **What it extracts** — presence, octopus silhouette/posture, a 6-class ethogram, one-sentence
+   captions, arm kinematics.
+4. **What we LEARN from it** ← the payoff, and the reason the pipeline is worth building: circadian
+   structure, stimulus response, activity budget. This is the section that proves the system produces
+   understanding rather than numbers.
+5. **Released data + frozen benchmarks** so others can reproduce and extend.
+6. **Where the understanding goes next** — limb-aware ethograms from the skeleton work.
+
+**Consequence for the cuts:** the behavioural-findings section is NO LONGER the cut candidate — it is
+essential. The "what does not work" catalogue drops from a section to a paragraph, and the detailed
+ablations (full rung matrix, 3-way resolution isolation, seed-noise discipline) move to the companion.
+
+**Overflow → arXiv companion / tech report** (full `PAPER_NOTES.md` R1–R35, all ablations, negative
+results in full). The paper cites it.
 
 ---
 
@@ -256,29 +275,35 @@ footage of a captive animal, no intervention).
 
 ---
 
-# STAGE 2 — cropping plan (to be executed)
+# STAGE 2 — cropping plan (revised for the pipeline→understanding framing)
 
-Target allocation for 6.0 pages, 1 figure + 3 tables:
+Target 6.0 pages, 1 figure + 3 tables.
 
-| § | pp | keep | cut |
+| § | section | pp | notes |
 |---|---|---|---|
-| I | 0.6 | funnel headline, 4 contributions | per-collection breakdown |
-| II | 0.4 | HideAndSeg, teachers-not-detectors | distillation survey |
-| III | 1.3 | funnel table + 4 reversing gates | motion-gate + truncation detail → companion |
-| IV | 0.8 | release table + the 4 rules | per-artifact prose |
-| V-A | 0.8 | progression + per-class + resolution finding | full rung matrix → companion |
-| V-B | 0.5 | IoU/area + "wrong metric" + what worked | fusion trade, teacher-vs-human → companion |
-| V-C | 0.3 | LoRA gain + 1.7 GB / 3 s deploy | training detail |
-| VI | 0.4 | items 1,3,4,5,6 as a compact list | items 2,7,8,9 → companion |
-| VII | 0.3 | capability + SKEL-50 + limb-usage future work | all ablations → companion |
-| VIII | **0** | — | **entire section → companion** |
-| IX | 0.3 | all six limitations, terse | |
-| X | 0.3 | | |
+| I | Introduction + contributions | 0.6 | problem = continuous behavioural monitoring; funnel as the enabling fact in 2 sentences |
+| II | Related work | 0.4 | HideAndSeg; teachers-not-detectors; ethogram automation |
+| III | Pipeline and its gates | 1.3 | **Fig 1** cascade w/ survival numbers; **Tab 1** gates + the measurement that set each. Keep the 4 reversing gates only |
+| IV | Local models | 1.3 | ethogram 0.6 (progression + per-class) · segmentation 0.4 (IoU + area-err + "wrong metric") · caption 0.3 (LoRA gain + 1.7 GB/3 s) |
+| V | **What the pipeline reveals** | 1.2 | **the payoff.** activity budget, circadian (45% peak @17:00), human presence doubles motion 0.045→0.095 and lifts arousal 0.46→0.68, colour-by-context. WITH the caveats (enrichment_object 66%; rate contrasts robust, absolute levels not) |
+| VI | Datasets + frozen benchmarks | 0.6 | **Tab 3** release inventory + the 4 protocol rules |
+| VII | Skeleton → limb-aware ethograms (future) | 0.3 | capability + SKEL-50 + the direction |
+| VIII | Limitations | 0.4 | single animal; assisted labels = agreement not accuracy; val/test disagreement; IR unusable |
+| IX | Conclusion + data availability | 0.3 | |
+| | **total** | **6.4** | trim 0.4 from II/IV in drafting |
 
-**Figure 1:** the cascade with per-stage survival numbers (carries §III visually, saves prose).
-**Table 1:** funnel + gate justifications. **Table 2:** dataset release. **Table 3:** ethogram results.
+**Demoted to a paragraph** (inside §IV): what does not work — head capacity ≈ 0 and *more capacity
+hurts*; augmentation negative; teacher-label quality NOT the segmentation ceiling (retracted, leakage);
+OWLv2 has no viable operating point. One sentence each, no table.
+
+**Moved to the companion:** full rung matrix · 3-way resolution isolation · mask-geometry leakage
+result · upsampling-vs-weighting · motion-channel redundancy · skeleton tracking ablations · temporal
+fusion trade · 30B-vs-235B captions · teacher-vs-human mask comparison.
+
+**Figure 1** must carry §III visually — cascade stages with survival counts — so §III can stay at 1.3 pp.
 
 ## Open decisions
-1. Confirm §VIII (behavioural findings) is dropped to the companion. ← biggest cut, needs a yes
+1. ~~Drop behavioural findings?~~ **NO — it is the payoff section.** Settled.
 2. Blind human round on the 34 reserved test videos — run it, or ship the limitation as written?
-3. Companion venue: arXiv preprint, or a tech report linked from the data release?
+3. Companion venue: arXiv preprint, or tech report linked from the data release?
+4. Trim the last 0.4 pp from §II or §IV during drafting.
