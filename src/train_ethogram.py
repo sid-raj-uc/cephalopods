@@ -310,7 +310,10 @@ def run_one(rung, man, X, classes, seed, extra_rows=None, D=512):
     f1_te, per = macro_f1(pt, Hte, n_cls)
     n_params = sum(p.numel() for p in model.parameters())
     out = {"val_f1": best, "test_f1": f1_te, "per_class": per, "n_params": n_params,
-           "pred": pt.tolist(), "true": Hte.tolist()}
+           "pred": pt.tolist(), "true": Hte.tolist(),
+           # the trained weights, so a caller can persist a usable checkpoint. Without this the
+           # paper's headline model existed only as a number in a JSON file.
+           "state_dict": {k: v.detach().clone() for k, v in model.state_dict().items()}}
     # Optional extra rows to predict (e.g. the human-labelled clips, which span several splits).
     # Softmax rather than argmax so a caller can average over seeds before deciding -- averaging
     # argmaxes would let one seed's confident error outvote two seeds' correct uncertainty.

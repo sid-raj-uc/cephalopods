@@ -1,0 +1,64 @@
+{
+ "models": {
+  "octo-presence-clip-probe-v1.pt": {
+   "task": "Presence gate: is an octopus visible in this frame?",
+   "arch": "frozen CLIP ViT-B/32 + MLP probe (512-256-64-2), 0.6 MB",
+   "trained_on": "~11k human-labelled frames over 8 dates, letterbox preprocessing, including 66 human-verified hard negatives",
+   "scores": "AUC 0.745 on 120 human-labelled frames sampled at uniform random timestamps over 60 videos (detector-independent). Zero-shot CLIP on the same frames: 0.450.",
+   "use_for": "first-stage gating of long footage before an expensive model",
+   "do_not": "do not read the 96.8% training accuracy as field performance -- that was a different, easier test set. Preprocessing MUST be letterbox, not centre crop.",
+   "internal_path": "weights/clip_mlp_hardneg_v2.pt",
+   "bytes": 594981,
+   "sha256_16": "24ced8e60c94f5e7"
+  },
+  "octo-mask-lraspp-3.2M-v1.pt": {
+   "task": "Single-class octopus segmentation, no prompt at inference",
+   "arch": "LR-ASPP over MobileNetV3, 3.2 M parameters, 768x768 input",
+   "trained_on": "auto-labelled GroundingDINO+SAM2 masks blended with 513 human masks; Focal-Tversky loss; test videos excluded from every training source",
+   "scores": "IoU 0.6415 mean / 0.7193 median and mean AREA ERROR ~1% against 122 human masks on 5 held-out videos. The zero-shot teacher scores 0.374 per-frame on the same masks (paired delta -0.268, CI95 [-0.313,-0.136]).",
+   "use_for": "presence, body area as a posture proxy, motion inside the mask, and as the input to skeletonisation",
+   "do_not": "do not use on infrared footage -- it is colour-trained and over-segments bright metal tools there (35% of our corpus is IR and is excluded downstream). Do not expect boundary-accurate masks; area is accurate, thin arms are not.",
+   "internal_path": "weights/seg/octo_seg_thin768_lraspp.pt",
+   "bytes": 13072529,
+   "sha256_16": "95ac99693dd5fe0f"
+  },
+  "octo-ethogram-ensemble-v1.pt": {
+   "task": "6-class behaviour classification, absence included as a class",
+   "arch": "5 frozen backbones (CLIP, DINOv2, VideoMAE, + two mask-cropped views), one pooled-statistics MLP head each, 3 seeds per member, soft vote. 33.5 MB",
+   "trained_on": "4,665 clips / 204 videos labelled by a 5-pass Qwen3-VL-235B ensemble, with SOFT targets from the vote distribution; splits by source video",
+   "scores": "macro-F1 0.6648 / accuracy 0.7541 on 740 test clips from 34 held-out videos. Majority-class baseline: 0.1004 / 43.1%.",
+   "use_for": "assembling a behavioural time series from extracted clips",
+   "do_not": "this reproduces the VLM teacher, NOT human ground truth. On the same clips the teacher agrees with a human 72.5% and this student 66.9%, and every human label used for that comparison was collected with the model's answer on screen (agreement, not accuracy). Per-class F1 for human/enrichment interaction rests on 40 clips from 7 videos and is not reliable.",
+   "internal_path": "weights/ethogram_ensemble_v1.pt",
+   "bytes": 33517173,
+   "sha256_16": "8a27031e0b695f8b"
+  },
+  "octo-caption-qwen3vl2b-lora-v1": {
+   "task": "One-sentence behaviour caption for a 20 s clip",
+   "arch": "Qwen3-VL-2B + LoRA r16/alpha32 adapter, 77 MB (needs the base model)",
+   "trained_on": "3,066 teacher captions from Qwen3-VL-235B, on CLAHE-enhanced best-N frames",
+   "scores": "held-out embedding similarity 0.834 (base 0.702), ROUGE-L 0.455 (base 0.269)",
+   "use_for": "captioning where a GPU is available",
+   "do_not": "frame preparation matters more than the model here -- feeding uniform, unenhanced frames was preferred over enhanced ones in only 1 of 33 blind comparisons. Use the same CLAHE + best-frame selection it was trained with.",
+   "internal_path": "models/qwen3vl2b_caption_v1_lora",
+   "bytes": 81224793,
+   "sha256_16": "9148502dec3004e4"
+  },
+  "octo-caption-qwen3vl2b-4bit-v1": {
+   "task": "Same, quantised for on-device use",
+   "arch": "Qwen3-VL-2B, 4-bit MLX, 1.7 GB, self-contained",
+   "trained_on": "as above, then merged and quantised",
+   "scores": "~3 s per clip on a 16 GB Apple Silicon laptop, no GPU, no API",
+   "use_for": "running the caption stage on site",
+   "do_not": "MLX is Apple Silicon only; bitsandbytes NF4 is the CUDA equivalent and is not interchangeable with this file.",
+   "internal_path": "models/qwen3vl2b_caption_v1_mlx_4bit",
+   "bytes": 1793555657,
+   "sha256_16": "3de3bada0fecd728"
+  }
+ },
+ "withheld": {
+  "weights/clip_mlp_v3.pt": "Retrained presence gate. Large improvement on diverse footage (FPR 0.485 -> 0.243, AUC 0.777 -> 0.906) but it FORGOT its original domain: recall on held-out anchor frames fell 0.985 -> 0.903 and AUC 0.999 -> 0.924. Training was 68% new-domain, so the boundary shifted. Withheld until the anchor regression is fixed by rebalancing the two domains.",
+  "weights/seg/octo_seg_clean512tv_lraspp.pt": "512-input segmentation variant, superseded on every metric by the 768 model (IoU 0.608 vs 0.642, presence AUC 0.718 vs 0.794). Kept for the resolution ablation only.",
+  "weights/clip_mlp_best.pt": "Prior presence probe, superseded. Trained on 66 hard negatives instead of ~1.7k."
+ }
+}
