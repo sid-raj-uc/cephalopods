@@ -48,7 +48,8 @@ decode and only $6.7\%$ of the footage is ever decoded; of the clips that
 survive, $42.7\%$ still contain no animal, which is why the expensive model is
 spent last rather than first. Each gate is set by a measurement, and four of
 those measurements reversed the choice we would otherwise have made---most
-sharply, $166$ of $232$ mined ``hard negatives'' in fact contained the animal.
+sharply, $166$ of $232$ frames we were about to train on as ``no octopus'' in fact
+contained the animal.
 The distilled students reach $75.4\%$ accuracy and $0.665$ macro-F1 on a
 six-class ethogram, $0.642$ mask IoU with no prompt at inference from
 $3.2$\,M parameters, and captioning that improves embedding similarity from
@@ -157,9 +158,9 @@ clips to VLM & $5{,}222$ \\
 \multicolumn{2}{@{}l}{\textbf{Gate placement}} \\
 \midrule
 hard negatives &
-$166$ of $232$ mined detector false positives \emph{contained} the animal; only
-$66$ were true negatives. Prevented training on ``negatives'' that were $72\%$
-animal. \\
+the $232$ frames the detector was most confident about were hand-checked before
+being reused as negatives: $166$ \emph{did} contain the animal, so only $66$ were
+genuine. Prevented labelling $166$ images of an octopus ``no octopus''. \\
 camera direction &
 one camera is wrong $45\%$ of the time when it reports \textsc{present} but
 $100\%$ correct when it reports \textsc{absent}. Prevented excluding it, and
