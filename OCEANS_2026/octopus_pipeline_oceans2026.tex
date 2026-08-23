@@ -46,7 +46,7 @@ as an offline teacher. On $892$\,h of footage from one adult
 \emph{Octopus vulgaris}, cheap gates discard $60\%$ of videos without a full
 decode and only $6.7\%$ of the footage is ever decoded; of the clips that
 survive, $42.7\%$ still contain no animal, which is why the expensive model is
-spent last rather than first. Each gate is set by a measurement, and four of
+spent last rather than first. Each gate is set by a measurement, and three of
 those measurements reversed the choice we would otherwise have made---most
 sharply, $166$ of $232$ frames we were about to train on as ``no octopus'' in fact
 contained the animal.
@@ -129,7 +129,7 @@ nor code; our release is a partial answer to it.
 The cascade runs cheapest-first: probe, motion, a trained presence probe, then
 the VLM (Fig.~\ref{fig:pipeline}). Table~\ref{tab:gates} reports how much
 footage survives each stage and, for every gate, the measurement that placed it
-alongside the decision that measurement reversed. Four of the five gates ended up
+alongside the decision that measurement reversed. Three of the four gates ended up
 contrary to the design we would have chosen without the measurement.
 
 \begin{figure}[t]\centering
@@ -161,10 +161,6 @@ hard negatives &
 the $232$ frames the detector was most confident about were hand-checked before
 being reused as negatives: $166$ \emph{did} contain the animal, so only $66$ were
 genuine. Prevented labelling $166$ images of an octopus ``no octopus''. \\
-camera direction &
-one camera is wrong $45\%$ of the time when it reports \textsc{present} but
-$100\%$ correct when it reports \textsc{absent}. Prevented excluding it, and
-with it the corpus's most reliable negatives. \\
 presence &
 the VLM returns \emph{not present} on $63\%$ of clips the trained detector had
 marked verified. Prevented trusting the detector. \\
@@ -451,7 +447,7 @@ for colour cameras only.
 Continuous behavioural monitoring of a captive cephalopod is achievable if the
 expensive model is used to teach rather than to run. Placing each gate in the
 cascade by measurement rather than intuition mattered more than any single model
-choice: four of five gates ended up contrary to the obvious design, and the
+choice: three of four gates ended up contrary to the obvious design, and the
 largest single improvement to behaviour classification came from changing the
 frozen representation and how much of the animal it sees, not from any change to
 the classifier. The resulting local models recover circadian structure and a
