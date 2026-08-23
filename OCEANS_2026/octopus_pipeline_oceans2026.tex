@@ -55,7 +55,9 @@ $3.2$\,M parameters, and captioning that improves embedding similarity from
 $0.702$ to $0.834$ over its own base model. Applied to the corpus, the pipeline
 recovers a circadian activity profile peaking at $45\%$ visible activity at
 $17{:}00$ against $1$--$5\%$ overnight, and shows that human presence nearly
-doubles movement. We release $5{,}222$ VLM-labelled clips with their full vote
+doubles movement. Skeletonising the mask into a mantle--head--eight-arm graph
+recovers per-arm kinematics, which we release as the basis for limb-level
+ethograms. We release $5{,}222$ VLM-labelled clips with their full vote
 distributions, ${\approx}25{,}000$ captions, $969$ human labels and masks, and
 three frozen video-level benchmarks.
 \end{abstract}
@@ -411,10 +413,10 @@ frozen sets are never regenerated to suit a result; negatives of different kinds
 are never pooled; and holdout videos are excluded from \emph{every} training
 source, not merely the final stage.
 
-\section{Toward Limb-Level Ethograms}
+\section{Skeletonisation: Toward Limb-Level Ethograms}
 \label{sec:skel}
 The mask student also supports a finer representation than a class label. We
-convert a silhouette into an anatomical graph---mantle, head and eight
+skeletonise the silhouette into an anatomical graph---mantle, head and eight
 arms---by thinning and shortest-path tracing, tracking it across frames with an
 optical-flow prior and marking every node \emph{detected}, \emph{fitted} or
 \emph{occluded} so that kinematics use only evidence-backed samples. On $50$
@@ -424,10 +426,12 @@ than the first was worth $+3.67$ arms. Speeds are in pixels per second in crop
 space, uncalibrated, and arm counts are silhouette-limited.
 
 \begin{figure}[t]\centering
-  \includegraphics[width=0.44\textwidth]{assets/skeleton_example.pdf}
-  \caption{Silhouette to anatomical graph: mantle, head and eight arms, with each
-  node marked detected, fitted or occluded so that kinematics are computed only
-  from evidence-backed samples.}
+  \includegraphics[width=0.47\textwidth]{assets/skeleton_example.pdf}
+  \caption{Skeletonisation on two clips, each recovering seven of eight arms with a
+  correct head. Colour distinguishes individual arms; every node is marked
+  detected, fitted or occluded so that kinematics are computed only from
+  evidence-backed samples. Left: an infrared frame during human interaction.
+  Right: the animal against the tank glass.}
   \label{fig:skel}
 \end{figure}
 

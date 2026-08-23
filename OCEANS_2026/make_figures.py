@@ -89,8 +89,10 @@ if back and top:
         axs[0, j].imshow(mpimg.imread(p)); axs[0, j].axis("off")
     for j, p in enumerate(top):
         axs[1, j].imshow(mpimg.imread(p)); axs[1, j].axis("off")
-    axs[0, 0].set_title("Colour camera (Right\\_Back)", fontsize=8, loc="left")
-    axs[1, 0].set_title("Infrared camera (Right\\_Top)", fontsize=8, loc="left")
+    # Camera IDs are internal rig names that mean nothing to a reader; the axis that matters is
+    # colour vs infrared, which is what changes the segmenter's behaviour.
+    axs[0, 0].set_title("Colour camera", fontsize=8, loc="left")
+    axs[1, 0].set_title("Infrared camera", fontsize=8, loc="left")
     fig2.tight_layout(pad=0.3, h_pad=0.8)
     fig2.savefig(OUT / "segmentation_demo.pdf", bbox_inches="tight"); plt.close(fig2)
     print("wrote segmentation_demo.pdf")
@@ -191,16 +193,27 @@ print("wrote kinematics_by_behaviour.pdf  (%d clips / %d videos)"
 # ── Fig 5: skeleton qualitative example (image panels: base vs SAM2-refined) ───────────────
 # Figure sources are FROZEN under assets/frozen/: data/skel_diag/ is a scratch dir that every
 # experiment overwrites, so reading it here silently changed a published figure once.
-src = OUT / "frozen" / "skeleton_example_src.jpg"
-if src.exists():
-    im = mpimg.imread(str(src))
-    W = im.shape[1]; w = (W - 6) // 2          # frozen source is a 2-panel strip: base | refined
-    base_p, sam_p = im[:, :w], im[:, W - w:]
-    fig5, ax5 = plt.subplots(1, 2, figsize=(7.0, 1.75))
-    ax5[0].imshow(base_p); ax5[0].axis("off")
-    ax5[1].imshow(sam_p); ax5[1].axis("off")
-    fig5.tight_layout(pad=0.3)
+# Two DIFFERENT clips, both 7 of 8 arms recovered with a correct head -- chosen over the previous
+# base-vs-refined strip because the paper's skeleton section does not discuss mask refinement, so
+# those panel labels referred to something the text never explained.
+# CROPPED to the animal. Uncropped, the octopus occupies a small part of a 1024x576 frame and the
+# skeleton is illegible at column width -- the same problem the paper reports for its backbones,
+# where cropping to the animal was worth +0.07 macro-F1. Crops are (x0, x1, y0, y1) in pixels,
+# chosen once against the frozen panels so they cannot drift.
+panels = [(OUT / "frozen" / "skeleton_ex1_interaction.jpg", (560, 900, 210, 460)),
+          (OUT / "frozen" / "skeleton_ex2_glass.jpg",       (540, 900, 10,  530))]
+if all(p.exists() for p, _ in panels):
+    # The two animals have very different postures -- one spread horizontally, one hanging down the
+    # glass -- so their crops have different aspect ratios. Equal-width axes would letterbox the tall
+    # one into a sliver, so column widths are set proportional to each crop's aspect and both panels
+    # render at the same HEIGHT with no wasted space.
+    ars = [(x1 - x0) / (y1 - y0) for _, (x0, x1, y0, y1) in panels]
+    fig5, ax5 = plt.subplots(1, 2, figsize=(7.0, 2.4), gridspec_kw={"width_ratios": ars})
+    for ax, (p, (x0, x1, y0, y1)) in zip(ax5, panels):
+        ax.imshow(mpimg.imread(str(p))[y0:y1, x0:x1]); ax.axis("off")
+    fig5.tight_layout(pad=0.2, w_pad=0.5)
     fig5.savefig(OUT / "skeleton_example.pdf", bbox_inches="tight", dpi=200); plt.close(fig5)
-    print("wrote skeleton_example.pdf")
+    print("wrote skeleton_example.pdf  (2 frozen panels)")
 else:
-    print("WARN: skel_diag/004.jpg missing")
+    print("WARN: frozen skeleton panels missing:",
+          [p.name for p in panels if not p.exists()])
