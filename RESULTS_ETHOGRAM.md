@@ -385,6 +385,116 @@ backbone is the only free variable and rungs 1–3 stay architecturally identica
 The video arm is the more decisive of the two: CLIP has no notion of motion at all, and the
 hand-computed motion channels that were supposed to compensate bought +0.006.
 
+### 7.1 Result — the representation WAS the constraint
+
+All at `CW_POWER=0.5`, 3 seeds, identical splits/seeds/rung definitions. The refactor that made the
+trainer backbone-agnostic was regression-tested first: the CLIP path reproduces §5's **0.5298
+exactly**, so any movement below is real rather than an artifact of the rewrite.
+
+| backbone | rung 1 | rung 2 | rung 3 |
+|---|---|---|---|
+| CLIP ViT-B/32 (512d) | 0.5096 ± 0.030 | 0.5368 ± 0.015 | 0.5298 ± 0.007 |
+| DINOv2-base (768d) | **0.6006** ± 0.004 | 0.5772 ± 0.014 | 0.5781 ± 0.001 |
+| VideoMAE-base (768d) | 0.5883 ± 0.005 | **0.6057** ± 0.011 | 0.6016 ± 0.022 |
+
+Val-selected: CLIP rung 3 → 0.5298 · DINOv2 rung 2 → **0.5772 (+0.047)** · VideoMAE rung 1 →
+**0.5883 (+0.059)**.
+
+**Robust to the selection rule**, which the §4 rung ladder was not: the *worst* rung of either new
+backbone beats the *best* rung of CLIP (DINOv2 0.577–0.601, VideoMAE 0.588–0.606 vs CLIP
+0.510–0.537 — no overlap). So the conclusion does not depend on how the winner is picked.
+
+**But the win is NOT clearly about time.** VideoMAE leads on the val-selected figure, yet DINOv2 — an
+*image* model — is within noise of it, and VideoMAE's best rung is 1, which pools over time and
+discards order. The supported claim is "a better self-supervised representation", not "a video model
+sees motion". That is weaker than the hypothesis this experiment set out to test.
+
+### 7.2 Combining backbones — ensemble beats fusion
+
+| approach | params | val | TEST macro-F1 |
+|---|---|---|---|
+| best single (DINOv2 rung 2) | 598 K | 0.5784 | 0.5772 |
+| fusion: concat all 3 → one MLP (width 6,150) | 1.59 M | 0.5784 | 0.5960 ± 0.028 |
+| ensemble, val-selected rungs, soft vote | 3 × ~600 K | 0.5969 | 0.6177 |
+| **ensemble, all-MLP (rung 2), hard vote** | 3 × 598 K | **0.6039** | **0.6172** |
+| ensemble, all-MLP, soft vote | 3 × 598 K | 0.6025 | 0.6183 |
+
+Val-selected winner: the all-MLP ensemble, **+0.0255 on val against a seed std of 0.0081** — clears
+noise, unlike the head sweep (§7.4).
+
+**Fusion lost**, as predicted: a 6,150-wide input and 1.59 M params against 133 training videos landed
+at *exactly* the best single backbone's val score, i.e. the extra two representations bought nothing
+once they had to share one head, and it carries the worst test variance. Homogeneous all-MLP members
+beat each backbone's individually-best rung (0.6039 vs 0.5969 val) and are simpler to deploy. The
+members agree on only **60% of test clips** — that disagreement is why voting helps.
+
+### 7.3 Accuracy vs macro-F1, since the two are easily confused
+
+The ensemble is **71.4% accuracy** (528/740 clips) at **macro-F1 0.6183**. Majority baseline: 43.1%
+accuracy / 0.1004 macro-F1. Accuracy is the more intuitive number and is reported alongside, but
+macro-F1 stays the headline: a model predicting `No octopus` on everything scores 43% accuracy and
+0.10 macro-F1, which is exactly the collapse macro-F1 exists to catch.
+
+| class | recall | precision | F1 | test n |
+|---|---|---|---|---|
+| No octopus | 0.85 | 0.92 | **0.88** | 319 |
+| Exploration / manipulation | 0.66 | 0.67 | 0.67 | 141 |
+| Locomotion (crawl/swim) | 0.67 | 0.62 | 0.65 | 52 |
+| Resting / stationary | 0.55 | 0.61 | 0.58 | 119 |
+| Reaching out of water | 0.70 | **0.47** | 0.56 | 69 |
+| Human / enrichment interaction | 0.38 | 0.37 | 0.37 | 40 |
+
+`Resting` improved from 0.44 (§5.1) — the `No octopus` ↔ `Resting` confusion that was 22% of all
+errors is genuinely better with stronger representations. `Reaching` remains a sink (precision 0.47).
+
+### 7.4 Four things that did NOT help, measured
+
+Recorded because each sounds obviously worth trying, and without the numbers they get retried.
+
+1. **Head capacity/architecture ≈ 0.** hidden {256,512,1024} × dropout {0.3,0.5}: VideoMAE val gain
+   +0.0017 vs seed std 0.0040; on DINOv2 the frozen 256/0.4 head *is* the val-best. Test spread across
+   the grid is 0.033 while val resolves 0.002 — val cannot distinguish these configs, so any "winner"
+   is luck. **More capacity actively hurts**: 1024 hidden is the worst config on both backbones.
+2. **Upsampling ≈ loss weighting.** `BALANCE` ∈ {none, weight, upsample, both}: upsample val 0.5775 vs
+   weight 0.5753, margin +0.0023 against seed std 0.0026.
+3. **Less balancing keeps winning.** `BALANCE=none` gives the best test macro-F1 (0.6103), best
+   accuracy (0.7036) *and* the best F1 on the weakest class (`Human` 0.44 vs 0.37 weighted) —
+   balancing hurt the class it was meant to protect. Consistent with the `CW_POWER` sweep
+   (1.0 → 0.5 → 0 all improved test). **NOT adopted**: val ranks `none` *worst* (0.5648), so taking it
+   would be test-set selection. Val and test disagree systematically on this axis across three
+   separate experiments — a limitation to report, not a number to pick from.
+4. **Feature-space augmentation is negative.** mixup {0.2,0.4}, Gaussian noise {0.05,0.1}, and the
+   combination all lose, monotonically with strength, and val/test **agree** for once (baseline
+   0.5753/0.6057; mixup 0.4 → 0.5667/0.5896; noise 0.1 → 0.5450/0.5481). The model is not
+   overfitting-limited, so a regulariser only corrupts frozen features. mixup does lift the weakest
+   class slightly (0.37 → 0.39 as alpha rises) at everyone else's expense — the same
+   recall-for-precision trade class weighting made.
+
+**The pattern across §7: everything that adds real information helps; everything that reshuffles
+existing information does not.** representation +0.087 › class-weight tempering +0.017 › head ≈ 0 ›
+upsampling ≈ 0 › augmentation negative. That ordering is what motivates the mask-feature experiment
+(§7.5) over any further tuning.
+
+### 7.5 In flight — segmentation geometry as ethogram features
+
+`src/extract_mask_feats.py` → `src/eval_mask_features.py`. The only untried lever that adds *real*
+information: CLIP/DINOv2/VideoMAE are appearance encoders that never explicitly localise the animal,
+so nothing in the stack knows where the octopus is, how big it is, or whether it moved. Ten channels
+per frame (area, centroid x/y, bbox w/h, elongation, solidity, masked-motion, centroid displacement,
+validity) from `octo_seg_thin768_lraspp.pt`.
+
+It targets measured weaknesses, not generic ones: `No octopus` ↔ `Resting` is 22% of all errors and
+their whole-frame motion medians are **identical** (0.0198 vs 0.0198), so the existing motion channels
+provably cannot separate them, while mask area separates present from absent by **10–25×** in the
+smoke test (0.001–0.004 on reflection clips vs 0.034–0.073 on real animals). It also uses the accurate
+part of a mediocre model: SEG-TEST mask IoU is 0.6415 but **area error is ~1%**.
+
+Two constraints carried into the evaluation rather than left to prose: the segmenter trained on **11
+of the 34 ethogram test videos**, so gains are reported split by `seg_seen_video` with the unseen
+subset as the honest number; and IR (35% of the corpus) is **zeroed with `valid=0`** because the
+colour-trained segmenter over-segments bright tools there, which also gives a free negative control —
+a "gain" appearing on IR would prove the effect is not the masks.
+
 **One trap logged, because it would have inverted the result.** transformers 5.12 expects VideoMAE's
 attention biases as `attention.{query,key,value}.bias`, while the checkpoint stores `q_bias`/`v_bias`
 (no `k_bias` — zero by design). 36 of 196 tensors therefore came out **freshly initialised**,
@@ -398,8 +508,9 @@ affected.
 
 ## 8. Open items
 
-1. **Representation swap** (§7) — now the best-motivated experiment, because §6.4 shows the student,
-   not the labels, is the weak link. Running.
+1. **DONE (§7):** representation swap → **macro-F1 0.5298 → 0.6172, accuracy 71.4%**. V-JEPA-2 (ViT-L,
+   326M, 1024d) is extracting as a fourth ensemble member; mask features (§7.5) are the live
+   experiment.
 2. **Blind human round on the 34 reserved test videos** (§6.3) — the only unanchored human figure.
    §6.4 raises its value: the teacher-vs-student gap is currently measured against labels the
    annotator produced while looking at the teacher's answer.
@@ -419,6 +530,13 @@ affected.
 | dataset builder | `src/build_ethogram_dataset.py` |
 | dataset validator | `src/validate_ethogram_dataset.py` |
 | trainer / ladder | `src/train_ethogram.py` → `data/ethogram_ladder_v1.json` |
+| backbone features | `src/extract_backbone_feats.py` → `src/dataset_etho/v1/feats_<backbone>/` |
+| backbone ladders | `data/ethogram_ladder_{dinov2,videomae,clip_cw05}.json` |
+| fusion vs ensemble | `src/train_ethogram_fusion.py` → `data/ethogram_fusion.json` |
+| head sweep | `src/sweep_ethogram_head.py` → `data/ethogram_head_sweep_*.json` |
+| human eval (3-way) | `src/eval_ethogram_human.py` → `data/ethogram_human_eval.json` |
+| mask features | `src/extract_mask_feats.py` → `src/dataset_etho/v1/feats_mask/` |
+| mask comparison | `src/eval_mask_features.py` → `data/ethogram_mask_features.json` |
 | frozen dataset | `src/dataset_etho/v1/{manifest.jsonl, features.npz, snapshot.json}` |
 | ensemble passes | `data/ensemble_235b/pass{1..5}.jsonl` |
 | ensemble vote | `src/ensemble_235b_vote.py` → `data/ensemble_235b_voted.json` |
