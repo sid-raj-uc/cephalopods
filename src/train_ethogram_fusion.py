@@ -48,9 +48,9 @@ REPO = HERE.parent
 
 import train_ethogram as T
 
-BACKBONES = ["clip", "dinov2", "videomae", "vjepa2"]
+BACKBONES = ["clip", "dinov2", "videomae", "dinov2crop", "videomaecrop"]
 # the val-selected rung per backbone from R30, used for the ENSEMBLE arm
-BEST_RUNG = {"clip": 3, "dinov2": 2, "videomae": 1, "vjepa2": 2}
+BEST_RUNG = {"clip": 3, "dinov2": 2, "videomae": 1, "dinov2crop": 2, "videomaecrop": 2}
 
 
 def pooled(X, rows, D):

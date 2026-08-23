@@ -68,6 +68,68 @@ def resolve(clip):
     return None
 
 
+# ---------------------------------------------------------------------------- mask-guided cropping
+# Chosen from the corpus, not guessed. Median longest bbox side is 0.216, p75 0.334, p95 0.642.
+# PAD=1.5 gives ~3.1x median linear magnification while leaving margin for an off-centre centroid --
+# an extended arm pulls the centroid away from the body, and clipping that arm would destroy the very
+# signal `Reaching`/`Exploration` depend on. PAD=1.8 was too generous (2.6x, and 6.9% of frames were
+# not cropped at all); PAD=1.0 buys 4.0x but risks cutting the animal.
+# MIN=0.20 rather than 0.25 because the 0.25 floor was CAPPING magnification at 4x on exactly the
+# small animals that need it most, while still retaining some tank context (surface, den) that
+# `Reaching` and `Human interaction` plausibly rely on.
+CROP_PAD = 1.5
+CROP_MIN = 0.20
+_MASK_CACHE = {}
+
+
+def load_crop_boxes(version):
+    """Per-clip [T, 4] boxes from the cached mask features -- NO segmenter re-run needed.
+
+    WHY CROP AT ALL. Every backbone sees the animal at ~48x48 px inside a 224 input (27x27 for the
+    smaller quartile): median mask bbox longest side is 0.216 of the frame, so >95% of the input is
+    tank. Cropping to the animal gives 4.6x linear magnification at the median, 8.2x on small animals.
+    This is the same lever that already worked twice here -- segmentation gained +0.14 IoU from 256->512
+    because at 256 the octopus was ~40x40 px, and the detector's letterbox-vs-centre-crop fix was a
+    framing change, not a new model.
+
+    The box is built from the CENTROID and the bbox dims, both already stored per frame, so this costs
+    nothing extra. A SQUARE crop centred on the centroid with PAD=1.8x the longest side, because the
+    centroid is not the bbox centre -- generous padding guarantees the animal stays inside even when
+    the mass is off-centre (an extended arm pulls the centroid away from the body). Under-padding
+    would silently crop the animal in half, which is worse than not cropping.
+
+    valid=0 frames (IR, or no usable mask) fall back to the FULL frame rather than a guessed box.
+    """
+    if version in _MASK_CACHE:
+        return _MASK_CACHE[version]
+    mdir = REPO / "src" / "dataset_etho" / version / "feats_mask"
+    boxes = {}
+    for f in mdir.glob("*.npy"):
+        a = np.load(f)
+        cx, cy, bw, bh, valid = a[:, 1], a[:, 2], a[:, 3], a[:, 4], a[:, 9]
+        side = np.clip(CROP_PAD * np.maximum(bw, bh), CROP_MIN, 1.0)
+        b = np.stack([cx, cy, side, valid], 1).astype(np.float32)
+        boxes[f.stem] = b
+    _MASK_CACHE[version] = boxes
+    print(f"crop boxes loaded for {len(boxes)} clips (pad={CROP_PAD}, min_side={CROP_MIN})")
+    return boxes
+
+
+def crop_frame(img, box):
+    """img PIL -> cropped PIL. box = (cx, cy, side, valid) in normalised coords."""
+    cx, cy, side, valid = box
+    if valid < 0.5:
+        return img                              # no mask: use the full frame, do not guess
+    W, H = img.size
+    s = float(side) * max(W, H) / 2.0
+    x, y = float(cx) * W, float(cy) * H
+    l, t = max(0, x - s), max(0, y - s)
+    r, b = min(W, x + s), min(H, y + s)
+    if r - l < 16 or b - t < 16:
+        return img
+    return img.crop((int(l), int(t), int(r), int(b)))
+
+
 def device():
     if torch.cuda.is_available():
         return "cuda"
@@ -137,16 +199,37 @@ def patch_videomae_qkv_bias(model, mid):
 
 
 @torch.no_grad()
-def feats_image(paths, proc, model, dev):
-    """Per-frame embedding -> [T, D]. CLS token if present, else mean over patch tokens."""
+def feats_image(paths, proc, model, dev, boxes=None, letterbox=False, size=224):
+    """Per-frame embedding -> [T, D]. CLS token if present, else mean over patch tokens.
+
+    LETTERBOX vs the processor's default CENTRE CROP. dinov2-base's processor resizes the shortest
+    edge to 256 then centre-crops 224, which on a 1280x720 frame keeps only 43% of the image and
+    throws away 116 px from EACH side. That is precisely the bug AGENTS.md records as the original
+    cause of poor detection performance ("preprocessing is letterbox, not crop ... aspect-ratio
+    mismatch, not architecture, was the root cause"), and only the CLIP path had the fix. The octopus
+    is frequently at the frame edge on Right_Back/Right_Left, so this was discarding the animal
+    outright on some clips.
+
+    With letterbox=True the frame is padded to square at `size` and the processor's resize/crop are
+    switched OFF, so nothing is discarded. Note this ALSO reframes the crop result: mask crops are
+    square by construction, so they never lost anything to the centre crop -- part of "cropping helps"
+    may simply have been "the animal ends up centred". This flag is what separates the two.
+    """
     ims = [Image.open(p).convert("RGB") for p in paths]
-    px = proc(images=ims, return_tensors="pt")["pixel_values"].to(dev)
+    if boxes is not None:
+        ims = [crop_frame(im, b) for im, b in zip(ims, boxes)]
+    if letterbox:
+        ims = [C.letterbox(im, size) for im in ims]
+        px = proc(images=ims, return_tensors="pt", do_resize=False,
+                  do_center_crop=False)["pixel_values"].to(dev)
+    else:
+        px = proc(images=ims, return_tensors="pt")["pixel_values"].to(dev)
     h = model(pixel_values=px).last_hidden_state            # [T, tokens, D]
     return h[:, 0].float().cpu().numpy() if h.shape[1] > 1 else h.mean(1).float().cpu().numpy()
 
 
 @torch.no_grad()
-def feats_video(paths, proc, model, dev, n_frames):
+def feats_video(paths, proc, model, dev, n_frames, boxes=None):
     """Video backbone -> [T', D] by pooling spatial tokens at each temporal position.
 
     Video models emit spatiotemporal tokens; averaging over space keeps a TIME axis so rung 3's GRU
@@ -156,7 +239,14 @@ def feats_video(paths, proc, model, dev, n_frames):
     idx = np.linspace(0, len(paths) - 1, n_frames).round().astype(int)
     # numpy frames, and the batch is a LIST of videos -- proc(videos=[frames]) is the only signature
     # transformers 5.x accepts here; PIL input or the pixel_values_videos key both fail.
-    vid = [np.array(Image.open(paths[i]).convert("RGB")) for i in idx]
+    _ims = [Image.open(paths[i]).convert("RGB") for i in idx]
+    if boxes is not None:
+        # video models need a fixed size per clip, so crop then resize every frame to the first
+        # frame's crop size -- a per-frame size change would break the tensor stack.
+        _ims = [crop_frame(im, boxes[min(k, len(boxes) - 1)]) for k, im in enumerate(_ims)]
+        tgt = _ims[0].size
+        _ims = [im if im.size == tgt else im.resize(tgt, Image.BILINEAR) for im in _ims]
+    vid = [np.array(im) for im in _ims]
     enc = proc(videos=[vid], return_tensors="pt")
     key = "pixel_values_videos" if "pixel_values_videos" in enc else "pixel_values"
     px = enc[key].to(dev)
@@ -207,6 +297,11 @@ def main():
     ap.add_argument("--version", default="v1")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--workers", type=int, default=3, help="parallel ffmpeg decoders")
+    ap.add_argument("--letterbox", action="store_true",
+                    help="pad to square instead of the processor's destructive centre-crop; "
+                         "writes feats_<backbone>lb/")
+    ap.add_argument("--crop", action="store_true",
+                    help="mask-guided crop before embedding; writes feats_<backbone>crop/")
     ap.add_argument("--no-reuse-motion", action="store_true",
                     help="recompute the motion channels instead of copying them from the CLIP build")
     a = ap.parse_args()
@@ -225,7 +320,8 @@ def main():
     B = {}
     for nm in names:
         proc, model, kind, nfr = load_backbone(nm, dev)
-        o = d / f"feats_{nm}"; o.mkdir(parents=True, exist_ok=True)
+        sfx = ("crop" if a.crop else "") + ("lb" if a.letterbox else "")
+        o = d / f"feats_{nm}{sfx}"; o.mkdir(parents=True, exist_ok=True)
         B[nm] = {"proc": proc, "model": model, "kind": kind, "nfr": nfr, "out": o,
                  "params": sum(p.numel() for p in model.parameters()),
                  "done": {p.stem for p in o.glob("*.npy")}, "D": None, "ok": 0, "fail": 0}
@@ -235,6 +331,8 @@ def main():
     # Motion channels are IDENTICAL by construction to the CLIP build's, so copy them from
     # feats/*.npy columns -2: instead of re-running cv2 over the frames. Not an approximation --
     # the same numbers, and it also removes the last reason to touch every dense frame.
+    CROPS = load_crop_boxes(a.version) if a.crop else {}
+    globals()["CROPS"] = CROPS
     clip_feats = d / "feats"
     reuse = not a.no_reuse_motion and clip_feats.exists()
 
@@ -281,11 +379,17 @@ def main():
                     if stem in b["done"]:
                         continue
                     try:
+                        bx = None
+                        if a.crop:
+                            bx = CROPS.get(stem)
+                            if bx is None:
+                                b["fail"] += 1; continue
                         if b["kind"] == "image":
-                            emb = feats_image([fr[i] for i in pick], b["proc"], b["model"], dev)
+                            emb = feats_image([fr[i] for i in pick], b["proc"], b["model"], dev, bx,
+                                              letterbox=a.letterbox)
                             mot = mot10
                         else:
-                            emb = feats_video(fr, b["proc"], b["model"], dev, b["nfr"])
+                            emb = feats_video(fr, b["proc"], b["model"], dev, b["nfr"], bx)
                             tp = np.linspace(0, len(mot10) - 1, emb.shape[0]).round().astype(int)
                             mot = mot10[tp]
                         arr = np.concatenate([emb, mot], axis=1).astype(np.float32)

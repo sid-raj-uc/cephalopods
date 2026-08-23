@@ -185,11 +185,18 @@ PAGE = """
 <div id=toast></div>
 <script>
 let Q=null, i=0, cur=null, sel=null, unsure=false, t0=Date.now();
-let shown=false, always=localStorage.getItem('always_v2')==='1';
+// "always show hint" is PER ROUND and defaults OFF. It used to live under the fixed key
+// 'always_v2', so a round enabled in v2 silently stayed enabled in v3 -- every one of the 151 v3
+// labels came back assisted=true at a median 2.0s per clip, which turns an accuracy measurement into
+// an agreement measurement without anyone choosing that. Keying by VERSION means a new round starts
+// blind and the labeller has to opt in again, deliberately.
+let shown=false, always=false, hintKey=null;   // set in boot(), once the round version is known
 const $=s=>document.querySelector(s);
 function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,900)}
 async function boot(){
   Q=await (await fetch('/api/queue')).json();
+  hintKey='always_'+Q.version;                 // per-round, so a new round starts blind
+  always=localStorage.getItem(hintKey)==='1';
   $('#btns').innerHTML=Q.labels.map((l,n)=>
     `<button data-l="${l.replace(/"/g,'&quot;')}">${l}<kbd>${n+1}</kbd></button>`).join('');
   $('#btns').querySelectorAll('button').forEach(b=>b.onclick=()=>choose(b.dataset.l));
@@ -199,7 +206,7 @@ async function boot(){
   $('#bhint').onclick=showHint;
   $('#always').checked=always;
   $('#always').onchange=e=>{always=e.target.checked;
-    localStorage.setItem('always_v2',always?'1':'0'); if(always) showHint();};
+    localStorage.setItem(hintKey,always?'1':'0'); if(always) showHint();};
   // resume at the first unlabelled clip
   i=Q.items.findIndex(x=>!(x.clip in Q.done)); if(i<0) i=0;
   go(i);
