@@ -1397,3 +1397,80 @@ Per-class at the selected `CW_POWER=0.5` (rung 3, 3 seeds pooled):
 `No octopus` ↔ `Resting` remains the dominant confusion (22.3% of all errors) and is untouched by
 weighting, as expected — it is a label/signal problem (45% of IR `No octopus` labels are wrong
 against the human, R26/R27), not a class-balance problem. Two independent defects, two fixes.
+
+## R29 — teacher vs student vs human: the STUDENT is the weak link (2026-08-22)
+
+`src/eval_ethogram_human.py`. The ladder scores the student against its own teacher, i.e. measures
+reproduction, not correctness. 455 human labels make the real question answerable. Populations are
+**never pooled** — 102 human-labelled clips are in the train split, so scoring there measures
+memorisation and is diagnostic only.
+
+Rung 3, CW_POWER=0.5, 3 seeds, probabilities averaged before argmax.
+
+| population | clips/videos | teacher vs human | student vs human | student vs teacher |
+|---|---|---|---|---|
+| **human_secondary** | 251 / 99 | **72.5%**, macro-F1 **0.6569** | 60.6%, macro-F1 0.4917 | 0.5635 |
+| test | 30 / 19 | 86.7%, 0.5139 | 60.0%, 0.2636 | 0.2721 |
+| val | 25 / 18 | 92.0%, 0.4298 | 72.0%, 0.3150 | 0.3214 |
+
+Agreement CIs on the 251-clip population: teacher [66.7, 77.7] vs student [54.4, 66.4] — **disjoint**.
+test/val macro-F1 are computed on 25-30 clips over 6 classes; too noisy to quote.
+
+Where student and teacher disagree, who does the human back?
+
+| population | disagreements | backs STUDENT | backs TEACHER | neither |
+|---|---|---|---|---|
+| human_secondary | 86 | 19 | **49** | 18 |
+| test | 11 | 1 | 9 | 1 |
+| val | 6 | 0 | 5 | 1 |
+
+**THIS REVERSES R27's headline.** R27 concluded "the ceiling is video diversity" (later narrowed to
+"given frozen CLIP features"). Neither labels nor data quantity is the binding constraint:
+
+1. The teacher beats the student on the SAME clips, 0.657 vs 0.492 macro-F1, disjoint intervals. The
+   student has ~0.165 macro-F1 of headroom against labels already in hand.
+2. On disagreements the human sides with the teacher 2.6:1 — the student's deviations are mostly the
+   student being wrong, not the teacher being noisy.
+3. So the signal IS in the footage; a 235B VLM recovers it and a frozen-CLIP embedding + 267K-param
+   head does not. **The constraint is the student's representation/capacity.**
+
+Consequences for the plan: the backbone swap (R30, running) becomes the first experiment, and buying
+teacher labels for the 1,160 harvested clips drops down the list — more of the same labels does not
+fix a student already behind the labels it has.
+
+**CONFOUND, recorded because it favours this conclusion.** The hint the labelling UI shows is the
+ENSEMBLE's verdict, and all 455 labels are `assisted`, so the annotator was anchored toward the
+teacher and `teacher vs human` is inflated by an unknown amount. `student vs human` is NOT anchored
+(student predictions were never displayed), so the comparison is biased in the teacher's favour and
+the true gap is smaller than 12 points. The direction likely survives — large gap, 2.6:1 split — but
+the magnitude must not be quoted as clean. The blind round on the reserved test videos is the fix and
+this result raises its value.
+
+Full write-up with all tables: `RESULTS_ETHOGRAM.md` §6.4.
+
+## R30 — representation swap, in flight (2026-08-22)
+
+`src/extract_backbone_feats.py`. R27's ladder varied the HEAD on frozen CLIP; the representation was
+never varied, so "the ceiling is video diversity" was always conditional. R29 then showed the student
+is the weak link, making this the right experiment. Same clips, same frames (the manifest's recorded
+`frames_used`), same two motion channels appended → the backbone is the only free variable and rungs
+1-3 stay architecturally identical.
+
+| backbone | kind | params | hypothesis |
+|---|---|---|---|
+| CLIP ViT-B/32 | image-text | 88M | baseline: test macro-F1 0.5298 |
+| DINOv2-base | image, self-supervised | 87M | is CLIP's *appearance* encoding the limit? |
+| VideoMAE-base | **video-native** | 86M | is *time* the limit? |
+
+The video arm is sharper: CLIP has no notion of motion, and the hand-computed motion channels meant
+to compensate bought +0.006 (R27).
+
+**Trap that would have inverted the result.** transformers 5.12 expects VideoMAE attention biases as
+`attention.{query,key,value}.bias`; the checkpoint stores `q_bias`/`v_bias` (no `k_bias` — zero by
+design). 36 of 196 tensors therefore came out FRESHLY INITIALISED, announced only via a generic
+"MISSING … consider training on your downstream task" warning. It does not crash and the features look
+plausible — a partly uninitialised encoder would have produced a **fake negative for the video
+backbone** and the wrong conclusion about whether time helps. Patched (24 tensors: query+value over 12
+layers) after verifying the attention WEIGHTS load bitwise-identical, so only biases were affected.
+
+Status 2026-08-22: DINOv2 761/4,665 (0 failures), ~22 clips/min on MPS, ETA ~3 h; VideoMAE queued.
