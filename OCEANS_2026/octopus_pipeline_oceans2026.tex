@@ -126,9 +126,10 @@ nor code; our release is a partial answer to it.
 \section{Pipeline and the Measurements That Set It}
 \label{sec:pipeline}
 The cascade runs cheapest-first: probe, motion, a trained presence probe, then
-the VLM (Fig.~\ref{fig:pipeline}). Table~\ref{tab:gates} gives the funnel and,
-for each gate, the measurement that placed it and what that measurement
-prevented.
+the VLM (Fig.~\ref{fig:pipeline}). Table~\ref{tab:gates} reports how much
+footage survives each stage and, for every gate, the measurement that placed it
+alongside the decision that measurement reversed. Four of the five gates ended up
+contrary to the design we would have chosen without the measurement.
 
 \begin{figure}[t]\centering
   \includegraphics[width=0.47\textwidth]{assets/pipeline_behaviour.pdf}
@@ -139,21 +140,19 @@ prevented.
 \end{figure}
 
 \begin{table}[t]\centering
-\caption{The cascade. Upper block: how much footage survives each stage.
-Lower block: the measurement that set each gate, and the decision it reversed.
-Four of five gates were placed against intuition.}
+\caption{The Cascade: Survival Rates and Gate Placement}
 \label{tab:gates}
 \small
-\begin{tabular}{@{}p{0.30\columnwidth}p{0.62\columnwidth}@{}}
+\begin{tabular}{@{}p{0.26\columnwidth}p{0.66\columnwidth}@{}}
 \toprule
 \multicolumn{2}{@{}l}{\textbf{Funnel} (1{,}769 videos, $892.5$\,h)} \\
 \midrule
-probe, ${\approx}10$ seek frames & $1{,}054$ videos ($60\%$) discarded with no full decode \\
-decoded at all              & $59.9$\,h $=\mathbf{6.7\%}$ of the footage \\
-clips reaching the VLM      & $5{,}222$ \\
-\quad no animal             & $42.7\%$ \\
-\quad stationary            & $16.7\%$ \\
-\quad behaviourally active  & $\mathbf{40.6\%}$ \\
+probe & $1{,}054$ videos ($60\%$) discarded on ${\approx}10$ seek frames, with no full decode \\
+decoded at all & $59.9$\,h $=\mathbf{6.7\%}$ of the footage \\
+clips to VLM & $5{,}222$ \\
+\quad no animal & $42.7\%$ \\
+\quad stationary & $16.7\%$ \\
+\quad active & $\mathbf{40.6\%}$ \\
 \midrule
 \multicolumn{2}{@{}l}{\textbf{Gate placement}} \\
 \midrule
@@ -205,9 +204,7 @@ accuracy, per-class F1 ${\approx}0$). Table~\ref{tab:etho} shows the current
 model and the one change that mattered.
 
 \begin{table}[t]\centering
-\caption{Ethogram classification, $740$ test clips from $34$ held-out videos,
-three seeds. Macro-F1 is the headline because the classes run $43\%$ to $5\%$
-and accuracy rewards collapse.}
+\caption{Ethogram Classification Results}
 \label{tab:etho}
 \small
 \begin{tabular}{@{}lcc@{}}
@@ -287,10 +284,7 @@ clean holdout, mask IoU is flat across teacher quality ($0.494$, $0.508$,
 $0.506$).
 
 \begin{table}[t]\centering
-\caption{Against zero-shot foundation models on identical held-out human labels.
-Paired differences bootstrapped clustered by source video; both intervals exclude
-zero. Presence arms share the frozen backbone \emph{and} preprocessing, so the
-gap isolates the trained probe.}
+\caption{Distilled Students vs.\ Zero-Shot Teachers}
 \label{tab:zeroshot}
 \small
 \begin{tabular}{@{}llc@{}}
@@ -312,7 +306,10 @@ task & system & metric \\
 \end{table}
 
 Table~\ref{tab:zeroshot} sets the students against the zero-shot models they were
-distilled from, on identical labels. One caveat travels with the mask row: on the
+distilled from, on identical held-out human labels; paired differences are
+bootstrapped clustered by source video and both intervals exclude zero. The two
+presence arms share the frozen backbone \emph{and} its preprocessing, so the gap
+isolates the trained probe rather than the features. One caveat travels with the mask row: on the
 $21$ of $122$ frames where Grounding DINO clears its own confidence gate the
 teacher \emph{wins}, $0.726$ against $0.657$. The teacher is high-precision and
 low-recall---it finds nothing at all on a quarter of frames---and distillation
@@ -320,9 +317,7 @@ converted a sparse, high-quality signal into dense coverage. That is a better
 argument for distilling than a flat win would have been.
 
 \begin{table}[t]\centering
-\caption{Side by side with HideAndSeg~\cite{hideandseg}. Reported mask quality
-tracks how much prompting is assumed at inference; every other row differs, so
-the IoU row is not a ranking.}
+\caption{Comparison with HideAndSeg~\cite{hideandseg}}
 \label{tab:sidebyside}
 \small
 \begin{tabular}{@{}lccc@{}}
@@ -341,10 +336,12 @@ scale                 & $148$ vid.          & --          & $4{,}665$ clips \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:sidebyside} places us beside that work. We claim the unprompted,
-presence-inferring and ${\approx}78\times$-smaller columns, and the release; we do
-not claim the IoU column, since neither method has been run on the other's data
-and the two lower rows favour them.
+Table~\ref{tab:sidebyside} places us beside that work. Reported mask quality
+tracks how much prompting is assumed at inference, and every other row differs, so
+the IoU row is not a ranking. We claim the unprompted, presence-inferring and
+${\approx}78\times$-smaller rows, and the release; we do not claim the IoU row,
+since neither method has been run on the other's data and the final two rows
+favour them.
 
 \section{What the Pipeline Reveals}
 \label{sec:findings}
