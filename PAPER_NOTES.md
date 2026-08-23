@@ -1578,3 +1578,56 @@ should not be acted on.
 
 **Next, running:** V-JEPA-2 (ViT-L, 326M, 1024d) as a fourth ensemble member — the cheapest test of
 the only lever that has worked.
+
+## R35 — mask features: the controls killed a +0.043 "gain" (2026-08-23)
+
+`src/extract_mask_feats.py` + `src/eval_mask_features.py`. Ten segmentation-geometry channels (area,
+centroid x/y, bbox w/h, elongation, solidity, masked-motion, centroid displacement, validity) from
+`octo_seg_thin768_lraspp.pt`, appended to VideoMAE rung 2. Extraction: 4,665/4,665, 0 failures,
+1,623 IR clips zeroed with `valid=0`.
+
+**PRE-RUN VALIDATION was strong** — each channel separates the class it was designed for, on the
+2,454 clips with a valid mask block:
+
+| test | via | AUC | existing feature |
+|---|---|---|---|
+| No-octopus vs Resting | `area` | **0.772** | ~0.50 (motion medians identical) |
+| Locomotion vs Resting | `masked_motion` | **0.819** | 0.714 (whole-frame motion) |
+| Reaching vs others | `centroid_y` (height) | **0.804** | none exists |
+| Locomotion vs Resting | `centroid_disp` | 0.707 | 0.714 |
+
+(`centroid_y` prints as AUC 0.196 in the raw output — image y increases DOWNWARD, so Reaching's low
+cy = animal high in frame, exactly as predicted. The direction convention was wrong, not the feature.)
+
+**HEADLINE, WHICH IS NOT CLAIMABLE:** without mask val 0.5753 / TEST 0.6057 → with mask val 0.6200 /
+**TEST 0.6491 (+0.0434)**, val margin +0.0447 vs seed std 0.0028.
+
+**Why it fails — the built-in controls:**
+
+| subset | n | macro-F1 without → with |
+|---|---|---|
+| segmenter SAW the video | 540 | 0.600 → 0.664 (**+0.064**) |
+| segmenter UNSEEN | 200 | 0.306 → 0.280 (**−0.025**) |
+| IR only (zeroed block, control) | 232 | 0.381 → 0.359 (−0.022) |
+
+The whole gain sits on the 540 clips from the 11 test videos the segmenter trained on. The IR control
+correctly shows no gain, so the comparison itself is sound — the effect IS the masks, and the masks
+only help where the segmenter has already seen the footage.
+
+**The mechanism predictions also failed.** `Reaching` +0.120 (matches the `cy` prediction), but
+`Resting` **−0.010** despite being the main target, and the No-octopus↔Resting confusion rose from
+**18.8% → 25.4% of errors** — the one number the experiment was built to move went the wrong way.
+Meanwhile `Human interaction`, designated the NO-MECHANISM control, gained **+0.080**, the
+second-largest jump. Gains where no mechanism was predicted and absence where one was is the signature
+of a cause other than the claimed one.
+
+**Caveat on the negative too:** the unseen subset has `Locomotion` and `Reaching` at 1 clip each and
+`Human` at 2, so its macro-F1 is dominated by single-example classes. It shows NO DEMONSTRATED GAIN,
+not harm.
+
+**To make this conclusive:** retrain the segmenter with all 34 ethogram test videos held out
+(`--holdout-videos`, the discipline the segmentation work already adopted after being burned by this
+exact leak in 2026-08-09). Until then the strong pre-run AUCs stay a promising prior, not a result.
+
+**Process note worth keeping:** the leak was foreseen and the split built in BEFORE running. That is
+the only reason a +0.043 was not reported as a win — the raw numbers pass the seed-noise test cleanly.

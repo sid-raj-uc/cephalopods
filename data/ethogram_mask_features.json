@@ -1,0 +1,64 @@
+{
+ "backbone": "videomae",
+ "rung": 2,
+ "cw_power": 0.5,
+ "arms": {
+  "without_mask": {
+   "val": 0.5753,
+   "val_std": 0.0061,
+   "test": 0.6057,
+   "test_std": 0.0113,
+   "per_class": {
+    "No octopus": 0.8457,
+    "Exploration / manipulation": 0.676,
+    "Human / enrichment interaction": 0.3683,
+    "Locomotion (crawl/swim)": 0.6183,
+    "Reaching out of water": 0.5546,
+    "Resting / stationary": 0.5712
+   },
+   "feat_dim": 768,
+   "static_confusions": 45
+  },
+  "with_mask": {
+   "val": 0.62,
+   "val_std": 0.0028,
+   "test": 0.6491,
+   "test_std": 0.0098,
+   "per_class": {
+    "No octopus": 0.8745,
+    "Exploration / manipulation": 0.6794,
+    "Human / enrichment interaction": 0.4483,
+    "Locomotion (crawl/swim)": 0.6561,
+    "Reaching out of water": 0.6746,
+    "Resting / stationary": 0.5617
+   },
+   "feat_dim": 778,
+   "static_confusions": 51
+  }
+ },
+ "delta": {
+  "val": 0.0447,
+  "test": 0.0434,
+  "verdict": "REAL val gain"
+ },
+ "subsets": {
+  "seg SAW the video": {
+   "n": 540,
+   "macro_f1_without": 0.6001,
+   "macro_f1_with": 0.6637,
+   "delta": 0.0636
+  },
+  "seg UNSEEN": {
+   "n": 200,
+   "macro_f1_without": 0.3055,
+   "macro_f1_with": 0.2803,
+   "delta": -0.0252
+  },
+  "IR only (zeroed block = control)": {
+   "n": 232,
+   "macro_f1_without": 0.3806,
+   "macro_f1_with": 0.3588,
+   "delta": -0.0218
+  }
+ }
+}
