@@ -307,3 +307,88 @@ fusion trade · 30B-vs-235B captions · teacher-vs-human mask comparison.
 2. Blind human round on the 34 reserved test videos — run it, or ship the limitation as written?
 3. Companion venue: arXiv preprint, or tech report linked from the data release?
 4. Trim the last 0.4 pp from §II or §IV during drafting.
+
+---
+
+# TABLES — drafted
+
+## Table A — like-for-like: ours vs zero-shot foundation models
+**This is where superiority is CLAIMED**, because every row is measured on identical data with a
+paired test. Both segmentation rows use the same 122 human masks; both detection rows use the same
+120 human-labelled frames, the same frozen CLIP backbone and the same letterbox preprocessing, so the
+gap isolates the trained component.
+
+```latex
+\begin{table}[t]\centering
+\caption{Ours vs.\ zero-shot foundation models, measured on identical held-out human labels.
+Paired differences are bootstrapped \emph{clustered by source video}; both intervals exclude zero.}
+\label{tab:zeroshot}
+\small
+\begin{tabular}{@{}llcc@{}}
+\toprule
+task & system & metric & paired $\Delta$ \\
+\midrule
+\multirow{2}{*}{mask} & GD-tiny$+$SAM2, zero-shot, per frame & IoU $0.374$ & \multirow{2}{*}{$-0.268$ [$-0.313$, $-0.136$]} \\
+                      & \textbf{ours} (3.2\,M student, no prompt) & IoU $\mathbf{0.642}$ & \\
+\midrule
+\multirow{2}{*}{presence} & zero-shot CLIP (5$+$5 prompt ensemble) & AUC $0.450$ & \multirow{2}{*}{$+0.295$ [$+0.069$, $+0.528$]} \\
+                          & \textbf{ours} (trained probe, same backbone) & AUC $\mathbf{0.745}$ & \\
+\midrule
+\multirow{2}{*}{caption} & Qwen3-VL-2B base & emb-sim $0.702$ & \multirow{2}{*}{$+0.132$} \\
+                         & \textbf{ours} (LoRA student) & emb-sim $\mathbf{0.834}$ & \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
+Caveats to carry in the caption or text: the presence rows rest on **23 positives**, so claim the
+ordering not the magnitude; and the mask headline inverts on the subset where GroundingDINO clears its
+own confidence gate (21/122 frames: teacher $0.726$ vs student $0.657$) — high-precision/low-recall
+teacher distilled into uniformly competent coverage, which is the better argument for distillation.
+
+## Table B — side by side with the closest prior art
+**This is CONTEXT, not a win.** The condition columns are the point: they show why the IoU column is
+not a like-for-like ranking. Reader draws their own conclusion.
+
+```latex
+\begin{table}[t]\centering
+\caption{Side-by-side with HideAndSeg~\cite{hideandseg}. The reported mask quality tracks how much
+prompting is assumed at inference; the conditions differ in every other column, so these numbers are
+not a ranking.}
+\label{tab:sidebyside}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & HideAndSeg & our teacher & \textbf{our student} \\
+\midrule
+mask IoU              & $0.938$              & $0.726$\,$^{a}$        & $\mathbf{0.642}$ \\
+reference for that number & manual init.\ frame & 122 human masks    & 122 human masks \\
+held-out videos       & --                   & 5                      & 5 \\
+prompt at inference   & auto (YOLO-trained)  & confidence-gated       & \textbf{none} \\
+presence              & given (35\% removed) & inferred               & \textbf{inferred} \\
+params at inference   & ${\approx}249$\,M    & ${\approx}230$\,M      & $\mathbf{3.2}$\,M \\
+runtime reported      & no                   & --                     & \textbf{local, no GPU} \\
+data / code released  & no                   & --                     & \textbf{yes} \\
+setting               & wild, 3 sites        & 1 tank                 & 1 tank \\
+subject               & juv.\ \emph{O.\ insularis} & adult \emph{O.\ vulgaris} & adult \emph{O.\ vulgaris} \\
+videos / frames       & 148 / 366{,}514      & --                     & 4{,}665 clips \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
+$^{a}$ on the 21/122 frames where GroundingDINO clears its own $0.60$ seed-confidence gate; $0.374$
+over all 122.
+
+**Two rows are deliberately unflattering to us** — `setting` and `videos/frames`. Their field coverage
+exceeds ours and the table should say so; hiding it invites a reviewer to spend their whole report on
+our single-animal limitation instead of on the contribution.
+
+**What we claim from Table B:** unprompted operation, presence inferred rather than assumed,
+${\approx}78\times$ smaller at inference, and data released. **Not** the IoU column.
+
+## Verify before submission
+- [ ] Re-read HideAndSeg's Tables 1–2 directly (not via `PAPER_NOTES` R20) to confirm: metric
+      insensitivity across 5/10/20 annotated frames, zero change from a second annotation frame, and
+      that the supervised reference is the initial frame. Asserting a peer's headline metric is
+      insensitive to its own ablation must rest on their paper, not on our summary.
+- [ ] Confirm their parameter count (YOLOv11-l + SAM2-hiera-large $\approx249$\,M) from their text.
+- [ ] Confirm the 35\% presence-filtering figure.
