@@ -271,10 +271,19 @@ penalises the under-segmentation the symmetric loss ignores.
   \label{fig:seg}
 \end{figure}
 
-\textbf{Captioning.} A $2$B VLM adapted with LoRA on teacher captions improves
-held-out embedding similarity from $0.702$ to $0.834$ and ROUGE-L from $0.269$ to
-$0.455$ over its own base model. Quantised to four bits it is $1.7$\,GB and
-captions a clip in ${\approx}3$\,s on a $16$\,GB laptop with no GPU.
+\textbf{Captioning.} The teacher's captions were initially poor on this footage,
+and the fix was its \emph{input} rather than its size: enhancing frame contrast,
+raising resolution, and sending only the frames the presence probe scores highest
+rather than a uniform sample. In a blind A/B over $33$ clips the enhanced-input
+captions were preferred $23$ times against $1$ ($70\%$, CI$_{95}$ $[53\%,83\%]$;
+the remainder ties or both judged poor)---the same lesson as the letterbox and
+resolution results above, arriving a third time. A $2$B VLM adapted with LoRA on
+those captions then improves held-out embedding similarity from $0.702$ to
+$0.834$ and ROUGE-L from $0.269$ to $0.455$ over its own base model. Quantised to
+four bits it is $1.7$\,GB and captions a clip in ${\approx}3$\,s on a $16$\,GB
+laptop with no GPU. The released corpus carries ${\approx}25{,}000$ teacher
+captions, five per clip from disjoint frame samplings, against the $3{,}066$
+examples this student was trained on.
 
 \textbf{What did not work.} Recorded because each is a natural next thing to try.
 Feature-space augmentation (mixup, Gaussian noise) is \emph{negative} and
