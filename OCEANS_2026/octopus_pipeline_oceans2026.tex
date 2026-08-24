@@ -63,26 +63,25 @@ ORCID: 0000-0002-4979-6156}\thanks{\textsuperscript{*}Siddharth Raj and Krishan 
 Continuous behavioural monitoring is the obvious use for an aquarium's cameras
 and remains out of reach: manual ethogram scoring is bounded by expert hours,
 and prompting a large vision--language model (VLM) on every clip fails on
-arithmetic rather than on accuracy. The 892 h of footage we hold for a single
-adult \emph{Octopus vulgaris} is about 160,000 twenty-second clips, or 372 to
-1,030 h of wall-clock for one five-pass labelling run, on infrastructure an
-aquarium does not have. We instead treat a 235B-parameter VLM as an
-\emph{offline teacher} and distil it into a cascade of small models that runs on
-site. Cheap gates reject 60\% of videos without a full decode, leaving only
-about 60 h ever decoded; 42.7\% of the clips that survive still contain no
-animal, which is why the expensive model is spent last rather than first. Every
-gate is placed by a measurement on human-labelled data rather than by intuition,
-and in each case the measurement changed the design. The students reach 0.665
-macro-F1 and 75.4\% accuracy on a six-class ethogram, against a majority
-baseline of 0.100 and 43.1\%; 0.642 mask IoU from 3.2 M parameters with no
-prompt at inference, above the 0.374 its teacher architecture reaches zero-shot
-per frame; and caption embedding similarity lifted from 0.702 to 0.834 over
-their own base model. Applied to the corpus, the pipeline recovers a circadian
+arithmetic rather than on accuracy. The 892 h we hold for a single adult
+\emph{Octopus vulgaris} is about 160,000 twenty-second clips, so one five-pass
+labelling run costs 372 to 1,030 h of wall-clock on an API the aquarium does not
+have. We instead treat a 235B-parameter VLM as an \emph{offline teacher} and
+distil it into a cascade of small models that runs on site. Cheap gates reject
+60\% of videos without a full decode, leaving only about 60 h ever decoded;
+42.7\% of surviving clips still contain no animal, which is why the expensive
+model is spent last rather than first. Every gate is placed by a measurement on
+human-labelled data rather than by intuition, and in each case the measurement
+changed the design. The students reach 0.665 macro-F1 on a six-class ethogram
+against a majority baseline of 0.100, and 0.642 mask IoU from 3.2 M parameters
+with no prompt at inference, above the 0.374 its teacher architecture reaches
+zero-shot per frame. Applied to the corpus, the pipeline recovers a circadian
 profile peaking at 45\% visible activity at 17:00 against 1 to 5\% overnight,
-and shows human presence nearly doubling movement; skeletonising the masks into
-a mantle--head--eight-arm graph yields per-arm kinematics. We release 5,222
-teacher-labelled clips with their full vote distributions, about 25,000
-captions, 969 human labels and masks, and three frozen video-level benchmarks.
+and shows human presence nearly doubling movement. Arm-tip speed, computed from
+the masks without ever seeing the teacher's answer, independently recovers the
+same ordering of behaviours. We release 5,222 teacher-labelled clips with full
+vote distributions, about 25,000 captions, 969 human labels and masks, and three
+frozen video-level benchmarks.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -322,6 +321,35 @@ penalises the under-segmentation the symmetric loss ignores.
   \label{fig:seg}
 \end{figure}
 
+\textbf{The mask as a presence gate, counted by video.} Mask area is also the
+better presence test, and measuring it exposed a defect in our own benchmark.
+Negative sets are never pooled, because the two failure modes are different: an
+empty tank, and the reflection camera in which the glass shows the room and a
+mirrored human. Against $105$ empty frames drawn from $53$ recordings the
+student separates present from absent at AUC $0.917$
+(CI$_{95}$ $[0.839,0.962]$, false positives $0.143$ at the deployed area gate);
+against $34$ reflection frames from $27$ recordings, $0.921$
+($[0.826,0.966]$, $0.176$). The intervals almost entirely overlap, so
+\emph{neither failure mode dominates}---a null result, and one we had earlier
+got wrong in both directions. An initial estimate of $0.794$ came from $19$
+negative frames of which $18$ were the same recording; it was not merely
+under-powered but pessimistic, dominated by one unusually hard video. Counting
+negatives by \emph{video} rather than by frame is the same discipline already
+applied to the training splits, and applying it late cost us a published number
+that understated the model.
+
+\textbf{Temporal fusion does not pay.} Smoothing the probability map across
+neighbouring frames is the obvious way to exploit video, and it fails
+instructively. Exponential moving average costs mask quality
+(IoU $0.642\rightarrow0.547$) and optical-flow warping is worse on \emph{both}
+axes ($0.511$), so what little it buys comes from plain smoothing rather than
+motion compensation. Its apparent presence gain was large only against the
+one-recording baseline above; measured against the properly powered $0.917$ the
+remaining headroom is under $0.08$. Test-time fusion therefore trades mask
+quality for almost nothing. A temporally \emph{trained} student---rather than a
+smoothed per-frame one---remains untested and is the honest next step, since
+per-frame mislocalisation is the failure mode.
+
 \textbf{Captioning.} The teacher's captions were initially poor on this footage,
 and the fix was its \emph{input} rather than its size: enhancing frame contrast,
 raising resolution, and sending only the frames the presence probe scores highest
@@ -515,10 +543,43 @@ space, uncalibrated, and arm counts are silhouette-limited.
   \label{fig:skel}
 \end{figure}
 
-This is released as a capability rather than a result. Its purpose is the obvious
-next question: a six-class sheet cannot distinguish exploration with one arm from
-whole-body exploration, and per-limb usage statistics would make
-\emph{limb-aware} ethograms possible. That is the direction we intend to take.
+\textbf{Two independent halves of the pipeline agree.} The skeleton is worth
+more than a capability claim, because it can be checked against the ethogram
+without either signal seeing the other: the kinematics pipeline never reads the
+behaviour label, and the teacher never sees a mask. On a video-spread sample of
+$146$ clips from $66$ recordings, aggregated to one value per (video, class)
+before testing so that several clips from one recording cannot masquerade as
+independent evidence, raw arm-tip speed orders the classes as an ethologist
+would (Table~\ref{tab:kin}). The separation is not marginal---Kruskal--Wallis
+$H=33.2$ on $N=132$ video-class units, $p=3.5\times10^{-6}$,
+$\varepsilon^{2}=0.224$---and all five resting-versus-other contrasts survive
+Holm correction ($p\leq0.0086$). A purely geometric measurement derived from the
+mask thus recovers the behavioural distinction a language model was asked about
+independently, which is the strongest evidence we have that the pipeline
+measures the animal rather than its own conventions.
+
+\begin{table}[t]\centering
+\caption{Arm-Tip Speed by Behaviour Class, Aggregated by Video}
+\label{tab:kin}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+behaviour & median (px/s) & videos \\
+\midrule
+resting / stationary          & $53$  & $24$ \\
+human/enrichment interaction  & $90$  & $24$ \\
+crawling                      & $91$  & $19$ \\
+swimming / jetting            & $107$ & $15$ \\
+exploration / manipulation    & $112$ & $25$ \\
+reaching out of water         & $141$ & $25$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Its further purpose is the obvious next question: a six-class sheet cannot
+distinguish exploration with one arm from whole-body exploration, and per-limb
+usage statistics would make \emph{limb-aware} ethograms possible. That is the
+direction we intend to take.
 
 \section{Limitations}
 \label{sec:limits}
