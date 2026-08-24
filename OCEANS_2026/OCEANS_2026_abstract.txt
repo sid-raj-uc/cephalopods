@@ -11,6 +11,7 @@ AUTHORS
 -------
 1. Siddharth Raj *
    University of Chicago, Chicago, IL, USA
+   siddharthraj000@gmail.com
 
 2. Krishan Mohan Patel *
    Institute for Digital Media Education, University of Teacher Education
@@ -20,18 +21,22 @@ AUTHORS
    Research and Development, Arishna IoT Solutions, Bangalore, India
    ORCID: 0009-0005-2499-2715
 
-4. Shivansh Pachnanda
+4. Rishabh Thakur
+   Research and Development, Arishna IoT Solutions, Bangalore, India
+   rishabh.thakur.hp19@gmail.com
+
+5. Shivansh Pachnanda
    University of Delhi, New Delhi, India
 
-5. Harendra Pal Singh
+6. Harendra Pal Singh
    Cluster Innovation Center, University of Delhi, New Delhi, India
 
-6. Harald Burgsteiner
+7. Harald Burgsteiner
    Institute for Digital Media Education, University of Teacher Education
    Styria, Graz, Austria
    ORCID: 0000-0001-7800-8414
 
-7. Wolfgang Slany
+8. Wolfgang Slany
    Institute of Software Engineering and Artificial Intelligence, Graz
    University of Technology, Graz, Austria
    ORCID: 0000-0002-4979-6156
