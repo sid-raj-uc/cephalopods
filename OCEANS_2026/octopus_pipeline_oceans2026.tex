@@ -503,7 +503,8 @@ are ratios within the same gate, are robust to it.
 
 \section{Released Data and Benchmarks}
 \label{sec:data}
-No public annotated octopus behaviour corpus exists. We release:
+No public annotated octopus behaviour corpus exists. We release, at
+github.com/sidraj000/octopus-behaviour:
 $5{,}222$ clips with five-pass teacher labels \emph{including the full vote
 distribution} rather than only the majority; ${\approx}25{,}000$ captions
 ($5{,}160$ clips $\times$ five disjoint frame samplings), which additionally
@@ -618,9 +619,13 @@ round on the reserved videos and the second animal.
 
 \section*{Ethical Statement and Data Availability}
 All footage is observational, from cameras already installed for husbandry, with
-no intervention or manipulation of the animal. Datasets, frozen benchmarks,
-weights and an extended technical report are available at the project
-repository.
+no intervention or manipulation of the animal. The labels, frozen benchmarks,
+code, review interfaces and the full experimental record---including the
+experiments that failed and the conclusions we retracted---are at
+github.com/sidraj000/octopus-behaviour, under Apache-2.0 for code and CC-BY-4.0
+for the labels. The trained models and the larger datasets are linked from
+there. The footage itself is not ours to redistribute, but every label carries
+the source video and time offsets needed to reconstruct its clip.
 
 \begin{thebibliography}{00}
 \bibitem{disc_o}
