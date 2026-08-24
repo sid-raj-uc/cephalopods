@@ -466,7 +466,7 @@ opencv-python — same 4.13 version, superset).
 Plan: `src/DATA_PLAN.md`. Running results ledger: `PAPER_NOTES.md`.
 - **The server has WAY more than we used.** It exposes HTML directory listings (crawlable). 6 collections /
   ~5 animals: **Nity ~209 days** (`O-vulgaris-Nity-2025-9-17--` 157d + `-2026-2-20--` 52d) + others
-  (Heidi 155d, a 2024 vulgaris 122d, Maya 48d, Eledone 1d). Creds `octopus`/`communication42` (in `.env`).
+  (Heidi 155d, a 2024 vulgaris 122d, Maya 48d, Eledone 1d). Creds in `.env` as `OCTOPUS_USER`/`OCTOPUS_PASS`.
 - **Network reality (measured on Colab):** server download is **~5 MB/s and PARALLELISM BARELY HELPS**
   (1→5 streams = only 1.6×; near-total server-side cap). So: **one CPU box, 2–3 stream workers, no GPU**
   (GPU idles on a network-bound job — costs 10–50× for zero speedup). Stream-scan is viable
@@ -635,7 +635,22 @@ from *every* training source; negatives of different kinds are **never pooled**;
   up as a new tab with its captions. Needs `python-multipart`. Run: `venv/bin/python3 ui/demo_player.py` →
   http://localhost:8011.
 
+## Public release repo — `sidraj000/octopus-behaviour`
+The paper's companion release is a **separate public repo** (`github.com/sidraj000/octopus-behaviour`,
+local checkout `~/Documents/my-projects/octopus-behaviour`): code + ethogram/caption labels + the paper;
+models and the big datasets on Drive. Apache-2.0 (code) / CC-BY-4.0 (labels).
+- **NEVER publish `AGENTS.md` there.** It is an internal runbook: it named the footage-server password
+  in plaintext and the address + SSH key of a compute box. It *was* pushed there on 2026-08-23 and had
+  to be scrubbed with a history rewrite (see the credential note below). Publish `docs/PAPER_NOTES.md`
+  as the experimental record instead.
+- Sanitize box hostnames/IPs out of anything else published (`SEGMENTATION_LOG.md` named the A100 box).
+
 ## Credentials
+**The footage-server password leaked publicly on 2026-08-23** (in `AGENTS.md`, pushed to the public
+release repo for ~20 min; scrubbed by history rewrite, but GitHub still serves orphaned commits by SHA,
+so treat it as compromised). **It must be rotated server-side** — a rewrite is not a fix. Until then
+assume `repo.octopus-intelligence.org` creds are public.
+
 `.env` (repo root, gitignored) holds `OCTOPUS_USER`/`OCTOPUS_PASS` (footage server) and
 `OPENROUTER_API_KEY` (captioning). Never commit any of these; only `.env.example` files are tracked.
 Notebooks read creds via getpass/env; scripts via `server_creds.py` / env.
