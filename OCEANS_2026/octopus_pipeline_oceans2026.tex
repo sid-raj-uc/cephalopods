@@ -136,6 +136,24 @@ frames we wanted removed while discarding $32\%$ of the real animals. A weak
 ranking signal with no viable operating point is not a detector, which is the
 case for distillation rather than prompting.
 
+\textbf{Automated behaviour analysis, and why pose-first does not transfer.}
+Quantitative ethology has largely been automated by markerless pose estimation:
+DeepLabCut~\cite{deeplabcut} and SLEAP~\cite{sleap} fit user-defined keypoint
+skeletons and are the default tools for rodents, insects and fish. That
+formulation assumes a body plan with a fixed, identifiable set of landmarks. An
+octopus has no rigid skeleton, eight arms that are mutually
+indistinguishable, and a deformable mantle, so ``keypoint $k$'' is not
+well defined across frames and the arms cannot be consistently ordered. We
+therefore work from silhouettes rather than landmarks, and treat the anatomical
+graph (Sec.~\ref{sec:skel}) as derived from the mask rather than fitted
+directly. The behavioural vocabulary itself is not ours to invent: body-pattern
+and action catalogues for cephalopods~\cite{borrelli} and a published ethogram
+for benthic octopods~\cite{mather} define the categories, and our six-class
+sheet is a coarsening of them chosen for what is separable from a fixed
+overhead camera at $20$\,s granularity. Distillation follows the standard
+recipe~\cite{hinton}, with the teacher a prompted VLM rather than a trained
+classifier.
+
 \textbf{Octopus segmentation.} The closest work is
 HideAndSeg~\cite{hideandseg}, a concurrent annotation-light pipeline: a human
 annotates initial frames to prompt SAM2, the resulting masks train a YOLOv11
@@ -214,6 +232,14 @@ votes, ethogram votes and captions. This is not redundancy for its own sake: the
 majority vote differs from a single pass on $705$ clips ($13.5\%$), $36.2\%$ of
 clips are split rather than unanimous, and---per Table~\ref{tab:gates}---the
 margin predicts human agreement, which is what licenses training on soft targets.
+Voting only reduces variance if the passes are exchangeable, so we checked that
+rather than assuming it. On the $1{,}144$ clips with all five passes, pairwise
+Cohen $\kappa$ across all ten pass pairs spans just $0.617$--$0.653$: no pass is
+an outlier. Agreement itself is moderate on the six-class label
+(Fleiss $\kappa=0.634$, mean pairwise $0.729$) and strong on presence
+($\kappa=0.818$, $0.910$)---that is, the teacher is far more certain \emph{that}
+the animal is there than \emph{what} it is doing, which is precisely why presence
+is used as a gate and behaviour is carried as a distribution.
 
 \section{Local Models}
 \label{sec:models}
@@ -309,6 +335,21 @@ four bits it is $1.7$\,GB and captions a clip in ${\approx}3$\,s on a $16$\,GB
 laptop with no GPU. The released corpus carries ${\approx}25{,}000$ teacher
 captions, five per clip from disjoint frame samplings, against the $3{,}066$
 examples this student was trained on.
+
+\textbf{Cost and footprint.} Teacher cost is linear in frames sent
+($\mathrm{tokens}\approx290+386n$), measured at \$$0.000603$ per six-frame call.
+The five-pass labelling of the $5{,}222$ surviving clips is therefore
+$26{,}110$ calls, about \$$16$. The same five-pass protocol applied to all
+${\approx}160{,}000$ clips in the corpus would be $800{,}000$ calls, about
+\$$480$, and---at the $13$--$36$ clips/min the hosted model sustains---the
+$372$--$1{,}030$\,h of wall-clock from Sec.~\ref{sec:pipeline}. The selection
+cascade is what turns that into a job that finishes: a ${\approx}31\times$
+reduction in teacher calls, paid for by gates that are essentially free. What is
+deployed afterwards contains no frontier model at all---a $0.6$\,M-parameter
+ethogram head, a $3.2$\,M-parameter mask student, and a $2$B captioner quantised
+to $1.7$\,GB that labels a clip in ${\approx}3$\,s on a $16$\,GB laptop with no
+GPU and no network. The teacher is a one-off offline expense; the recurring cost
+is a laptop.
 
 \textbf{What did not work.} Recorded because each is a natural next thing to try.
 Feature-space augmentation (mixup, Gaussian noise) is \emph{negative} and
@@ -409,6 +450,21 @@ $0.045$) and a higher score on a transparent arousal rubric ($0.68$ against
 $0.46$). On the colour cameras, the most common body colour at baseline
 (dark red-brown, $16\%$ of clips) is markedly less frequent during human
 interaction ($6\%$).
+
+\textbf{Posture and location.} The structured record carries more than a class
+per clip. Of the $3{,}083$ clips with a visible animal, $64\%$ show arms
+extended against $18\%$ contracted, and $53\%$ place the animal on open
+substrate, $20\%$ on the glass and $19\%$ at the surface. Only $7.5\%$ place it
+in the den or at its entrance---which is a statement about what the pipeline can
+see, not about the animal. Time spent hidden in the den is exactly what the
+presence gate discards, so den occupancy is under-observed by construction and
+the denominator here is visible time, not elapsed time.
+
+\textbf{Viewpoint is a confound, not a finding.} Behaviour composition differs
+sharply by camera: the rear view is dominated by human interaction and reaching
+out of water, the front view by exploration. This is where the cameras point,
+not how the animal differs, and it is a reason to pool cameras before comparing
+behaviours rather than to report per-camera profiles as results.
 
 Two caveats bound these. The tank contains permanent enrichment objects, so a
 context label of ``enrichment object present'' fires on ${\approx}66\%$ of clips
@@ -530,6 +586,29 @@ Qwen Team, ``Qwen3-VL,'' 2025.
 \bibitem{owlv2}
 M.\ Minderer, A.\ Gritsenko, and N.\ Houlsby, ``Scaling Open-Vocabulary Object
 Detection,'' in \textit{NeurIPS}, 2023.
+\bibitem{deeplabcut}
+A.~Mathis, P.~Mamidanna, K.~M. Cury, T.~Abe, V.~N. Murthy, M.~W. Mathis, and
+M.~Bethge, ``DeepLabCut: markerless pose estimation of user-defined body parts
+with deep learning,'' \emph{Nature Neuroscience}, vol.~21, no.~9, pp.
+1281--1289, 2018.
+
+\bibitem{sleap}
+T.~D. Pereira \emph{et al.}, ``SLEAP: A deep learning system for multi-animal
+pose tracking,'' \emph{Nature Methods}, vol.~19, no.~4, pp. 486--495, 2022.
+
+\bibitem{borrelli}
+L.~Borrelli, F.~Gherardi, and G.~Fiorito, \emph{A Catalogue of Body Patterning
+in Cephalopoda}. Florence, Italy: Firenze University Press, 2006.
+
+\bibitem{mather}
+J.~A. Mather and J.~S. Alupay, ``An ethogram for benthic octopods (Cephalopoda:
+Octopodidae),'' \emph{Journal of Comparative Psychology}, vol.~130, no.~2, pp.
+109--127, 2016.
+
+\bibitem{hinton}
+G.~Hinton, O.~Vinyals, and J.~Dean, ``Distilling the knowledge in a neural
+network,'' arXiv:1503.02531, 2015.
+
 \bibitem{hideandseg}
 A.\ de Aguiar, M.\ P.\ Andrade, C.\ M.\ D.\ Santos, and J.\ P.\ Gois,
 ``HideAndSeg: an AI-based tool with automated prompting for octopus segmentation

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  23 AUG 2026 21:07
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  23 AUG 2026 21:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -347,11 +347,11 @@ map/pdftex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/base/8r
 <assets/pipeline_behaviour.pdf, id=13, 406.51875pt x 127.8088pt>
 File: assets/pipeline_behaviour.pdf Graphic file (type pdf)
 <use assets/pipeline_behaviour.pdf>
-Package pdftex.def Info: assets/pipeline_behaviour.pdf  used on input line 171.
+Package pdftex.def Info: assets/pipeline_behaviour.pdf  used on input line 189.
 
 (pdftex.def)             Requested size: 242.52063pt x 76.24706pt.
 
-Underfull \hbox (badness 1406) in paragraph at lines 203--205
+Underfull \hbox (badness 1406) in paragraph at lines 221--223
 \OT1/ptm/m/n/9 ``mo-tion''. Ab-so-lute changed-pixel frac-tion
  []
 
@@ -359,26 +359,31 @@ Underfull \hbox (badness 1406) in paragraph at lines 203--205
 <assets/segmentation_demo.pdf, id=84, 497.15338pt x 206.80006pt>
 File: assets/segmentation_demo.pdf Graphic file (type pdf)
 <use assets/segmentation_demo.pdf>
-Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 291.
+Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 317.
 (pdftex.def)             Requested size: 216.71906pt x 90.14978pt.
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 3
+40.
 
-Overfull \hbox (1.62695pt too wide) in paragraph at lines 360--374
+(/usr/local/texlive/2026basic/texmf-dist/tex/latex/psnfss/ts1ptm.fd
+File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
+) [3 <./assets/segmentation_demo.pdf>]
+Overfull \hbox (1.62695pt too wide) in paragraph at lines 401--415
  [][] 
  []
 
-[3 <./assets/segmentation_demo.pdf>]
-<assets/behaviour_findings.pdf, id=121, 510.31967pt x 160.63388pt>
+<assets/behaviour_findings.pdf, id=120, 510.31967pt x 160.63388pt>
 File: assets/behaviour_findings.pdf Graphic file (type pdf)
 <use assets/behaviour_findings.pdf>
-Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 392.
+Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 433.
 
 (pdftex.def)             Requested size: 247.6778pt x 77.96124pt.
-<assets/skeleton_example.pdf, id=122, 421.90718pt x 184.69pt>
+[4 <./assets/behaviour_findings.pdf>]
+<assets/skeleton_example.pdf, id=181, 421.90718pt x 184.69pt>
 File: assets/skeleton_example.pdf Graphic file (type pdf)
 <use assets/skeleton_example.pdf>
-Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 453.
+Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 509.
 (pdftex.def)             Requested size: 242.52063pt x 106.1649pt.
- [4 <./assets/behaviour_findings.pdf> <./assets/skeleton_example.pdf>]
+ [5 <./assets/skeleton_example.pdf>]
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -390,18 +395,20 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[5] (./octopus_pipeline_oceans2026.aux)
+[6
+
+] (./octopus_pipeline_oceans2026.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 4232 strings out of 469006
- 67169 string characters out of 5454814
- 490271 words of memory out of 5000000
- 32880 multiletter control sequences out of 15000+600000
- 677165 words of font info for 141 fonts, out of 8000000 for 9000
+ 4262 strings out of 469006
+ 67610 string characters out of 5454814
+ 487291 words of memory out of 5000000
+ 32906 multiletter control sequences out of 15000+600000
+ 677479 words of font info for 142 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
  57i,14n,65p,491b,348s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9
@@ -419,10 +426,10 @@ ype1/urw/times/utmb8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/
 urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/
 times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/times
 /utmri8a.pfb>
-Output written on octopus_pipeline_oceans2026.pdf (5 pages, 780106 bytes).
+Output written on octopus_pipeline_oceans2026.pdf (6 pages, 786542 bytes).
 PDF statistics:
- 249 PDF objects out of 1000 (max. 8388607)
- 83 compressed objects within 1 object stream
+ 252 PDF objects out of 1000 (max. 8388607)
+ 85 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
