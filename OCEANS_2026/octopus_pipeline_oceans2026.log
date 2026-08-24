@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  23 AUG 2026 20:53
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  23 AUG 2026 21:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -321,34 +321,19 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-LaTeX Font Info:    Calculating math sizes for size <11> on input line 47.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 47.
+LaTeX Font Info:    Calculating math sizes for size <11> on input line 53.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 53.
 
  (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 47.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 53.
 
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Overfull \hbox (32.04817pt too wide) in paragraph at lines 47--47
- [] 
- []
-
-
-Overfull \hbox (32.04817pt too wide) in paragraph at lines 47--47
- [] 
- []
-
-
-Overfull \hbox (32.04817pt too wide) in paragraph at lines 47--47
- [] 
- []
-
-
-Underfull \hbox (badness 3009) in paragraph at lines 76--79
+Underfull \hbox (badness 3009) in paragraph at lines 82--85
 []\OT1/ptm/b/it/9 Index Terms\OT1/ptm/b/n/9 ---animal be-haviour, cephalopods, 
 ethogram,
  []
@@ -359,39 +344,39 @@ map/pdftex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/base/8r
 
 
 ]
-<assets/pipeline_behaviour.pdf, id=17, 406.51875pt x 127.8088pt>
+<assets/pipeline_behaviour.pdf, id=16, 406.51875pt x 127.8088pt>
 File: assets/pipeline_behaviour.pdf Graphic file (type pdf)
 <use assets/pipeline_behaviour.pdf>
-Package pdftex.def Info: assets/pipeline_behaviour.pdf  used on input line 159.
+Package pdftex.def Info: assets/pipeline_behaviour.pdf  used on input line 165.
 
 (pdftex.def)             Requested size: 242.52063pt x 76.24706pt.
 
-Underfull \hbox (badness 1406) in paragraph at lines 191--193
+Underfull \hbox (badness 1406) in paragraph at lines 197--199
 \OT1/ptm/m/n/9 ``mo-tion''. Ab-so-lute changed-pixel frac-tion
  []
 
 [2 <./assets/pipeline_behaviour.pdf>]
-<assets/segmentation_demo.pdf, id=86, 497.15338pt x 206.80006pt>
+<assets/segmentation_demo.pdf, id=84, 497.15338pt x 206.80006pt>
 File: assets/segmentation_demo.pdf Graphic file (type pdf)
 <use assets/segmentation_demo.pdf>
-Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 279.
+Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 285.
 (pdftex.def)             Requested size: 216.71906pt x 90.14978pt.
 
-Overfull \hbox (1.62695pt too wide) in paragraph at lines 348--362
+Overfull \hbox (1.62695pt too wide) in paragraph at lines 354--368
  [][] 
  []
 
 [3 <./assets/segmentation_demo.pdf>]
-<assets/behaviour_findings.pdf, id=122, 510.31967pt x 160.63388pt>
+<assets/behaviour_findings.pdf, id=121, 510.31967pt x 160.63388pt>
 File: assets/behaviour_findings.pdf Graphic file (type pdf)
 <use assets/behaviour_findings.pdf>
-Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 380.
+Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 386.
 
 (pdftex.def)             Requested size: 247.6778pt x 77.96124pt.
-<assets/skeleton_example.pdf, id=123, 421.90718pt x 184.69pt>
+<assets/skeleton_example.pdf, id=122, 421.90718pt x 184.69pt>
 File: assets/skeleton_example.pdf Graphic file (type pdf)
 <use assets/skeleton_example.pdf>
-Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 441.
+Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 447.
 (pdftex.def)             Requested size: 242.52063pt x 106.1649pt.
  [4 <./assets/behaviour_findings.pdf> <./assets/skeleton_example.pdf>]
 
@@ -405,22 +390,20 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[5
-
-] (./octopus_pipeline_oceans2026.aux)
+[5] (./octopus_pipeline_oceans2026.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 4228 strings out of 469006
- 67126 string characters out of 5454814
+ 4232 strings out of 469006
+ 67169 string characters out of 5454814
  489271 words of memory out of 5000000
- 32878 multiletter control sequences out of 15000+600000
- 674502 words of font info for 138 fonts, out of 8000000 for 9000
+ 32880 multiletter control sequences out of 15000+600000
+ 677165 words of font info for 141 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 57i,14n,65p,491b,370s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,14n,65p,491b,348s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9
 .pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cm
 mi10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/c
@@ -431,16 +414,15 @@ msfonts/cm/cmr6.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public
 /amsfonts/cm/cmr7.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/publ
 ic/amsfonts/cm/cmr9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/pu
 blic/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type
-1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/t
-ype1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2026basic/texmf-dist/font
-s/type1/urw/times/utmb8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/typ
-e1/urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/u
-rw/times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/ti
-mes/utmri8a.pfb>
-Output written on octopus_pipeline_oceans2026.pdf (5 pages, 786448 bytes).
+1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/t
+ype1/urw/times/utmb8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/
+urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/
+times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/times
+/utmri8a.pfb>
+Output written on octopus_pipeline_oceans2026.pdf (5 pages, 778092 bytes).
 PDF statistics:
- 254 PDF objects out of 1000 (max. 8388607)
- 86 compressed objects within 1 object stream
+ 249 PDF objects out of 1000 (max. 8388607)
+ 83 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
