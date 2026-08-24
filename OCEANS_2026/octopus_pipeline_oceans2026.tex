@@ -18,37 +18,44 @@
 \begin{document}
 
 \title{From Footage to Ethogram: A Deployable Pipeline for Continuous
-Behavioural Monitoring of a Captive Octopus\thanks{\textsuperscript{*}These
-authors contributed equally (shared first authorship).}}
+Behavioural Monitoring of a Captive Octopus}
 
-\author{
-\IEEEauthorblockN{1\textsuperscript{st} Siddharth Raj\textsuperscript{*}}
-\IEEEauthorblockA{\textit{University of Chicago}\\
+\author{\IEEEauthorblockN{1\textsuperscript{st} Siddharth Raj\textsuperscript{*}}
+\IEEEauthorblockA{\textit{University of Chicago} \\
 Chicago, IL, USA \\
 siddharthraj000@gmail.com}
 \and
 \IEEEauthorblockN{2\textsuperscript{nd} Krishan Mohan Patel\textsuperscript{*}}
 \IEEEauthorblockA{\textit{Institute for Digital Media Education} \\
-\textit{University of Teacher Education Styria}\\
+\textit{University of Teacher Education Styria} \\
 Graz, Austria}
 \and
 \IEEEauthorblockN{3\textsuperscript{rd} Himanshu Kumar}
 \IEEEauthorblockA{\textit{Research and Development} \\
-\textit{Arishna IoT Solutions}\\
+\textit{Arishna IoT Solutions} \\
 Bangalore, India \\
 ORCID: 0009-0005-2499-2715}
 \and
-\IEEEauthorblockN{4\textsuperscript{th} Harald Burgsteiner}
+\IEEEauthorblockN{4\textsuperscript{th} Shivansh Pachnanda}
+\IEEEauthorblockA{\textit{University of Delhi} \\
+New Delhi, India}
+\and
+\IEEEauthorblockN{5\textsuperscript{th} Harendra Pal Singh}
+\IEEEauthorblockA{\textit{Cluster Innovation Center} \\
+\textit{University of Delhi} \\
+New Delhi, India}
+\and
+\IEEEauthorblockN{6\textsuperscript{th} Harald Burgsteiner}
 \IEEEauthorblockA{\textit{Institute for Digital Media Education} \\
-\textit{University of Teacher Education Styria}\\
+\textit{University of Teacher Education Styria} \\
 Graz, Austria \\
 ORCID: 0000-0001-7800-8414}
 \and
-\IEEEauthorblockN{5\textsuperscript{th} Wolfgang Slany}
+\IEEEauthorblockN{7\textsuperscript{th} Wolfgang Slany}
 \IEEEauthorblockA{\textit{Institute of Software Engineering and AI} \\
-\textit{Graz University of Technology}\\
+\textit{Graz University of Technology} \\
 Graz, Austria \\
-ORCID: 0000-0002-4979-6156}
+ORCID: 0000-0002-4979-6156}\thanks{\textsuperscript{*}Siddharth Raj and Krishan Mohan Patel contributed equally (shared first authorship).}
 }
 \maketitle
 
@@ -56,27 +63,26 @@ ORCID: 0000-0002-4979-6156}
 Continuous behavioural monitoring is the obvious use for an aquarium's cameras
 and remains out of reach: manual ethogram scoring is bounded by expert hours,
 and prompting a large vision--language model (VLM) on every clip fails on
-arithmetic rather than on accuracy. The $892$\,h of footage we hold for a single
-adult \emph{Octopus vulgaris} is ${\approx}160{,}000$ twenty-second clips, or
-$372$--$1{,}030$\,h of wall-clock for one five-pass labelling run, on
-infrastructure an aquarium does not have. We instead treat a $235$B-parameter VLM as an
+arithmetic rather than on accuracy. The 892 h of footage we hold for a single
+adult \emph{Octopus vulgaris} is about 160,000 twenty-second clips, or 372 to
+1,030 h of wall-clock for one five-pass labelling run, on infrastructure an
+aquarium does not have. We instead treat a 235B-parameter VLM as an
 \emph{offline teacher} and distil it into a cascade of small models that runs on
-site. Cheap gates reject $60\%$ of videos without a full decode, leaving only
-${\approx}60$\,h ever decoded; $42.7\%$ of the clips that survive still contain
-no animal, which is why the expensive model is spent last rather than first.
-Every gate is placed by a measurement on human-labelled data rather than by
-intuition, and in each case the measurement changed the design. The students
-reach $0.665$ macro-F1 and $75.4\%$ accuracy on a six-class ethogram (majority
-baseline $0.100$ / $43.1\%$), $0.642$ mask IoU from $3.2$\,M parameters with no
-prompt at inference---above the $0.374$ its teacher architecture reaches
-zero-shot per frame---and lift caption embedding similarity from $0.702$ to
-$0.834$ over their
-own base model. Applied to the corpus, the pipeline recovers a circadian profile
-peaking at $45\%$ visible activity at $17{:}00$ against $1$--$5\%$ overnight,
+site. Cheap gates reject 60\% of videos without a full decode, leaving only
+about 60 h ever decoded; 42.7\% of the clips that survive still contain no
+animal, which is why the expensive model is spent last rather than first. Every
+gate is placed by a measurement on human-labelled data rather than by intuition,
+and in each case the measurement changed the design. The students reach 0.665
+macro-F1 and 75.4\% accuracy on a six-class ethogram, against a majority
+baseline of 0.100 and 43.1\%; 0.642 mask IoU from 3.2 M parameters with no
+prompt at inference, above the 0.374 its teacher architecture reaches zero-shot
+per frame; and caption embedding similarity lifted from 0.702 to 0.834 over
+their own base model. Applied to the corpus, the pipeline recovers a circadian
+profile peaking at 45\% visible activity at 17:00 against 1 to 5\% overnight,
 and shows human presence nearly doubling movement; skeletonising the masks into
-a mantle--head--eight-arm graph yields per-arm kinematics. We release $5{,}222$
-teacher-labelled clips with their full vote distributions, ${\approx}25{,}000$
-captions, $969$ human labels and masks, and three frozen video-level benchmarks.
+a mantle--head--eight-arm graph yields per-arm kinematics. We release 5,222
+teacher-labelled clips with their full vote distributions, about 25,000
+captions, 969 human labels and masks, and three frozen video-level benchmarks.
 \end{abstract}
 
 \begin{IEEEkeywords}
