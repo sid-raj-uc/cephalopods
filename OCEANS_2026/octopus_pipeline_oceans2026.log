@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  24 AUG 2026 10:59
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  24 AUG 2026 11:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -332,15 +332,9 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 66.
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-)
-Underfull \hbox (badness 3009) in paragraph at lines 93--96
-[]\OT1/ptm/b/it/9 Index Terms\OT1/ptm/b/n/9 ---animal be-haviour, cephalopods, 
-ethogram,
- []
-
-[1{/Users/siddharthraj/Library/texlive/2026basic/texmf-var/fonts/map/pdftex/upd
-map/pdftex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/base/8r
-.enc}
+) [1{/Users/siddharthraj/Library/texlive/2026basic/texmf-var/fonts/map/pdftex/u
+pdmap/pdftex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/base/
+8r.enc}
 
 
 ]
@@ -359,30 +353,32 @@ Underfull \hbox (badness 1406) in paragraph at lines 226--228
 <assets/segmentation_demo.pdf, id=84, 497.15338pt x 206.80006pt>
 File: assets/segmentation_demo.pdf Graphic file (type pdf)
 <use assets/segmentation_demo.pdf>
-Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 322.
+Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 324.
 (pdftex.def)             Requested size: 216.71906pt x 90.14978pt.
  [3 <./assets/segmentation_demo.pdf>]
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 3
-74.
+76.
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-Overfull \hbox (1.62695pt too wide) in paragraph at lines 435--449
+Overfull \hbox (1.62695pt too wide) in paragraph at lines 437--451
  [][] 
  []
 
 <assets/behaviour_findings.pdf, id=120, 510.31967pt x 160.63388pt>
 File: assets/behaviour_findings.pdf Graphic file (type pdf)
 <use assets/behaviour_findings.pdf>
-Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 467.
+Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 469.
 
 (pdftex.def)             Requested size: 247.6778pt x 77.96124pt.
 [4]
+Underfull \vbox (badness 6047) has occurred while \output is active []
+
 <assets/skeleton_example.pdf, id=126, 421.90718pt x 184.69pt>
 File: assets/skeleton_example.pdf Graphic file (type pdf)
 <use assets/skeleton_example.pdf>
-Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 544.
+Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 549.
 (pdftex.def)             Requested size: 242.52063pt x 106.1649pt.
  [5 <./assets/behaviour_findings.pdf> <./assets/skeleton_example.pdf>]
 
@@ -409,7 +405,7 @@ Here is how much of TeX's memory you used:
  32907 multiletter control sequences out of 15000+600000
  677479 words of font info for 142 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 57i,14n,65p,491b,348s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,14n,65p,560b,348s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9
 .pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cm
 mi10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/c
@@ -426,7 +422,7 @@ s/type1/urw/times/utmb8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/typ
 e1/urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/u
 rw/times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/ti
 mes/utmri8a.pfb>
-Output written on octopus_pipeline_oceans2026.pdf (6 pages, 799517 bytes).
+Output written on octopus_pipeline_oceans2026.pdf (6 pages, 800010 bytes).
 PDF statistics:
  257 PDF objects out of 1000 (max. 8388607)
  88 compressed objects within 1 object stream

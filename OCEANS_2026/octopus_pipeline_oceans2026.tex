@@ -91,8 +91,8 @@ frozen video-level benchmarks.
 \end{abstract}
 
 \begin{IEEEkeywords}
-animal behaviour, cephalopods, ethogram, knowledge distillation, video
-segmentation, vision--language models
+cephalopods, ethogram, knowledge distillation, vision--language models,
+video segmentation
 \end{IEEEkeywords}
 
 \section{Introduction}
@@ -154,8 +154,8 @@ graph (Sec.~\ref{sec:skel}) as derived from the mask rather than fitted
 directly. The behavioural vocabulary itself is not ours to invent: body-pattern
 and action catalogues for cephalopods~\cite{borrelli} and a published ethogram
 for benthic octopods~\cite{mather} define the categories, and our six-class
-sheet is a coarsening of them chosen for what is separable from a fixed
-overhead camera at $20$\,s granularity. Distillation follows the standard
+sheet is a coarsening of them chosen for what is separable from the
+fixed tank cameras at $20$\,s granularity. Distillation follows the standard
 recipe~\cite{hinton}, with the teacher a prompted VLM rather than a trained
 classifier.
 
@@ -254,7 +254,9 @@ any useful sense.
 
 \textbf{Ethogram classifier.} Six classes in one head---\emph{no octopus},
 resting, exploration/manipulation, locomotion, reaching out of water,
-human/enrichment interaction---because that is how it is deployed: a clip
+human/enrichment interaction, where locomotion merges the teacher's
+\emph{crawling} and \emph{swimming/jetting} that Fig.~\ref{fig:findings} and
+Table~\ref{tab:kin} report separately---because that is how it is deployed: a clip
 arrives and the question is what is happening, with ``no animal'' a legitimate
 answer. Inputs are frozen per-frame features plus two changed-pixel motion
 channels; the head is a $0.6$\,M-parameter MLP over pooled statistics. A
@@ -465,10 +467,12 @@ $3\%$ locomotion.
 
 \begin{figure}[t]\centering
   \includegraphics[width=0.48\textwidth]{assets/behaviour_findings.pdf}
-  \caption{Behaviour recovered from the corpus: activity budget, and
-  exposure-normalised visible activity by hour of day. Normalising by the number
-  of windows examined per hour is essential---without it the profile tracks
-  recording coverage rather than the animal.}
+  \caption{Behaviour recovered from the corpus: (a) activity budget, with
+  locomotion split into its crawling and swimming/jetting components;
+  (b) exposure-normalised visible activity by hour of day---normalising by the
+  number of windows examined per hour is essential, since without it the profile
+  tracks recording coverage rather than the animal; and (c) mean motion and
+  arousal with and without a human present.}
   \label{fig:findings}
 \end{figure}
 
@@ -519,8 +523,9 @@ frames it happens to see; a frozen six-class ethogram dataset of $4{,}665$ clips
 over $204$ videos with video-level splits and per-clip reliability weights;
 $456$ human behaviour labels; $513$ human masks; and $3{,}205$ structured
 behavioural records of nine fields each. Three benchmarks are frozen: $122$ human
-masks on five held-out videos plus $19$ empty-tank negatives; $50$ human
-arm-keypoint frames over $20$ videos; and a reflection-rejection set.
+masks on five held-out videos; $50$ human arm-keypoint frames over $20$ videos;
+and negative sets counted by recording rather than by frame---$105$ empty-tank
+frames from $53$ recordings and $34$ reviewed reflection frames from $27$.
 
 Four protocol rules are part of the release, because the pipeline broke each of
 them at least once during development: splits are by source video, never by clip;
