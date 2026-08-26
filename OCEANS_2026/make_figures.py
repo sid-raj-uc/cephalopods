@@ -13,7 +13,10 @@ OUT = REPO / "OCEANS_2026" / "assets"; OUT.mkdir(parents=True, exist_ok=True)
 INK, MUTE, GRID = "#222222", "#666666", "#dddddd"
 HUE = "#2a78d6"                      # single hue (magnitude; validated, chroma>=0.1)
 C_NONE, C_HUMAN = "#2a78d6", "#eb6834"   # categorical pair (validator: ALL PASS, light)
-plt.rcParams.update({"font.size": 8, "axes.edgecolor": MUTE, "axes.labelcolor": INK,
+# IEEE PDF eXpress rejects Type 3 fonts; matplotlib embeds Type 3 by default.
+# 42 = TrueType subsets, which pass and keep the text selectable.
+plt.rcParams.update({"pdf.fonttype": 42, "ps.fonttype": 42,
+                     "font.size": 8, "axes.edgecolor": MUTE, "axes.labelcolor": INK,
                      "xtick.color": MUTE, "ytick.color": MUTE, "text.color": INK,
                      "axes.linewidth": 0.6, "font.family": "sans-serif"})
 
