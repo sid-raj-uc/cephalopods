@@ -27,10 +27,16 @@ Paste the contents of `arxiv_abstract.txt` (plain text, LaTeX stripped).
 6 pages, 4 figures, 5 tables. Accepted at OCEANS 2026 MTS/IEEE Monterey.
 Code, labels and frozen benchmarks: https://github.com/sidraj000/octopus-behaviour
 
-## License
-Choose **CC BY 4.0** to match the release repo's label licence, or arXiv's
-non-exclusive licence if you want to keep redistribution tighter. Do NOT pick
-CC BY-NC-SA if you later want IEEE reuse to be frictionless.
+## License -- pick "arXiv.org perpetual, non-exclusive license"
+NOT a Creative Commons option. Copyright was transferred to IEEE by the copyright
+form signed on acceptance, so the CC licences would grant reuse rights that are
+no longer the authors' to give. The arXiv non-exclusive licence grants arXiv only
+what it needs to distribute the file, which is what IEEE's preprint policy
+contemplates. **arXiv states the choice is irrevocable**, so this is the field on
+the form worth being certain about.
+
+This does not conflict with the release repo's CC-BY-4.0: that covers the labels
+and data, which the authors do own. Different artifact, different rights holder.
 
 # IEEE rules that apply (checked, not assumed)
 
