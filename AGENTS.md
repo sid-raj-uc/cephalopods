@@ -570,6 +570,23 @@ venv at `./venv`, torch 2.12.1 CPU — `cuda False`). Naming pattern: `abox`/`vb
   so merging would silently change reported denominators. There is no flag to do it — pooling is a
   deliberate separate step that must be followed by re-running `src/benchmarks.py`.
 
+## IEEE PDF eXpress / PaperCept — the Type 3 font trap (hit 2026-08-25)
+PaperCept rejected the OCEANS upload with *"This document has Type 3 fonts (on pages 2, 3, 5)"* —
+the figure pages. **Cause: matplotlib embeds Type 3 fonts by default** (`pdf.fonttype = 3`), and
+`OCEANS_2026/make_figures.py` never overrode it, so DejaVuSans went in as Type 3 through three
+figures. Xplore rejects Type 3 because glyphs are drawing procedures, not a real font — they do not
+scale or extract as text.
+- **Fix (now in `make_figures.py`): `plt.rcParams.update({"pdf.fonttype": 42, "ps.fonttype": 42})`**
+  — TrueType subsets, which pass and keep figure text selectable. Preferred over Ghostscript
+  `-dNoOutputFonts`, which also passes but outlines the text.
+- **`pdffonts` must be checked for TYPE, not just embedding.** `grep -vc ' yes '` (embedded) reported
+  a clean bill for a paper that PaperCept then refused: an *embedded* Type 3 font is still Type 3.
+  The check that matters is `pdffonts x.pdf | tail -n +3 | grep -c "Type 3"` → must be 0.
+- **Regenerating figures is not free** — verify content did not shift: compare `pdftotext` token
+  multisets old-vs-new per figure (all four were token-identical; the no-text one was pixel-identical).
+- Clean pass looks like: every step `0` corrections/errors/warnings/infos and *"The pdf file is ready
+  to be submitted"*. "Bookmarks and annotations were successfully removed" is routine, not a finding.
+
 ## Benchmarks — the frozen suite (READ `BENCHMARKS.md` BEFORE CLAIMING ANY IMPROVEMENT)
 Every improvement claim, and every number in the OCEANS 2026 paper, is measured by **`src/benchmarks.py`**
 on frozen sets; results append to `data/benchmarks.json` keyed by `--tag`, and `--latex` regenerates
