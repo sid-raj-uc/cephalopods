@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  24 AUG 2026 11:05
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  26 AUG 2026 00:54
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -19,7 +19,7 @@ Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
 \@IEEEtrantmptoksA=\toks17
 LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 5
 03.
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/psnfss/ot1ptm.fd
+(/Users/siddharthraj/Library/texmf/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
 -- Using 8.5in x 11in (letter) paper.
@@ -117,7 +117,7 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24> not available
 \@IEEEtranrubishbin=\box54
 )
 ** ATTENTION: Overriding command lockouts (line 6).
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/cite/cite.sty
+(/Users/siddharthraj/Library/texmf/tex/latex/cite/cite.sty
 LaTeX Info: Redefining \cite on input line 302.
 LaTeX Info: Redefining \nocite on input line 332.
 Package: cite 2015/02/27  v 5.5
@@ -359,7 +359,7 @@ Package pdftex.def Info: assets/segmentation_demo.pdf  used on input line 324.
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 3
 76.
 
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/psnfss/ts1ptm.fd
+(/Users/siddharthraj/Library/texmf/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
 Overfull \hbox (1.62695pt too wide) in paragraph at lines 437--451
@@ -400,7 +400,7 @@ L3 programming layer <2026-01-19>
  ) 
 Here is how much of TeX's memory you used:
  4263 strings out of 469006
- 67619 string characters out of 5454814
+ 67571 string characters out of 5454814
  489312 words of memory out of 5000000
  32907 multiletter control sequences out of 15000+600000
  677479 words of font info for 142 fonts, out of 8000000 for 9000
