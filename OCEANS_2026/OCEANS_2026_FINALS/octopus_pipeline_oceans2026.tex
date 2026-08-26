@@ -445,8 +445,11 @@ presence              & given               & inferred    & \textbf{inferred} \\
 params                & ${\approx}249$\,M   & ${\approx}230$\,M & $\mathbf{3.2}$\,M \\
 data/code released    & no                  & --          & \textbf{yes} \\
 setting               & wild, 3 sites       & 1 tank      & 1 tank \\
-scale                 & $148$ vid.          & --          & $4{,}665$ clips \\
+scale                 & $148$ vid.          & --          & $\mathbf{142}$ vid. \\
 \bottomrule
+\multicolumn{4}{@{}p{0.95\columnwidth}}{\footnotesize $^{a}$Only on the $21$ of
+$122$ frames where Grounding DINO clears its own confidence gate; it finds
+nothing on a quarter of frames, so this is an operating point, not coverage.} \\
 \end{tabular}
 \end{table}
 
@@ -541,8 +544,9 @@ arms---by thinning and shortest-path tracing, tracking it across frames with an
 optical-flow prior and marking every node \emph{detected}, \emph{fitted} or
 \emph{occluded} so that kinematics use only evidence-backed samples
 (Fig.~\ref{fig:skel}). On $50$ human-annotated frames the arm-tip F1 is $0.539$
-(precision $0.72$) at $3.68$ arms recovered per frame; seeding propagation from the best-resolved frame rather
-than the first was worth $+3.67$ arms. Speeds are in pixels per second in crop
+(precision $0.72$) at $3.68$ arms recovered per frame. Seeding propagation from
+the best-resolved frame rather than the first was the decisive change, lifting
+median arms per frame from $2.17$ to $5.83$ on a separate tracking diagnostic. Speeds are in pixels per second in crop
 space, uncalibrated, and arm counts are silhouette-limited.
 
 \begin{figure}[t]\centering

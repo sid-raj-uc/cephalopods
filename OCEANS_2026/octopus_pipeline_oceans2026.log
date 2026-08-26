@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  26 AUG 2026 01:03
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.6)  26 AUG 2026 01:06
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -362,23 +362,24 @@ LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 3
 (/Users/siddharthraj/Library/texmf/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-Overfull \hbox (1.62695pt too wide) in paragraph at lines 437--451
+Overfull \hbox (1.62695pt too wide) in paragraph at lines 437--454
  [][] 
  []
 
-<assets/behaviour_findings.pdf, id=61, 510.31967pt x 160.63388pt>
+[4]
+<assets/behaviour_findings.pdf, id=67, 510.31967pt x 160.63388pt>
 File: assets/behaviour_findings.pdf Graphic file (type pdf)
 <use assets/behaviour_findings.pdf>
-Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 469.
+Package pdftex.def Info: assets/behaviour_findings.pdf  used on input line 472.
 
 (pdftex.def)             Requested size: 247.6778pt x 77.96124pt.
-[4]
-Underfull \vbox (badness 6047) has occurred while \output is active []
 
-<assets/skeleton_example.pdf, id=67, 421.90718pt x 184.69pt>
+Underfull \vbox (badness 1048) has occurred while \output is active []
+
+<assets/skeleton_example.pdf, id=68, 421.90718pt x 184.69pt>
 File: assets/skeleton_example.pdf Graphic file (type pdf)
 <use assets/skeleton_example.pdf>
-Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 549.
+Package pdftex.def Info: assets/skeleton_example.pdf  used on input line 553.
 (pdftex.def)             Requested size: 242.52063pt x 106.1649pt.
  [5 <./assets/behaviour_findings.pdf> <./assets/skeleton_example.pdf>]
 
@@ -399,11 +400,11 @@ L3 programming layer <2026-01-19>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 4263 strings out of 469006
- 67571 string characters out of 5454814
+ 4265 strings out of 469006
+ 67590 string characters out of 5454814
  489312 words of memory out of 5000000
- 32907 multiletter control sequences out of 15000+600000
- 677479 words of font info for 142 fonts, out of 8000000 for 9000
+ 32908 multiletter control sequences out of 15000+600000
+ 677788 words of font info for 143 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
  57i,14n,65p,560b,348s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9
@@ -414,18 +415,19 @@ s/cm/cmmi9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/amsf
 onts/cm/cmr10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/a
 msfonts/cm/cmr6.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/public
 /amsfonts/cm/cmr7.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/publ
-ic/amsfonts/cm/cmr9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/pu
-blic/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type
-1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/t
-ype1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2026basic/texmf-dist/font
-s/type1/urw/times/utmb8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/typ
-e1/urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/u
-rw/times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/ti
-mes/utmri8a.pfb>
-Output written on octopus_pipeline_oceans2026.pdf (6 pages, 800409 bytes).
+ic/amsfonts/cm/cmr8.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmr9.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/
+public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2026basic/texmf-dist/fonts
+/type1/public/amsfonts/cm/cmsy9.pfb></usr/local/texlive/2026basic/texmf-dist/fo
+nts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/t
+ype1/urw/times/utmbi8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1
+/urw/times/utmr8a.pfb></usr/local/texlive/2026basic/texmf-dist/fonts/type1/urw/
+times/utmri8a.pfb>
+Output written on octopus_pipeline_oceans2026.pdf (6 pages, 808850 bytes).
 PDF statistics:
- 151 PDF objects out of 1000 (max. 8388607)
- 88 compressed objects within 1 object stream
+ 156 PDF objects out of 1000 (max. 8388607)
+ 91 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
