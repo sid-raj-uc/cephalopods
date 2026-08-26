@@ -24,7 +24,7 @@ Paste the contents of `arxiv_abstract.txt` (plain text, LaTeX stripped).
 - Cross-list: **cs.LG** — the distillation contribution
 
 ## Comments field
-6 pages, 4 figures, 5 tables. Submitted to OCEANS 2026 MTS/IEEE Monterey.
+6 pages, 4 figures, 5 tables. Accepted at OCEANS 2026 MTS/IEEE Monterey.
 Code, labels and frozen benchmarks: https://github.com/sidraj000/octopus-behaviour
 
 ## License
@@ -56,8 +56,21 @@ CC BY-NC-SA if you later want IEEE reuse to be frictionless.
 - **On publication**, replace the preprint with either the full IEEE citation
   including DOI, or the accepted version plus the DOI. Not the IEEE-typeset PDF.
 
+# Still to do, after arXiv is live
+
+- **On publication**: replace the preprint with the full IEEE citation including
+  the DOI, or the accepted version plus the DOI. Not the IEEE-typeset PDF.
+- **Link it from the release repo.** The paper itself cannot be hosted on GitHub
+  under IEEE policy, which is why `paper/` was removed, but a link to the arXiv
+  preprint is fine and gives the repo the citable reference it currently lacks.
+
 # Note on version parity
 
-This source carries one addition the OCEANS submission does not: the preprint
-footnote. Everything else is byte-identical to the submitted paper. If the paper
-changes during review, update both or they will drift.
+This source differs from the OCEANS camera-ready by exactly two footnotes: the
+"Accepted at" line and the IEEE copyright notice. Everything else is identical.
+
+**Worth checking in the OCEANS author kit:** some IEEE conferences require the
+copyright notice on the bottom of page 1 of the CAMERA-READY too. PDF eXpress
+did not flag its absence and it is not in the submitted version, so if the kit
+asks for it, the camera-ready needs a rebuild -- the notice is in this arXiv
+source and can be lifted straight across.
