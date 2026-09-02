@@ -19,10 +19,35 @@ VLM teacher rather than ground truth, and one is unusable on 35% of the corpus.
 
 Usage: venv/bin/python3 src/make_model_release.py [--out release/models]
 """
+import os
 import argparse, hashlib, json, shutil, sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+
+def _place(src, dst):
+    """Hardlink if possible, else copy. The MLX model alone is 1.8 GB; duplicating it to stage a
+    release wastes disk this machine does not have, and a hardlink is identical for upload."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if src.is_dir():
+        shutil.rmtree(dst, ignore_errors=True)
+        dst.mkdir(parents=True)
+        for f in src.rglob("*"):
+            if f.is_file():
+                d = dst / f.relative_to(src)
+                d.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    os.link(f, d)
+                except OSError:
+                    shutil.copy2(f, d)
+    else:
+        if dst.exists():
+            dst.unlink()
+        try:
+            os.link(src, dst)
+        except OSError:
+            shutil.copy2(src, dst)
+
 
 # public name -> (source path, card)
 MODELS = {
@@ -142,10 +167,7 @@ def main():
                           "internal_path": m["src"], "bytes": size, "sha256_16": digest}
         if a.copy:
             dst = out / name
-            if src.is_dir():
-                shutil.rmtree(dst, ignore_errors=True); shutil.copytree(src, dst)
-            else:
-                shutil.copy2(src, dst)
+            _place(src, dst)
         lines += [f"\n## `{name}`\n",
                   f"- **Task** {m['task']}",
                   f"- **Architecture** {m['arch']}",

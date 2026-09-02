@@ -56,3 +56,15 @@ data/harvest_rr_dl/
 data/harvest_modal_dl/
 data/harvest_cbox_dl/
 data/harvest_local/
+
+# Cached backbone features and staged release datasets -- derived, large (~0.9 GB),
+# and distributed via Drive because GitHub blocks files over 100 MB.
+src/dataset_etho/*/feats_*/
+release/datasets/
+# Release staging: build output, rebuilt by src/make_release.py on demand.
+release/
+
+# Paper sources and submission packages. Kept locally, never published:
+# this repo is public and GitHub is a third-party server, which the IEEE
+# copyright agreement does not permit for the accepted version.
+OCEANS_2026/

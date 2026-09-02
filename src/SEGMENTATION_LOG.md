@@ -4,7 +4,7 @@ Detailed chronological log of the tiny-segmenter effort (teacher auto-labeling �
 Newest entries at the bottom. Numbers are honest, including the failures. See `SEGMENTATION_PLAN.md`
 for the design and `AGENTS.md` for the durable summary.
 
-Compute: GPU box **`amera-vllm-a100`** (A100-40GB, 10.32.0.7), reached by SSH from `amera-siddharth`
+Compute: a rented **A100-40GB** box, reached by SSH from a CPU-only workstation
 (CPU-only). Env: `~/seg-venv`. Dataset + weights live on the A100 during the run, pulled back at the end.
 
 ---
@@ -137,7 +137,7 @@ the CLIP gate (which fires at p=1.0 on the same reflections).
 - `src/eval_presence.py`, `src/build_v3.py` — eval + negatives-dataset scripts.
 
 ### A100 cleaned up (2026-07-23)
-- All segmentation artifacts deleted from `amera-vllm-a100` (home 31G → 28K): dataset_seg, seg_clips*,
+- All segmentation artifacts deleted from the A100 box (home 31G → 28K): dataset_seg, seg_clips*,
   ir_shard*, seg-venv, weights_seg, all scripts + logs, and the HF/torch/pip/.nv caches I created.
 - Left intact (not ours / shared): default dotfiles, `~/.ssh` (SSH access key), and the apt system
   packages (ffmpeg, python3-pip, python3-venv). GPU idle, 189G free. All artifacts already pulled to the repo.
