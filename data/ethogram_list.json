@@ -1,0 +1,118 @@
+{
+  "behaviors": [
+    {
+      "id": "crawling",
+      "category": "Locomotion",
+      "label": "Crawling",
+      "description": "Moving across substrate using arms"
+    },
+    {
+      "id": "swimming",
+      "category": "Locomotion",
+      "label": "Swimming / jetting",
+      "description": "Propelling through water column"
+    },
+    {
+      "id": "arm_walking",
+      "category": "Locomotion",
+      "label": "Arm walking",
+      "description": "Bipedal-style movement on two arms"
+    },
+    {
+      "id": "hunting",
+      "category": "Foraging",
+      "label": "Hunting",
+      "description": "Stalking or pursuing prey"
+    },
+    {
+      "id": "capturing_prey",
+      "category": "Foraging",
+      "label": "Capturing prey",
+      "description": "Pouncing on or grabbing prey"
+    },
+    {
+      "id": "manipulating_food",
+      "category": "Foraging",
+      "label": "Manipulating food",
+      "description": "Handling, tearing, or consuming food item"
+    },
+    {
+      "id": "entering_den",
+      "category": "Den behavior",
+      "label": "Entering den",
+      "description": "Moving into the den / shelter"
+    },
+    {
+      "id": "exiting_den",
+      "category": "Den behavior",
+      "label": "Exiting den",
+      "description": "Emerging from the den / shelter"
+    },
+    {
+      "id": "rearranging_den",
+      "category": "Den behavior",
+      "label": "Rearranging den",
+      "description": "Moving shells, rocks, or objects at den entrance"
+    },
+    {
+      "id": "arm_extension",
+      "category": "Exploration",
+      "label": "Arm extension / probing",
+      "description": "Extending one or more arms to explore environment"
+    },
+    {
+      "id": "object_manipulation",
+      "category": "Exploration",
+      "label": "Object manipulation",
+      "description": "Picking up, moving, or investigating an object"
+    },
+    {
+      "id": "reaching_out_of_water",
+      "category": "Exploration",
+      "label": "Reaching out of water",
+      "description": "Extending arms above the water surface"
+    },
+    {
+      "id": "responding_to_human",
+      "category": "Interaction",
+      "label": "Responding to human",
+      "description": "Approaching, retreating, or reacting to a person"
+    },
+    {
+      "id": "enrichment_interaction",
+      "category": "Interaction",
+      "label": "Enrichment interaction",
+      "description": "Interacting with joystick, toy, or enrichment device"
+    },
+    {
+      "id": "color_change",
+      "category": "Camouflage / defense",
+      "label": "Color / texture change",
+      "description": "Blanching, darkening, or changing skin texture"
+    },
+    {
+      "id": "inking",
+      "category": "Camouflage / defense",
+      "label": "Ink release",
+      "description": "Releasing ink cloud"
+    },
+    {
+      "id": "hiding",
+      "category": "Camouflage / defense",
+      "label": "Hiding / flattening",
+      "description": "Pressing body flat or concealing in substrate"
+    },
+    {
+      "id": "resting_in_den",
+      "category": "Resting",
+      "label": "Stationary in den",
+      "description": "Motionless inside the den"
+    },
+    {
+      "id": "resting_open",
+      "category": "Resting",
+      "label": "Stationary in open",
+      "description": "Motionless in the open tank"
+    }
+  ]
+}

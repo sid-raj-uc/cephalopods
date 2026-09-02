@@ -1,0 +1,13 @@
+{
+ "backbone": "vjepa2",
+ "model_id": "facebook/vjepa2-vitl-fpc64-256",
+ "kind": "video",
+ "feat_dim": 1024,
+ "n_motion": 2,
+ "params_millions": 326.0,
+ "n_clips": 3,
+ "n_failed": 0,
+ "layout": "0:1024 backbone | 1024 motion_inst | 1025 motion_disp",
+ "frames": "same dense extraction + same frames_used indices as the CLIP build",
+ "motion": "copied from the CLIP build"
+}

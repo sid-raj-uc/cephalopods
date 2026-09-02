@@ -23,13 +23,16 @@ from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent / "octo-clip-extraction"))  # motion_detector moved here
 from motion_detector import scan_motion
 
 PROJECT    = Path(__file__).resolve().parent.parent
 INDEX_PATH = PROJECT / "data" / "ethogram_index.json"
 
-USER, PASS    = "octopus", "communication42"
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 MOTION_PERCENTILE = 80  # per-camera: active if score ≥ this percentile of own distribution
 MERGE_GAP     = 15     # seconds — merge windows separated by less than this
 MIN_WINDOW    = 10     # seconds — drop windows shorter than this

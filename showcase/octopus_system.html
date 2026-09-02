@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nity — Octopus Behaviour Intelligence · Demo</title>
+<style>
+:root{
+  --abyss:#07171d; --deep:#0a2028; --panel:#0c2530; --panel2:#0e2a35;
+  --line:#153742; --line2:#1d4855;
+  --ink:#eaf3f3; --dim:#9db3b6; --faint:#5f7a7e; --fainter:#456065;
+  --coral:#e0603f; --coral-soft:#f0855f; --biolum:#4fd6c4; --biolum-dim:#2f9c90;
+  --amber:#e6b34a; --live:#37d67a;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --maxw:1160px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--sans);color:var(--ink);background:var(--abyss);
+  -webkit-font-smoothing:antialiased;line-height:1.5;
+  background-image:
+    radial-gradient(120% 80% at 85% -5%, #0e2b36 0%, rgba(10,32,40,0) 55%),
+    radial-gradient(90% 70% at 5% 100%, #0b2530 0%, rgba(7,23,29,0) 60%);
+  background-attachment:fixed;
+}
+a{color:var(--biolum);text-decoration:none}
+::selection{background:var(--coral);color:#fff}
+
+#prog{position:fixed;top:0;left:0;height:2px;background:var(--coral);z-index:60;width:0}
+#top{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(12px);
+  background:rgba(7,23,29,.72);border-bottom:1px solid var(--line)}
+#top .in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:18px;padding:11px 24px;font-size:12px}
+#top .brand{font-weight:700;display:flex;align-items:center;gap:9px;white-space:nowrap}
+#top .dot{width:9px;height:9px;border-radius:50%;background:var(--coral);box-shadow:0 0 12px var(--coral)}
+#top nav{display:flex;gap:2px;flex-wrap:wrap;margin-left:auto}
+#top nav a{color:var(--dim);font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:5px 9px;border-radius:6px;text-transform:uppercase}
+#top nav a:hover{color:var(--ink);background:var(--panel)}
+#top nav a.on{color:var(--biolum);background:rgba(79,214,196,.08)}
+@media(max-width:920px){#top nav{display:none}}
+
+section{max-width:var(--maxw);margin:0 auto;padding:70px 24px 14px;scroll-margin-top:58px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--biolum);display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--biolum-dim)}
+h1{font-size:clamp(40px,6.6vw,78px);line-height:1.0;letter-spacing:-.02em;margin:0 0 18px;font-weight:800;text-wrap:balance}
+h2{font-size:clamp(28px,3.8vw,42px);line-height:1.05;letter-spacing:-.015em;margin:0 0 8px;font-weight:800;text-wrap:balance}
+h3{font-size:17px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+.co{color:var(--coral)}.cy{color:var(--biolum)}
+.sub{font-size:clamp(15px,1.7vw,17px);color:var(--dim);max-width:66ch}
+.hr{height:1px;background:var(--line);max-width:var(--maxw);margin:30px auto 0}
+b,strong{color:var(--ink);font-weight:650}
+.mono{font-family:var(--mono)}
+.small{font-size:13px;color:var(--faint)}
+
+/* chips row */
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+.chip{font-family:var(--mono);font-size:12px;color:var(--dim);border:1px solid var(--line2);
+  border-radius:22px;padding:6px 13px;background:var(--panel);white-space:nowrap}
+.chip b{color:var(--ink)}
+.chip .k{color:var(--coral)}
+.chip .g{color:var(--biolum)}
+
+/* hero */
+#hero{padding-top:132px;padding-bottom:6px}
+#hero .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:20px}
+#hero .kicker b{color:var(--biolum)}
+.hstat{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
+.hstat .c{background:linear-gradient(180deg,var(--panel),var(--deep));border:1px solid var(--line);border-radius:13px;padding:17px 18px 15px}
+.hstat .n{font-size:31px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.hstat .n small{font-size:15px;color:var(--faint);font-weight:600;margin-left:2px}
+.hstat .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:9px;line-height:1.35}
+@media(max-width:760px){.hstat{grid-template-columns:1fr 1fr}}
+
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:8px}
+.flow .step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 15px;position:relative}
+.flow .step .k{font-family:var(--mono);font-size:10px;letter-spacing:.09em;color:var(--coral);text-transform:uppercase}
+.flow .step h3{font-size:14.5px;margin:8px 0 0}
+.flow .step .arr{position:absolute;right:-13px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:16px;z-index:2}
+.flow .step:last-child .arr{display:none}
+@media(max-width:900px){.flow{grid-template-columns:1fr 1fr}.flow .step .arr{display:none}}
+
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,var(--panel),var(--deep));border:1px solid var(--line);border-radius:14px;padding:20px}
+.card .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--biolum);margin-bottom:9px}
+.card p{font-size:13.5px;color:var(--dim);margin:6px 0 0}
+.card .big{font-size:33px;font-weight:800;letter-spacing:-.02em;line-height:1;margin-bottom:2px}
+.card .big small{font-size:14px;color:var(--faint);font-weight:600}
+
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:6px}
+.tiles .t{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 14px}
+.tiles .t .n{font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.tiles .t .n small{font-size:12px;color:var(--faint);font-weight:600}
+.tiles .t .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-top:7px;line-height:1.3}
+@media(max-width:900px){.tiles{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.tiles{grid-template-columns:1fr 1fr}}
+
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:6px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:540px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);background:var(--deep)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(79,214,196,.03)}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:20px;border:1px solid var(--line2);color:var(--dim);white-space:nowrap}
+.pill.ok{color:var(--biolum);border-color:var(--biolum-dim)}
+.pill.no{color:var(--coral-soft);border-color:#7a3b2c}
+
+/* cameras */
+.cam{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
+@media(max-width:760px){.cam{grid-template-columns:1fr 1fr 1fr}}
+.cam .c{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px;text-align:center}
+.cam .c .n{font-size:21px;font-weight:800}
+.cam .c .nm{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:4px}
+.cam .c .badge{display:inline-block;font-size:9.5px;font-family:var(--mono);margin-top:7px;padding:1px 7px;border-radius:12px;border:1px solid var(--line2)}
+.cam .c .badge.col{color:var(--biolum);border-color:var(--biolum-dim)}
+.cam .c .badge.ir{color:var(--amber);border-color:#7a6326}
+.cam .c .badge.rej{color:var(--coral-soft);border-color:#7a3b2c}
+
+/* bars */
+.abar{display:grid;grid-template-columns:150px 1fr 46px;align-items:center;gap:12px;margin:8px 0}
+.abar .lb{font-size:13px;color:var(--dim)}
+.abar .track{display:block;height:11px;background:#0a1e25;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.abar .fill{display:block;height:100%;background:var(--coral);border-radius:6px}
+.abar .v{font-family:var(--mono);font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:560px){.abar{grid-template-columns:110px 1fr 40px}}
+
+/* ethogram mini chips */
+.eth{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px}
+@media(max-width:760px){.eth{grid-template-columns:1fr 1fr}}
+.eth .e{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;display:flex;gap:11px;align-items:center}
+.eth .e .num{font-family:var(--mono);font-size:11px;color:var(--biolum);border:1px solid var(--biolum-dim);border-radius:6px;padding:3px 7px}
+.eth .e h3{font-size:13.5px;margin:0;font-weight:600}
+
+/* LIVE demo tiles */
+.livebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;
+  background:rgba(55,214,122,.06);border:1px solid #1f5c3c;border-radius:12px;padding:12px 16px}
+.livebar .ld{width:9px;height:9px;border-radius:50%;background:var(--live);box-shadow:0 0 10px var(--live);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.livebar .txt{font-size:13.5px;color:var(--dim)}
+.livebar .txt b{color:var(--ink)}
+.uigroup{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:24px 0 11px;display:flex;align-items:center;gap:10px}
+.uigroup::after{content:"";flex:1;height:1px;background:var(--line)}
+.uigrid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+@media(max-width:760px){.uigrid{grid-template-columns:1fr}}
+a.ui{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+  display:flex;gap:13px;align-items:center;transition:transform .15s ease,border-color .15s ease,background .15s ease;cursor:pointer}
+a.ui:hover{transform:translateY(-2px);border-color:var(--biolum-dim);background:var(--panel2)}
+a.ui .port{font-family:var(--mono);font-size:11px;color:var(--live);border:1px solid #1f5c3c;border-radius:7px;
+  padding:4px 8px;white-space:nowrap;display:flex;align-items:center;gap:6px}
+a.ui .port::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--live);box-shadow:0 0 7px var(--live)}
+a.ui h3{font-size:14px;margin:0 0 2px;color:var(--ink)}
+a.ui p{font-size:12px;color:var(--dim);margin:0}
+a.ui .go{margin-left:auto;color:var(--faint);font-size:16px}
+a.ui:hover .go{color:var(--biolum)}
+
+.note{border-left:3px solid var(--coral);background:rgba(224,96,63,.06);border-radius:0 10px 10px 0;padding:11px 16px;margin-top:14px}
+.note.cy{border-left-color:var(--biolum);background:rgba(79,214,196,.06)}
+.note p{margin:0;font-size:13.5px;color:var(--dim)}
+.note b{color:var(--ink)}
+
+.rv{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}.livebar .ld{animation:none}}
+
+footer{max-width:var(--maxw);margin:34px auto 0;padding:28px 24px 64px;border-top:1px solid var(--line)}
+footer .row{display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:flex-end}
+footer .mono{font-size:12px;color:var(--faint);text-align:right}
+svg text{font-family:var(--mono)}
+.svgwrap{margin-top:8px}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+<header id="top"><div class="in">
+  <span class="brand"><span class="dot"></span>NITY · Octopus Behaviour Intelligence</span>
+  <nav>
+    <a href="#hero">Top</a><a href="#dataset">Dataset</a><a href="#detection">Detect</a>
+    <a href="#pipeline">Pipeline</a><a href="#caption">Caption</a><a href="#segment">Segment</a>
+    <a href="#findings">Findings</a><a href="#demos">Live demos</a><a href="#models">Models</a>
+  </nav>
+</div></header>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="kicker rv">Octopus vulgaris <b>"Nity"</b> · aquarium camera footage → behaviour</div>
+  <h1 class="rv">Teaching a machine<br>to read an <span class="co">octopus.</span></h1>
+  <p class="sub rv">Months of raw footage → a quantified behavioural record. Frontier models teach; tiny distilled models run on a laptop.</p>
+  <div class="hstat">
+    <div class="c rv"><div class="n">3,205</div><div class="l">clips → behaviour records</div></div>
+    <div class="c rv"><div class="n">~209<small>d</small></div><div class="l">footage days on server</div></div>
+    <div class="c rv"><div class="n">3.2<small>M</small></div><div class="l">param edge segmenter</div></div>
+    <div class="c rv"><div class="n">5</div><div class="l">live demo tools</div></div>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- FLOW -->
+<section id="overview">
+  <div class="eyebrow rv">The pipeline</div>
+  <h2 class="rv">Five stages, one loop.</h2>
+  <div class="flow" style="margin-top:18px">
+    <div class="step rv"><div class="k">01 · Detect</div><h3>Octopus visible?</h3><span class="arr">→</span></div>
+    <div class="step rv"><div class="k">02 · Extract</div><h3>Cut into clips</h3><span class="arr">→</span></div>
+    <div class="step rv"><div class="k">03 · Caption</div><h3>Describe + label</h3><span class="arr">→</span></div>
+    <div class="step rv"><div class="k">04 · Structure</div><h3>Behaviour record</h3><span class="arr">→</span></div>
+    <div class="step rv"><div class="k">05 · Segment</div><h3>Pixel masks</h3><span class="arr">→</span></div>
+  </div>
+  <div class="chips rv">
+    <span class="chip"><span class="k">teachers</span> &nbsp;GroundingDINO · SAM2 · Qwen3-VL-235B</span>
+    <span class="chip"><span class="g">deployed</span> &nbsp;3.2M segmenter · 1.7 GB caption student · ~3 s/clip, no GPU</span>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- DATASET -->
+<section id="dataset">
+  <div class="eyebrow rv">The data</div>
+  <h2 class="rv">How much footage, and what came out.</h2>
+  <div class="tiles" style="margin-top:18px">
+    <div class="t rv"><div class="n">~209<small>d</small></div><div class="l">Nity footage days</div></div>
+    <div class="t rv"><div class="n">~1,769</div><div class="l">colour-cam videos</div></div>
+    <div class="t rv"><div class="n">3,986</div><div class="l">verified clips</div></div>
+    <div class="t rv"><div class="n">~9,600</div><div class="l">labelled frames</div></div>
+    <div class="t rv"><div class="n">3,205</div><div class="l">behaviour records</div></div>
+    <div class="t rv"><div class="n">4,412</div><div class="l">image·mask pairs</div></div>
+  </div>
+  <div class="cam">
+    <div class="c rv"><div class="n">861</div><div class="nm">Right_Front</div><div class="badge col">colour</div></div>
+    <div class="c rv"><div class="n">731</div><div class="nm">Right_Right</div><div class="badge col">colour</div></div>
+    <div class="c rv"><div class="n">576</div><div class="nm">Right_Back</div><div class="badge col">colour</div></div>
+    <div class="c rv"><div class="n">1,391</div><div class="nm">Right_Top</div><div class="badge ir">infrared</div></div>
+    <div class="c rv"><div class="n">427</div><div class="nm">Right_Left</div><div class="badge rej">reflection ✕</div></div>
+  </div>
+  <div class="note rv"><p><b>Colour is camera-gated:</b> 3 colour cams, 1 pure IR, 1 reflection artefact (dropped). Only ~42% of clips can carry a colour signal.</p></div>
+</section>
+
+<div class="hr"></div>
+
+<!-- DETECTION -->
+<section id="detection">
+  <div class="eyebrow rv">Stage 01 · Detection</div>
+  <h2 class="rv">Frozen CLIP + a tiny probe.</h2>
+  <div class="chips rv">
+    <span class="chip"><b>CLIP ViT-B/32</b> frozen</span>
+    <span class="chip">MLP probe <span class="mono">512→256→64→2</span></span>
+    <span class="chip"><span class="k">key insight</span> letterbox, <b>not</b> crop (crop drops 33–44%)</span>
+    <span class="chip">hard-neg mining <span class="mono">232 → 66 real</span></span>
+    <span class="chip"><span class="g">FP 24% → 3%</span>, recall ~0.97</span>
+  </div>
+  <div class="tw rv" style="margin-top:18px">
+    <table>
+      <thead><tr><th>Checkpoint</th><th>Data</th><th>Acc</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">clip_mlp_hardneg_v2.pt</span></td><td>letterbox + ~1.7k mined hard negs</td><td>96.8%</td><td><span class="pill ok">deployed</span></td></tr>
+        <tr><td><span class="mono">clip_mlp_best.pt</span></td><td>letterbox + 66 verified negs</td><td>96.3%</td><td><span class="pill">prior</span></td></tr>
+        <tr><td><span class="mono">clip_mlp_hardneg_unverified.pt</span></td><td>232 <b>unverified</b> (166 were octopus)</td><td>97.2%</td><td><span class="pill no">trap</span></td></tr>
+        <tr><td><span class="mono">clip_mlp_crop.pt</span></td><td>old CenterCrop (drops 33–44%)</td><td>96.8%</td><td><span class="pill no">deprecated</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small rv" style="margin-top:9px">Accuracies aren't directly comparable — each scored on a different test set.</p>
+</section>
+
+<div class="hr"></div>
+
+<!-- PIPELINE -->
+<section id="pipeline">
+  <div class="eyebrow rv">Stage 02 · Extraction</div>
+  <h2 class="rv">Two gates. A month → a handful of clips.</h2>
+  <div class="chips rv">
+    <span class="chip">20 s sliding window</span>
+    <span class="chip"><span class="k">visibility</span> ≥ 60% frames · <span class="mono">p ≥ 0.6</span></span>
+    <span class="chip"><span class="k">motion</span> absolute ≥ <span class="mono">0.008</span></span>
+    <span class="chip">ffmpeg byte-range copy</span>
+    <span class="chip"><span class="g">single-decode</span> 219 s → 130 s</span>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="note rv"><p><b>The bug we don't reintroduce:</b> per-video <i>normalized</i> motion let a flickering IR lamp pass as movement. Fix = <b>absolute</b> changed-pixel fraction + timestamp masking.</p></div>
+    <div class="note cy rv"><p><b>The VLM taught the gate:</b> 235B found <b>63%</b> of "verified" clips had no octopus (mostly Right_Left reflections). → drop Right_Left; a VLM beats the detector as a presence filter.</p></div>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- CAPTIONING -->
+<section id="caption">
+  <div class="eyebrow rv">Stage 03–04 · Captioning</div>
+  <h2 class="rv">Frontier teacher, pocket-sized student.</h2>
+  <div class="grid g3" style="margin-top:18px">
+    <div class="card rv"><div class="tag">Teacher</div><h3>Qwen3-VL 30B / 235B</h3><p>vLLM on A100 · or 235B via OpenRouter API, no GPU.</p></div>
+    <div class="card rv"><div class="tag">Student · deployed</div><h3>Qwen3-VL 2B · QLoRA</h3><p>r16/α32 · 3,066 train / 392 val · distilled captions.</p></div>
+    <div class="card rv"><div class="tag">Local deploy</div><div class="big">1.7<small> GB</small></div><p>MLX 4-bit · ~3 s/clip on a 16 GB Mac, no CUDA.</p></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card rv"><div class="tag">Embedding similarity ↑</div>
+      <div class="abar" style="grid-template-columns:56px 1fr 52px"><div class="lb">base</div><div class="track"><i class="fill" style="width:70.2%"></i></div><div class="v">0.702</div></div>
+      <div class="abar" style="grid-template-columns:56px 1fr 52px"><div class="lb">LoRA</div><div class="track"><i class="fill" style="width:83.4%;background:var(--biolum)"></i></div><div class="v">0.834</div></div>
+    </div>
+    <div class="card rv"><div class="tag">ROUGE-L ↑</div>
+      <div class="abar" style="grid-template-columns:56px 1fr 52px"><div class="lb">base</div><div class="track"><i class="fill" style="width:26.9%"></i></div><div class="v">0.269</div></div>
+      <div class="abar" style="grid-template-columns:56px 1fr 52px"><div class="lb">LoRA</div><div class="track"><i class="fill" style="width:45.5%;background:var(--biolum)"></i></div><div class="v">0.455</div></div>
+    </div>
+  </div>
+  <div class="uigroup rv">Ethogram · 7 classes</div>
+  <div class="eth">
+    <div class="e rv"><span class="num">01</span><h3>Resting / stationary</h3></div>
+    <div class="e rv"><span class="num">02</span><h3>Exploration / manipulation</h3></div>
+    <div class="e rv"><span class="num">03</span><h3>Crawling</h3></div>
+    <div class="e rv"><span class="num">04</span><h3>Swimming / jetting</h3></div>
+    <div class="e rv"><span class="num">05</span><h3>Reaching out of water</h3></div>
+    <div class="e rv"><span class="num">06</span><h3>Human / enrichment</h3></div>
+    <div class="e rv"><span class="num">07</span><h3>Colour change / defensive</h3></div>
+    <div class="e rv" style="opacity:.6"><span class="num" style="color:var(--faint);border-color:var(--line2)">∅</span><h3>octopus not present</h3></div>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- SEGMENTATION -->
+<section id="segment">
+  <div class="eyebrow rv">Stage 05 · Segmentation</div>
+  <h2 class="rv">Pixel masks — smallest model that works.</h2>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card rv"><div class="tag">Teacher · offline</div><h3>GroundingDINO-tiny → SAM2</h3><p>Video-propagation seeded from the most-confident frame. IR tool-bleed 11.8%→6.5%, colour bleed 15.5%→5.8%.</p></div>
+    <div class="card rv"><div class="tag">Student · deployed</div><h3>LR-ASPP · 3.2 M params</h3><p>Distilled from 4,412 auto-masks across 77 videos. Per-frame mask + area fraction.</p></div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="note cy rv"><p><b>Deployment win:</b> trained with negatives → presence gate <b>AUC 0.86</b>, <b>0.99 vs reflections</b>, 0% reflection false-positives. Beats the CLIP gate where it was weakest.</p></div>
+    <div class="note rv"><p><b>Honest limit:</b> present-mask IoU plateaus ~0.47 (bar 0.85) — a video-diversity gap (62 train videos), not architecture. More distinct footage is the fix.</p></div>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- FINDINGS -->
+<section id="findings">
+  <div class="eyebrow rv">The payoff · behaviour, quantified</div>
+  <h2 class="rv">What the footage says about Nity.</h2>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="card rv">
+      <div class="tag">Activity budget · share of present clips</div>
+      <div class="abar"><div class="lb">Exploration</div><div class="track"><i class="fill" style="width:100%"></i></div><div class="v">41%</div></div>
+      <div class="abar"><div class="lb">Resting</div><div class="track"><i class="fill" style="width:80.5%"></i></div><div class="v">33%</div></div>
+      <div class="abar"><div class="lb">Human interaction</div><div class="track"><i class="fill" style="width:34.1%"></i></div><div class="v">14%</div></div>
+      <div class="abar"><div class="lb">Reaching out</div><div class="track"><i class="fill" style="width:22%"></i></div><div class="v">9%</div></div>
+      <div class="abar"><div class="lb">Crawling</div><div class="track"><i class="fill" style="width:4.9%"></i></div><div class="v">2%</div></div>
+      <div class="abar"><div class="lb">Swimming</div><div class="track"><i class="fill" style="width:2.4%"></i></div><div class="v">1%</div></div>
+    </div>
+    <div class="card rv">
+      <div class="tag">Circadian · visible-activity rate / hour</div>
+      <div class="svgwrap"><svg id="circ" viewBox="0 0 520 230" width="100%" height="215" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card rv"><div class="tag">Stimulus response · human presence</div>
+      <div class="svgwrap"><svg id="stim" viewBox="0 0 520 210" width="100%" height="195" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+    <div class="rv" style="display:flex;align-items:center">
+      <div class="chips" style="margin-top:0;flex-direction:column;align-items:flex-start">
+        <span class="chip"><span class="k">human presence</span> nearly <b>doubles</b> motion &nbsp;0.045 → 0.095</span>
+        <span class="chip">arousal index &nbsp;0.46 → <b>0.68</b></span>
+        <span class="chip">circadian peak &nbsp;<b>45% @ 17:00</b> · ~1–5% overnight</span>
+        <span class="chip g">extracted with zero manual labelling</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- LIVE DEMOS -->
+<section id="demos">
+  <div class="eyebrow rv">Live demos · running now</div>
+  <h2 class="rv">Open it and show it.</h2>
+  <div class="livebar rv"><span class="ld"></span><span class="txt"><b>Five servers are live on localhost</b> — click any tile to open it in a new tab.</span></div>
+
+  <div class="uigrid" style="margin-top:16px">
+    <a class="ui rv" href="http://localhost:8000" target="_blank"><span class="port">:8000</span><div><h3>Captioning</h3><p>Watch clips and their generated caption + behaviour label.</p></div><span class="go">↗</span></a>
+    <a class="ui rv" href="http://localhost:8004" target="_blank"><span class="port">:8004</span><div><h3>Octopus presence data</h3><p>Frame-level octopus / no-octopus review set.</p></div><span class="go">↗</span></a>
+    <a class="ui rv" href="http://localhost:8017" target="_blank"><span class="port">:8017</span><div><h3>Base vs our model vs 235B</h3><p>Three-way caption comparison + the frames the model saw.</p></div><span class="go">↗</span></a>
+    <a class="ui rv" href="http://localhost:8011" target="_blank"><span class="port">:8011</span><div><h3>End-to-end run</h3><p>Full video on the left, synced captions on the right.</p></div><span class="go">↗</span></a>
+    <a class="ui rv" href="http://localhost:8012" target="_blank"><span class="port">:8012</span><div><h3>Segmentation</h3><p>Tiny mask model overlaying the octopus + live area%.</p></div><span class="go">↗</span></a>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- MODELS -->
+<section id="models">
+  <div class="eyebrow rv">Deliverables</div>
+  <h2 class="rv">Models &amp; artifacts.</h2>
+  <div class="tw rv" style="margin-top:16px">
+    <table>
+      <thead><tr><th>Model</th><th>Role</th><th>Headline</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">clip_mlp_hardneg_v2.pt</span></td><td>Octopus detector · CLIP+MLP, letterbox</td><td>96.8% · FP 3%</td></tr>
+        <tr><td>Qwen3-VL-2B <span class="mono">caption_v1</span></td><td>Caption student · QLoRA</td><td>emb-sim 0.834</td></tr>
+        <tr><td><span class="mono">qwen3vl2b_caption_v1_mlx_4bit</span></td><td>Local deploy · MLX 4-bit, no GPU</td><td>1.7 GB · ~3 s/clip</td></tr>
+        <tr><td><span class="mono">octo_seg_v3_lraspp_BEST.pt</span></td><td>Segmenter + presence gate · LR-ASPP</td><td>3.2 M · AUC 0.86</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="chips rv" style="margin-top:16px">
+    <a class="chip" href="https://huggingface.co/sidraj000/octopus-nity-caption-qwen3vl2b-mlx-4bit" target="_blank" style="color:var(--biolum);border-color:var(--biolum-dim)">Caption model on Hugging&nbsp;Face ↗</a>
+    <a class="chip" href="https://huggingface.co/sidraj000/octopus-nity-segmentation" target="_blank" style="color:var(--biolum);border-color:var(--biolum-dim)">Segmenter + detector on Hugging&nbsp;Face ↗</a>
+  </div>
+</section>
+
+<footer>
+  <div class="row">
+    <div class="small"><b style="color:var(--ink)">Octopus behaviour-analysis pipeline</b><br>detection · extraction · captioning · behavioural extraction · segmentation</div>
+    <div class="mono">Octopus vulgaris "Nity" · 5 cameras · ~209 days<br><span style="color:var(--biolum-dim)">selected · IEEE OCEANS 2026</span></div>
+  </div>
+</footer>
+
+<script>
+const prog=document.getElementById('prog'), links=[...document.querySelectorAll('#top nav a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+function onScroll(){
+  const h=document.documentElement, sc=h.scrollTop, max=h.scrollHeight-h.clientHeight;
+  prog.style.width=(max>0?(sc/max*100):0)+'%';
+  let idx=0; secs.forEach((s,i)=>{ if(s && s.getBoundingClientRect().top<=120) idx=i; });
+  links.forEach((a,i)=>a.classList.toggle('on', i===idx));
+}
+document.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.1});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+// safety net: if nothing revealed shortly after load, reveal everything (never leave content hidden)
+setTimeout(()=>{ if(!document.querySelector('.rv.in')) document.querySelectorAll('.rv').forEach(e=>e.classList.add('in')); }, 800);
+
+(function(){
+  const rates=[4.8,0,0.4,0,0,10.4,12.1,0.7,2.5,1.3,0,0.3,10.8,24.2,24.3,39.6,42.4,45.3,35.9,36.5,5.6,3.8,8.1,11.1];
+  const W=520,H=230,pl=8,pr=8,pt=24,pb=26, iw=W-pl-pr, ih=H-pt-pb, max=48;
+  const x=i=>pl+ i/(rates.length-1)*iw, y=v=>pt+ih - v/max*ih;
+  let d="M"+x(0)+" "+y(rates[0]); rates.forEach((v,i)=>{ if(i) d+=" L"+x(i).toFixed(1)+" "+y(v).toFixed(1); });
+  const area=d+" L"+x(rates.length-1)+" "+(pt+ih)+" L"+x(0)+" "+(pt+ih)+" Z";
+  const peak=rates.indexOf(Math.max(...rates));
+  document.getElementById('circ').innerHTML=`
+    <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0603f" stop-opacity=".38"/><stop offset="1" stop-color="#e0603f" stop-opacity="0"/></linearGradient></defs>
+    <line x1="${pl}" y1="${pt+ih}" x2="${W-pr}" y2="${pt+ih}" stroke="#153742"/>
+    <path d="${area}" fill="url(#cg)"/>
+    <path d="${d}" fill="none" stroke="#e0603f" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="${x(peak).toFixed(1)}" cy="${y(rates[peak]).toFixed(1)}" r="4" fill="#4fd6c4"/>
+    <text x="${x(peak).toFixed(1)}" y="${y(rates[peak])-9}" fill="#eaf3f3" font-size="11" text-anchor="middle">45% @ 17:00</text>
+    <text x="${pl}" y="${H-8}" fill="#5f7a7e" font-size="9.5">0h</text>
+    <text x="${x(6).toFixed(1)}" y="${H-8}" fill="#5f7a7e" font-size="9.5" text-anchor="middle">6h</text>
+    <text x="${x(12).toFixed(1)}" y="${H-8}" fill="#5f7a7e" font-size="9.5" text-anchor="middle">12h</text>
+    <text x="${x(18).toFixed(1)}" y="${H-8}" fill="#5f7a7e" font-size="9.5" text-anchor="middle">18h</text>
+    <text x="${W-pr}" y="${H-8}" fill="#5f7a7e" font-size="9.5" text-anchor="end">23h</text>`;
+})();
+(function(){
+  const groups=[{t:"MOTION",a:{v:0.045,l:"0.045"},b:{v:0.095,l:"0.095"},max:0.11},
+                {t:"AROUSAL INDEX",a:{v:0.46,l:"0.46"},b:{v:0.68,l:"0.68"},max:0.8}];
+  const W=520, gx=[130,370], base=168, bh=120, bw=42, gap=20; let s='';
+  groups.forEach((g,gi)=>{ const cx=gx[gi];
+    [['a',-1,'#37525a'],['b',1,'#e0603f']].forEach(([k,side,col])=>{
+      const d=g[k], h=d.v/g.max*bh, x=cx+side*(gap/2)+(side<0?-bw:0), yv=base-h;
+      s+=`<rect x="${x}" y="${yv.toFixed(1)}" width="${bw}" height="${h.toFixed(1)}" rx="4" fill="${col}"/>`;
+      s+=`<text x="${x+bw/2}" y="${(yv-6).toFixed(1)}" fill="#eaf3f3" font-size="11" text-anchor="middle">${d.l}</text>`;
+      s+=`<text x="${x+bw/2}" y="${base+15}" fill="#5f7a7e" font-size="9.5" text-anchor="middle">${k==='a'?'alone':'human'}</text>`;
+    });
+    s+=`<text x="${cx}" y="26" fill="#5f7a7e" font-size="10" text-anchor="middle" letter-spacing="1">${g.t}</text>`;
+  });
+  s+=`<line x1="20" y1="${base}" x2="${W-20}" y2="${base}" stroke="#153742"/>`;
+  document.getElementById('stim').innerHTML=s;
+})();
+</script>
+</body>
+</html>

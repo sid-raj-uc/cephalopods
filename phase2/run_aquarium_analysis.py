@@ -39,8 +39,10 @@ logging.basicConfig(
 log = logging.getLogger("aquarium_analysis")
 
 BASE_URL  = "https://repo.octopus-intelligence.org/public"
-USER      = "octopus"
-PASS      = "communication42"
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 SESSION   = "O-vulgaris-Nity-2026-2-20--"
 
 ALL_CAMERAS = [
@@ -164,7 +166,8 @@ def run_clip_scan(video_path: Path, model, processor, text_features, device) -> 
 
 
 def run_motion_scan(video_path: Path) -> tuple[np.ndarray, np.ndarray]:
-    from phase2.motion_detector import scan_motion
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "octo-clip-extraction"))  # motion_detector moved here
+    from motion_detector import scan_motion
     return scan_motion(str(video_path), fps=1.0, smooth_window=5)
 
 

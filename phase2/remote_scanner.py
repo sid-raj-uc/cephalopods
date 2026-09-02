@@ -9,7 +9,7 @@ for segment download.
 Usage:
     from phase2.remote_scanner import RemoteScanner
 
-    scanner = RemoteScanner(username="octopus", password="communication42")
+    scanner = RemoteScanner()  # creds default to OCTOPUS_USER/OCTOPUS_PASS env vars
     segments = scanner.scan_and_download(
         url="https://repo.octopus-intelligence.org/public/.../video.mp4",
         out_dir="data/aquarium",
@@ -28,10 +28,10 @@ from PIL import Image
 log = logging.getLogger(__name__)
 
 BASE_URL = "https://repo.octopus-intelligence.org/public"
-DEFAULT_USER = "octopus"
-DEFAULT_PASS = "communication42"
-
-
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER as DEFAULT_USER, PASS as DEFAULT_PASS  # creds from env / .env, not hardcoded
 def _auth_url(url: str, username: str, password: str) -> str:
     """Inject Basic Auth credentials into the URL."""
     return url.replace("https://", f"https://{username}:{password}@")

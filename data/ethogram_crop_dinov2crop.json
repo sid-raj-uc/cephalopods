@@ -1,0 +1,39 @@
+{
+ "version": "v1",
+ "classes": [
+  "No octopus",
+  "Exploration / manipulation",
+  "Human / enrichment interaction",
+  "Locomotion (crawl/swim)",
+  "Reaching out of water",
+  "Resting / stationary"
+ ],
+ "majority_macro_f1": 0.1004,
+ "n_test_clips": 740,
+ "n_test_videos": 34,
+ "test_class_counts": {
+  "No octopus": 319,
+  "Locomotion (crawl/swim)": 52,
+  "Human / enrichment interaction": 40,
+  "Reaching out of water": 69,
+  "Resting / stationary": 119,
+  "Exploration / manipulation": 141
+ },
+ "rungs": {
+  "2": {
+   "n_params": 597778,
+   "val_f1_mean": 0.6183,
+   "test_f1_mean": 0.6465,
+   "test_f1_std": 0.011,
+   "per_class_f1": {
+    "No octopus": 0.8845,
+    "Exploration / manipulation": 0.6182,
+    "Human / enrichment interaction": 0.4542,
+    "Locomotion (crawl/swim)": 0.7069,
+    "Reaching out of water": 0.6597,
+    "Resting / stationary": 0.5558
+   },
+   "seeds": 3
+  }
+ }
+}

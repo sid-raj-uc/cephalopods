@@ -1,0 +1,475 @@
+{
+ "version": "v1",
+ "rung": 3,
+ "cw_power": 0.5,
+ "caveat": "ALL human labels are `assisted` (model answer visible) -> agreement, not accuracy; every figure is an optimistic bound",
+ "populations": {
+  "human_secondary": {
+   "n_clips": 251,
+   "n_videos": 99,
+   "class_counts": {
+    "Locomotion (crawl/swim)": 34,
+    "Reaching out of water": 16,
+    "No octopus": 97,
+    "Resting / stationary": 51,
+    "Human / enrichment interaction": 33,
+    "Exploration / manipulation": 20
+   },
+   "teacher_vs_human": {
+    "macro_f1": 0.6569,
+    "accuracy": 0.7251,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.8646,
+      "n": 97
+     },
+     "Exploration / manipulation": {
+      "f1": 0.4889,
+      "n": 20
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.75,
+      "n": 33
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.7949,
+      "n": 34
+     },
+     "Reaching out of water": {
+      "f1": 0.4167,
+      "n": 16
+     },
+     "Resting / stationary": {
+      "f1": 0.6265,
+      "n": 51
+     }
+    },
+    "agreement": 0.7251,
+    "agreement_ci95": [
+     0.6668,
+     0.7766
+    ]
+   },
+   "student_vs_human": {
+    "macro_f1": 0.4917,
+    "accuracy": 0.6056,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.81,
+      "n": 97
+     },
+     "Exploration / manipulation": {
+      "f1": 0.2353,
+      "n": 20
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.3182,
+      "n": 33
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.6087,
+      "n": 34
+     },
+     "Reaching out of water": {
+      "f1": 0.3333,
+      "n": 16
+     },
+     "Resting / stationary": {
+      "f1": 0.6444,
+      "n": 51
+     }
+    },
+    "agreement": 0.6056,
+    "agreement_ci95": [
+     0.544,
+     0.664
+    ]
+   },
+   "student_vs_teacher": {
+    "macro_f1": 0.5635,
+    "accuracy": 0.6574,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.8182,
+      "n": 95
+     },
+     "Exploration / manipulation": {
+      "f1": 0.3929,
+      "n": 25
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.2941,
+      "n": 23
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.7342,
+      "n": 44
+     },
+     "Reaching out of water": {
+      "f1": 0.4375,
+      "n": 32
+     },
+     "Resting / stationary": {
+      "f1": 0.7042,
+      "n": 32
+     }
+    }
+   },
+   "where_they_disagree": {
+    "n": 86,
+    "human_sides_with_student": 19,
+    "human_sides_with_teacher": 49,
+    "human_agrees_with_neither": 18
+   }
+  },
+  "train_CONTAMINATED": {
+   "n_clips": 102,
+   "n_videos": 70,
+   "class_counts": {
+    "No octopus": 76,
+    "Resting / stationary": 14,
+    "Exploration / manipulation": 9,
+    "Locomotion (crawl/swim)": 1,
+    "Reaching out of water": 1,
+    "Human / enrichment interaction": 1
+   },
+   "teacher_vs_human": {
+    "macro_f1": 0.5062,
+    "accuracy": 0.8039,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.8734,
+      "n": 76
+     },
+     "Exploration / manipulation": {
+      "f1": 0.8,
+      "n": 9
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 1
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 1
+     },
+     "Reaching out of water": {
+      "f1": 1.0,
+      "n": 1
+     },
+     "Resting / stationary": {
+      "f1": 0.3636,
+      "n": 14
+     }
+    },
+    "agreement": 0.8039,
+    "agreement_ci95": [
+     0.7165,
+     0.8693
+    ]
+   },
+   "student_vs_human": {
+    "macro_f1": 0.3408,
+    "accuracy": 0.7549,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.8489,
+      "n": 76
+     },
+     "Exploration / manipulation": {
+      "f1": 0.6667,
+      "n": 9
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 1
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 1
+     },
+     "Reaching out of water": {
+      "f1": 0.0,
+      "n": 1
+     },
+     "Resting / stationary": {
+      "f1": 0.5294,
+      "n": 14
+     }
+    },
+    "agreement": 0.7549,
+    "agreement_ci95": [
+     0.6632,
+     0.8281
+    ]
+   },
+   "student_vs_teacher": {
+    "macro_f1": 0.3431,
+    "accuracy": 0.7843,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.869,
+      "n": 82
+     },
+     "Exploration / manipulation": {
+      "f1": 0.6897,
+      "n": 11
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Reaching out of water": {
+      "f1": 0.0,
+      "n": 1
+     },
+     "Resting / stationary": {
+      "f1": 0.5,
+      "n": 8
+     }
+    }
+   },
+   "where_they_disagree": {
+    "n": 22,
+    "human_sides_with_student": 7,
+    "human_sides_with_teacher": 12,
+    "human_agrees_with_neither": 3
+   }
+  },
+  "val": {
+   "n_clips": 25,
+   "n_videos": 18,
+   "class_counts": {
+    "No octopus": 17,
+    "Exploration / manipulation": 3,
+    "Resting / stationary": 5
+   },
+   "teacher_vs_human": {
+    "macro_f1": 0.4298,
+    "accuracy": 0.92,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.9714,
+      "n": 17
+     },
+     "Exploration / manipulation": {
+      "f1": 0.8571,
+      "n": 3
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Reaching out of water": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Resting / stationary": {
+      "f1": 0.75,
+      "n": 5
+     }
+    },
+    "agreement": 0.92,
+    "agreement_ci95": [
+     0.7503,
+     0.9778
+    ]
+   },
+   "student_vs_human": {
+    "macro_f1": 0.315,
+    "accuracy": 0.72,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.8235,
+      "n": 17
+     },
+     "Exploration / manipulation": {
+      "f1": 0.6667,
+      "n": 3
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Reaching out of water": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Resting / stationary": {
+      "f1": 0.4,
+      "n": 5
+     }
+    },
+    "agreement": 0.72,
+    "agreement_ci95": [
+     0.5242,
+     0.8572
+    ]
+   },
+   "student_vs_teacher": {
+    "macro_f1": 0.3214,
+    "accuracy": 0.76,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.8571,
+      "n": 18
+     },
+     "Exploration / manipulation": {
+      "f1": 0.5714,
+      "n": 4
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Reaching out of water": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Resting / stationary": {
+      "f1": 0.5,
+      "n": 3
+     }
+    }
+   },
+   "where_they_disagree": {
+    "n": 6,
+    "human_sides_with_student": 0,
+    "human_sides_with_teacher": 5,
+    "human_agrees_with_neither": 1
+   }
+  },
+  "test": {
+   "n_clips": 30,
+   "n_videos": 19,
+   "class_counts": {
+    "No octopus": 24,
+    "Resting / stationary": 3,
+    "Exploration / manipulation": 2,
+    "Reaching out of water": 1
+   },
+   "teacher_vs_human": {
+    "macro_f1": 0.5139,
+    "accuracy": 0.8667,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.9167,
+      "n": 24
+     },
+     "Exploration / manipulation": {
+      "f1": 0.5,
+      "n": 2
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Reaching out of water": {
+      "f1": 1.0,
+      "n": 1
+     },
+     "Resting / stationary": {
+      "f1": 0.6667,
+      "n": 3
+     }
+    },
+    "agreement": 0.8667,
+    "agreement_ci95": [
+     0.7032,
+     0.9469
+    ]
+   },
+   "student_vs_human": {
+    "macro_f1": 0.2636,
+    "accuracy": 0.6,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.7179,
+      "n": 24
+     },
+     "Exploration / manipulation": {
+      "f1": 0.3636,
+      "n": 2
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Reaching out of water": {
+      "f1": 0.0,
+      "n": 1
+     },
+     "Resting / stationary": {
+      "f1": 0.5,
+      "n": 3
+     }
+    },
+    "agreement": 0.6,
+    "agreement_ci95": [
+     0.4232,
+     0.7541
+    ]
+   },
+   "student_vs_teacher": {
+    "macro_f1": 0.2721,
+    "accuracy": 0.6333,
+    "per_class": {
+     "No octopus": {
+      "f1": 0.7692,
+      "n": 24
+     },
+     "Exploration / manipulation": {
+      "f1": 0.3636,
+      "n": 2
+     },
+     "Human / enrichment interaction": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Locomotion (crawl/swim)": {
+      "f1": 0.0,
+      "n": 0
+     },
+     "Reaching out of water": {
+      "f1": 0.0,
+      "n": 1
+     },
+     "Resting / stationary": {
+      "f1": 0.5,
+      "n": 3
+     }
+    }
+   },
+   "where_they_disagree": {
+    "n": 11,
+    "human_sides_with_student": 1,
+    "human_sides_with_teacher": 9,
+    "human_agrees_with_neither": 1
+   }
+  }
+ }
+}

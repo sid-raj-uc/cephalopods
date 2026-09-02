@@ -1,0 +1,13 @@
+{
+ "backbone": "dinov2",
+ "model_id": "facebook/dinov2-base",
+ "kind": "image",
+ "feat_dim": 768,
+ "n_motion": 2,
+ "params_millions": 86.6,
+ "n_clips": 4665,
+ "n_failed": 0,
+ "layout": "0:768 backbone | 768 motion_inst | 769 motion_disp",
+ "frames": "same dense extraction + same frames_used indices as the CLIP build",
+ "motion": "copied from the CLIP build"
+}

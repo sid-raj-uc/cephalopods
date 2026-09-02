@@ -34,8 +34,10 @@ SESSIONS = [
     "O-vulgaris-Nity-2025-9-17--",
 ]
 BASE_URL   = "https://repo.octopus-intelligence.org/public"
-USER, PASS = "octopus", "communication42"
-
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from server_creds import USER, PASS  # creds from env / .env, not hardcoded
 SLACK_SEC     = 120    # ±2 min scan window (tighter than exp12's 150s)
 WARM_UP_SEC   = 60     # skip first N sec of MOG2 (init artifact)
 CLIP_DUR      = 15

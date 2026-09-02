@@ -1,39 +1,70 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.egg-info/
-.eggs/
-dist/
-build/
 
-# Virtual environment
-venv/
-.env
-.venv
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Data — large binary assets not suitable for git
-data/
 !data/ethogram_index.json
-weights/
-# octo-images/
-segmented-output/
-
-# Cloned dependency (nested git repo)
-GroundingDINO/
-
-# W&B local run cache
-phase2/wandb/
-wandb/
-
+!data/ethogram_list.json
+!data/ethogram_list_v2.json
+!data/octopus_clips_processed.json
+!data/octopus_clips_verified.json
 # Claude Code local settings
-.claude/
-
+# Cloned dependency (nested git repo)
+# Data — large binary assets not suitable for git
+# Jupyter
+# Python
+# Virtual environment
+# W&B local run cache
 # macOS
+# octo-images/
+*.egg-info/
+*.py[cod]
+*.pyd
+*.pyo
 .DS_Store
+.claude/
+.eggs/
+.env
+.ipynb_checkpoints/
+.venv
+GroundingDINO/
+__pycache__/
+build/
+data/
+dist/
+frames_classifier_corpus_full.zip
+local_pipeline_out/
+models/
+notes/drive_upload/
+phase2/wandb/
+segmented-output/
+src/dataset/
+src/octopus_clips_verified/
+venv/
+wandb/
+weights/
 
+# notes/ holds credentials in plaintext (resources.md / resources.txt) — never commit
 notes/
+
+# Human ground truth + frozen eval sets: small, irreplaceable, and BENCHMARKS.md requires frozen
+# sets to be committed ("the frame/clip lists are committed and must not be regenerated").
+# data/ is ignored wholesale above, so these need explicit exceptions.
+!data/human_eval_sample_v*.json
+!data/human_behaviour_labels*.json
+!data/human_vs_ensemble_results.json
+
+# harvest clip trees (large binaries; ledger+index are tracked, clips are not)
+data/harvest_all/
+data/harvest_rr_dl/
+data/harvest_modal_dl/
+data/harvest_cbox_dl/
+data/harvest_local/
+
+# Cached backbone features and staged release datasets -- derived, large (~0.9 GB),
+# and distributed via Drive because GitHub blocks files over 100 MB.
+src/dataset_etho/*/feats_*/
+release/datasets/
+# Release staging: build output, rebuilt by src/make_release.py on demand.
+release/
+
+# Paper sources and submission packages. Kept locally, never published:
+# this repo is public and GitHub is a third-party server, which the IEEE
+# copyright agreement does not permit for the accepted version.
+OCEANS_2026/
